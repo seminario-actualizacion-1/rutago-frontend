@@ -1,2 +1,2 @@
-# rutago-frontend
+# RutaGo FrontEnd
 Frontend del proyecto RutaGo
