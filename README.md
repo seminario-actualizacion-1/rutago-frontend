@@ -4,4 +4,4 @@ Frontend del proyecto RutaGo
 ## Integrantes:
 
 - Jhon Edwar Suarez Quiñonez.
-
+- Sebastian Guapi Andrade.
