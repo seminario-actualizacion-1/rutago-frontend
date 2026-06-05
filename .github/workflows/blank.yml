@@ -1,0 +1,38 @@
+name: Deploy Frontend React
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # Versión recomendada para React moderno
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build React Project
+        run: |
+          # Inyectar la URL del back. Si usas Vite se usa VITE_APP_API_URL.
+          # Si usaras Create React App cambiar por REACT_APP_API_URL.
+          echo "VITE_APP_API_URL=${{ secrets.BACKEND_URL }}" >> .env
+          npm run build
+
+      - name: Deploy to VPS via SSH (rsync)
+        uses: up9cloud/action-rsync@v1.4
+        env:
+          HOST: ${{ secrets.HOST }}
+          USER: ${{ secrets.USER_NAME_RUTA_GO }}
+          PASSWORD: ${{ secrets.PASSWORD_SSH }}
+          SOURCE: dist/  # Cambiar a 'build/' si usas Create React App antigua
+          TARGET: /var/www/seminario1/rutago/
