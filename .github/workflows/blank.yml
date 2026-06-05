@@ -52,8 +52,8 @@ jobs:
             rm front.tar.gz
             
             # Crear directorio web definitivo y mover los archivos estáticos
-            sudo mkdir -p /var/www/seminario1/rutago/
-            sudo cp -r * /var/www/seminario1/rutago/
+            mkdir -p /var/www/seminario1/rutago/
+            cp -r * /var/www/seminario1/rutago/
             
             # Limpiar residuos temporales
             cd ~
