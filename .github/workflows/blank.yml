@@ -23,15 +23,31 @@ jobs:
 
       - name: Build React Project
         run: |
-          # Inyectar la URL del back. Si usas Vite se usa VITE_APP_API_URL.
           echo "VITE_APP_API_URL=${{ secrets.BACKEND_URL }}" >> .env
           npm run build
 
-      - name: Deploy to VPS via SSH (rsync)
+      - name: Upload to Temporary Folder via rsync
         uses: up9cloud/action-rsync@v1.4
         env:
           HOST: ${{ secrets.HOST }}
           USER: ${{ secrets.USER_NAME_RUTA_GO }}
-          KEY: ${{ secrets.PASSWORD_SSH }}       # <-- CORREGIDO: Cambiamos PASSWORD por KEY para que acepte tu llave SSH
+          KEY: ${{ secrets.PASSWORD_SSH }}
           SOURCE: dist/
-          TARGET: /var/www/seminario1/rutago/
+          TARGET: /home/${{ secrets.USER_NAME_RUTA_GO }}/front_tmp/
+
+      - name: Move to Web Directory via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER_NAME_RUTA_GO }}
+          key: ${{ secrets.PASSWORD_SSH }}
+          port: 22
+          script: |
+            # Crear la carpeta de destino final si no existe con sudo (asumiendo que tu usuario tiene permisos de sudo)
+            sudo mkdir -p /var/www/seminario1/rutago/
+            
+            # Copiar los archivos temporales al destino final de Nginx/Apache
+            sudo cp -r ~/front_tmp/* /var/www/seminario1/rutago/
+            
+            # Limpiar la carpeta temporal
+            rm -rf ~/front_tmp
