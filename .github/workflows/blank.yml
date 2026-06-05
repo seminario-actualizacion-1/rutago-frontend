@@ -26,16 +26,29 @@ jobs:
           echo "VITE_APP_API_URL=${{ secrets.BACKEND_URL }}" >> .env
           npm run build
 
-      - name: Upload to Temporary Folder via rsync
-        uses: up9cloud/action-rsync@v1.4
-        env:
-          HOST: ${{ secrets.HOST }}
-          USER: ${{ secrets.USER_NAME_RUTA_GO }}
-          KEY: ${{ secrets.PASSWORD_SSH }}
-          SOURCE: dist/
-          TARGET: /home/${{ secrets.USER_NAME_RUTA_GO }}/front_tmp/
+      - name: Compress Dist Folder
+        run: tar -czf front.tar.gz -C dist .
 
-      - name: Move to Web Directory via SSH
+      - name: Create Remote Temp Folder
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER_NAME_RUTA_GO }}
+          key: ${{ secrets.PASSWORD_SSH }}
+          port: 22
+          script: mkdir -p ~/front_tmp
+
+      - name: Transfer Compressed Front
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER_NAME_RUTA_GO }}
+          key: ${{ secrets.PASSWORD_SSH }}
+          port: 22
+          source: "front.tar.gz"
+          target: "/home/${{ secrets.USER_NAME_RUTA_GO }}/front_tmp/"
+
+      - name: Deploy to Web Directory
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
@@ -43,11 +56,14 @@ jobs:
           key: ${{ secrets.PASSWORD_SSH }}
           port: 22
           script: |
-            # Crear la carpeta de destino final si no existe con sudo (asumiendo que tu usuario tiene permisos de sudo)
+            cd ~/front_tmp
+            tar -xzf front.tar.gz
+            rm front.tar.gz
+            
+            # Crear directorio web definitivo y mover los archivos estáticos
             sudo mkdir -p /var/www/seminario1/rutago/
+            sudo cp -r * /var/www/seminario1/rutago/
             
-            # Copiar los archivos temporales al destino final de Nginx/Apache
-            sudo cp -r ~/front_tmp/* /var/www/seminario1/rutago/
-            
-            # Limpiar la carpeta temporal
+            # Limpiar residuos temporales
+            cd ~
             rm -rf ~/front_tmp
