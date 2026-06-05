@@ -29,31 +29,22 @@ jobs:
       - name: Compress Dist Folder
         run: tar -czf front.tar.gz -C dist .
 
-      - name: Create Remote Temp Folder
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER_NAME_RUTA_GO }}
-          key: ${{ secrets.PASSWORD_SSH }}  # <-- Asegurado que use 'key' en minúsculas
-          port: 22
-          script: mkdir -p ~/front_tmp
-
-      - name: Transfer Compressed Front
+      - name: Create Remote Temp Folder and Upload via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER_NAME_RUTA_GO }}
-          key: ${{ secrets.PASSWORD_SSH }}  # <-- Asegurado aquí también
+          key: ${{ secrets.PASSWORD_SSH }}
           port: 22
           source: "front.tar.gz"
           target: "/home/${{ secrets.USER_NAME_RUTA_GO }}/front_tmp/"
 
-      - name: Deploy to Web Directory
+      - name: Deploy to Web Directory via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER_NAME_RUTA_GO }}
-          key: ${{ secrets.PASSWORD_SSH }}  # <-- Y aquí
+          key: ${{ secrets.PASSWORD_SSH }}
           port: 22
           script: |
             cd ~/front_tmp
