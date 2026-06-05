@@ -15,7 +15,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # Versión recomendada para React moderno
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies
@@ -24,7 +24,6 @@ jobs:
       - name: Build React Project
         run: |
           # Inyectar la URL del back. Si usas Vite se usa VITE_APP_API_URL.
-          # Si usaras Create React App cambiar por REACT_APP_API_URL.
           echo "VITE_APP_API_URL=${{ secrets.BACKEND_URL }}" >> .env
           npm run build
 
@@ -33,6 +32,6 @@ jobs:
         env:
           HOST: ${{ secrets.HOST }}
           USER: ${{ secrets.USER_NAME_RUTA_GO }}
-          PASSWORD: ${{ secrets.PASSWORD_SSH }}
-          SOURCE: dist/  # Cambiar a 'build/' si usas Create React App antigua
+          KEY: ${{ secrets.PASSWORD_SSH }}       # <-- CORREGIDO: Cambiamos PASSWORD por KEY para que acepte tu llave SSH
+          SOURCE: dist/
           TARGET: /var/www/seminario1/rutago/
