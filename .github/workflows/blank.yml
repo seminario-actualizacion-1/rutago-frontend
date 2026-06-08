@@ -16,14 +16,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm install
 
       - name: Build React Project
         run: |
-          echo "VITE_APP_API_URL=${{ secrets.BACKEND_URL }}" >> .env
+          # Variable corregida a VITE_API_URL para coincidir con tu código
+          echo "VITE_API_URL=${{ secrets.BACKEND_URL }}" >> .env
           npm run build
 
       - name: Compress Dist Folder
@@ -50,11 +51,11 @@ jobs:
             cd ~/front_tmp
             tar -xzf front.tar.gz
             rm front.tar.gz
-            
+
             # Crear directorio web definitivo y mover los archivos estáticos
             mkdir -p /var/www/seminario1/rutago/
             cp -r * /var/www/seminario1/rutago/
-            
+
             # Limpiar residuos temporales
             cd ~
             rm -rf ~/front_tmp
