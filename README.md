@@ -138,6 +138,31 @@ El proyecto utiliza GitHub y GitHub Actions para automatizar tareas de integraci
 
 ---
 
+## 💻 Frontend
+
+### Correr proyecto
+
+```bash
+# Desde la carpeta rutago-frontend/
+
+# Instalar dependencias
+npm install
+
+# Modo desarrollo
+npm run dev
+
+# Build para producción
+npm run build
+```
+
+### Url local
+
+http://localhost:5173
+
+---
+
+## 🚀 Integración Continua
+
 ## 📋 Metodología Scrum
 
 Herramienta utilizada:
