@@ -22,7 +22,6 @@ function Registro() {
     e.preventDefault();
 
     try {
-      // Enviamos el objeto sin preocuparnos por el rolId, el backend se encarga
       await api.post("/usuarios/registro", formData);
 
       alert("Registro exitoso. Ahora puedes iniciar sesión.");
@@ -32,7 +31,6 @@ function Registro() {
         "Error al registrar el usuario:",
         err.response?.data || err,
       );
-      // Mostramos el mensaje que viene desde el backend (ej: correo ya registrado)
       setError(err.response?.data?.message || "Error al registrarse.");
     }
   };

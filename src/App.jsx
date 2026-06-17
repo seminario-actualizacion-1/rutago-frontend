@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login/Login";
 import Registro from "./pages/Registro/Registro";
 import RecuperarPassword from "./pages/RecuperarPassword/RecuperarPassword";
-import Home from "./pages/Home/Home"; // Usando Home como acordamos
+import Home from "./pages/Home/Home";
 
 function App() {
   return (

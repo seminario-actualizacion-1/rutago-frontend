@@ -18,10 +18,8 @@ function Login() {
 
     try {
       const response = await api.post("/usuarios/login", formData);
-      // Guardar el token para mantener la sesión
       localStorage.setItem("token", response.data.token);
 
-      // Redirigir al inicio después de loguear
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || "Credenciales incorrectas");

@@ -5,8 +5,8 @@ function Home() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Eliminamos el token de la sesión
-    navigate("/login"); // Enviamos al usuario de vuelta al login
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   return (
@@ -21,7 +21,6 @@ function Home() {
       <main className="home-content">
         <h2>Bienvenido al panel principal</h2>
         <p>Aquí verás toda la información de tu cuenta y servicios.</p>
-        {/* Aquí irán tus futuras funcionalidades */}
       </main>
     </div>
   );

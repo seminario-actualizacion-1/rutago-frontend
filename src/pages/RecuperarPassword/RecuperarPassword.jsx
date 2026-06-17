@@ -18,7 +18,6 @@ function RecuperarPassword() {
       await api.post("/usuarios/recuperar-password", { correo });
       setMensaje("Si el correo está registrado, recibirás instrucciones.");
 
-      // Redirigir al inicio después de 3 segundos
       setTimeout(() => navigate("/"), 3000);
     } catch (err) {
       console.error("Error al solicitar recuperación de contraseña:", err);
