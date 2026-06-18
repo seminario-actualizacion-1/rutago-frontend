@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../../api";
+import Input from "../../components/Input/Input";
+import Button from "../../components/Button/Button";
+import Card from "../../components/Card/Card";
 import "./Login.css";
 
 function Login() {
   const [formData, setFormData] = useState({ correo: "", contrasena: "" });
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,43 +21,28 @@ function Login() {
     try {
       const response = await api.post("/usuarios/login", formData);
       localStorage.setItem("token", response.data.token);
-
-      navigate("/");
+      window.location.href = "/";
     } catch (err) {
       setError(err.response?.data?.message || "Credenciales incorrectas");
     }
   };
 
   return (
-    <div className="container">
-      <form className="card" onSubmit={handleSubmit}>
-        <h2>Iniciar Sesión</h2>
+    <div className="login-container">
+      <Card title="Iniciar Sesión">
         {error && <p className="error-message">{error}</p>}
-
-        <input
-          name="correo"
-          type="email"
-          placeholder="Correo electrónico"
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="contrasena"
-          type="password"
-          placeholder="Contraseña"
-          onChange={handleChange}
-          required
-        />
-
-        <button type="submit">Ingresar</button>
-
-        <div className="links">
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <Input name="correo" label="Correo" type="email" placeholder="Correo electrónico" value={formData.correo} onChange={handleChange} />
+          <Input name="contrasena" label="Contraseña" type="password" placeholder="Contraseña" value={formData.contrasena} onChange={handleChange} />
+          <Button type="submit" variant="primary" fullWidth>Ingresar</Button>
+        </form>
+        <div className="login-links">
           <Link to="/recuperar-password">¿Olvidaste tu contraseña?</Link>
           <p>
             ¿No tienes cuenta? <Link to="/registro">Regístrate aquí</Link>
           </p>
         </div>
-      </form>
+      </Card>
     </div>
   );
 }
