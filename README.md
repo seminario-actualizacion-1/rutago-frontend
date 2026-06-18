@@ -208,3 +208,7 @@ Herramienta utilizada:
 ## 📄 Licencia
 
 Proyecto académico desarrollado con fines educativos para la implementación de soluciones tecnológicas orientadas al monitoreo y seguimiento de rutas de transporte en tiempo real.
+
+## 🔗 Enlaces
+
+- Backend: https://github.com/seminario-actualizacion-1/rutago-backend
