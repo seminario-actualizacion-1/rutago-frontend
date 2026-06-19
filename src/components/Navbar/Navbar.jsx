@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import './Navbar.css';
+import "./Navbar.css";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "../Logo/Logo";
 
@@ -7,12 +6,7 @@ export default function Navbar() {
   const location = useLocation();
   const ocultarEn = ["/login", "/registro", "/recuperar-password"];
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, [location.pathname]);
+  const isLoggedIn = !!localStorage.getItem("token");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -48,7 +42,7 @@ export default function Navbar() {
               <Link to="/login" className="nav-btn nav-btn-primary">Iniciar Sesión</Link>
             )}
             {location.pathname === "/recuperar-password" && (
-              <Link to="/login" className="btn btn-outline">Volver a Login</Link>
+              <Link to="/login" className="nav-btn nav-btn-primary">Volver a Login</Link>
             )}
           </div>
         )}

@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import api from "../../api";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import Input from "../../components/Input/Input";
 import Button from "../../components/Button/Button";
 import Card from "../../components/Card/Card";
 import "./Login.css";
 
 function Login() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ correo: "", contrasena: "" });
   const [error, setError] = useState("");
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,11 +21,10 @@ function Login() {
     setError("");
 
     try {
-      const response = await api.post("/usuarios/login", formData);
-      localStorage.setItem("token", response.data.token);
-      window.location.href = "/";
+      await login(formData);
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "Credenciales incorrectas");
+      setError(err.message || "Credenciales incorrectas");
     }
   };
 

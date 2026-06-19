@@ -1,0 +1,27 @@
+.viajes-container {
+  padding: 2rem;
+}
+
+.viajes-header {
+  margin-bottom: 2rem;
+}
+
+.viajes-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.viaje-card {
+  padding: 1rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.viaje-info {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.viaje-info strong {
+  color: #08863A;
+}

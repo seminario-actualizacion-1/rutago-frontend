@@ -1,0 +1,99 @@
+.sidebar {
+  width: 280px;
+  min-height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid #e5e4e7;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid #e5e4e7;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #08863a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.badge {
+  font-size: 0.75rem;
+  color: #555;
+  font-weight: 600;
+}
+
+.nav {
+  padding: 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sectionTitle {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #888;
+  font-weight: 700;
+  margin-bottom: 4px;
+  padding-left: 6px;
+}
+
+.link {
+  display: block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: #333;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.link:hover {
+  background: rgba(8, 134, 58, 0.08);
+  color: #08863a;
+}
+
+.linkActive {
+  display: block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #08863a;
+  color: #fff !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.apiItem {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #444;
+  background: #f7f7f8;
+  border: 1px solid #e5e4e7;
+}
+
+.apiLabel {
+  color: #333;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
