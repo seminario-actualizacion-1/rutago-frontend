@@ -3,6 +3,8 @@ import { createContext, useState, useEffect } from "react";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+  const apiUrl = import.meta.env.VITE_API_URL || "/api";
+
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem("rutago_user");
@@ -26,7 +28,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (credentials) => {
-    const response = await fetch("http://localhost:8082/api/usuarios/login", {
+    const response = await fetch(`${apiUrl}/usuarios/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),

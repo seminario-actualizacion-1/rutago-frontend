@@ -1,9 +1,10 @@
 export function useAuth() {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const isAuthenticated = !!token;
+  const apiUrl = import.meta.env.VITE_API_URL || "/api";
 
   const login = async (credentials) => {
-    const response = await fetch("http://localhost:8082/api/usuarios/login", {
+    const response = await fetch(`${apiUrl}/usuarios/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
