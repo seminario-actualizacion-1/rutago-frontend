@@ -24,7 +24,7 @@ jobs:
       - name: Build React Project
         run: |
           # Variable corregida a VITE_API_URL para coincidir con tu código
-          echo "VITE_API_URL=${{ secrets.BACKEND_URL }}" >> .env
+          echo "VITE_API_URL=${{ secrets.BACKEND_URL }}" >> .env.production
           npm run build
 
       - name: Compress Dist Folder
