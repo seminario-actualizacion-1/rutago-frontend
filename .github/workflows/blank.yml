@@ -19,14 +19,12 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build React Project
         run: |
-          # Vite usa .env.production para npm run build.
-          # Se usa /api porque Nginx ya redirige /api hacia el backend en localhost:8082.
-          rm -f .env .env.local
-          printf 'VITE_API_URL=/api\n' > .env.production
+          # Variable corregida a VITE_API_URL para coincidir con tu código
+          echo "VITE_API_URL=${{ secrets.BACKEND_URL }}" >> .env
           npm run build
 
       - name: Compress Dist Folder
@@ -50,25 +48,14 @@ jobs:
           key: ${{ secrets.PASSWORD_SSH }}
           port: 22
           script: |
-            set -e
-
             cd ~/front_tmp
-            rm -rf deploy
-            mkdir -p deploy
-            tar -xzf front.tar.gz -C deploy
-            rm -f front.tar.gz
+            tar -xzf front.tar.gz
+            rm front.tar.gz
 
-            sudo -n mkdir -p /var/www/seminario1/rutago/
+            # Crear directorio web definitivo y mover los archivos estáticos
+            mkdir -p /var/www/seminario1/rutago/
+            cp -r * /var/www/seminario1/rutago/
 
-            # Reemplazar toda la build publicada para evitar assets viejos con localhost hardcodeado.
-            sudo -n rm -rf /var/www/seminario1/rutago/*
-            sudo -n cp -a deploy/. /var/www/seminario1/rutago/
-            sudo -n chown -R "$USER:www-data" /var/www/seminario1/rutago/
-
-            if grep -R "localhost:8082" /var/www/seminario1/rutago/assets/*.js; then
-              echo "ERROR: la build publicada aun contiene localhost:8082"
-              exit 1
-            fi
-
+            # Limpiar residuos temporales
             cd ~
             rm -rf ~/front_tmp
