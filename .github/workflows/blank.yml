@@ -58,11 +58,12 @@ jobs:
             tar -xzf front.tar.gz -C deploy
             rm -f front.tar.gz
 
-            mkdir -p /var/www/seminario1/rutago/
+            sudo -n mkdir -p /var/www/seminario1/rutago/
 
             # Reemplazar toda la build publicada para evitar assets viejos con localhost hardcodeado.
-            rm -rf /var/www/seminario1/rutago/*
-            cp -a deploy/. /var/www/seminario1/rutago/
+            sudo -n rm -rf /var/www/seminario1/rutago/*
+            sudo -n cp -a deploy/. /var/www/seminario1/rutago/
+            sudo -n chown -R "$USER:www-data" /var/www/seminario1/rutago/
 
             if grep -R "localhost:8082" /var/www/seminario1/rutago/assets/*.js; then
               echo "ERROR: la build publicada aun contiene localhost:8082"
