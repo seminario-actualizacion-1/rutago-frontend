@@ -1,17 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-//import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../hooks/useAuth";
 import Input from "../../components/Input/Input";
 import Button from "../../components/Button/Button";
 import Card from "../../components/Card/Card";
 import "./Login.css";
-import api from "../../api";
 
 function Login() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ correo: "", contrasena: "" });
   const [error, setError] = useState("");
-  //const { login } = useAuth();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,7 +21,7 @@ function Login() {
     setError("");
 
     try {
-      await api.post("/usuarios/login", formData);
+      await login(formData);
       navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Credenciales incorrectas");
@@ -54,7 +53,7 @@ function Login() {
             onChange={handleChange}
           />
           <Button type="submit" variant="primary" fullWidth>
-            Ingresar:(Data)
+            Ingresar
           </Button>
         </form>
         <div className="login-links">
