@@ -21,6 +21,7 @@ export function useAuth() {
         id: data.usuario?.id,
         nombres: data.usuario?.nombres,
         rolId: data.usuario?.rolId,
+        rol: data.usuario?.rol,
       })
     );
   };
