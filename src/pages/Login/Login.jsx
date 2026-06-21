@@ -54,7 +54,7 @@ function Login() {
             onChange={handleChange}
           />
           <Button type="submit" variant="primary" fullWidth>
-            Ingresar
+            Ingresar:(Data)
           </Button>
         </form>
         <div className="login-links">
