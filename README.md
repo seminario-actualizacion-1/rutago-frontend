@@ -212,3 +212,5 @@ Proyecto académico desarrollado con fines educativos para la implementación de
 ## 🔗 Enlaces
 
 - Backend: https://github.com/seminario-actualizacion-1/rutago-backend
+
+- TRELLO : https://trello.com/b/zR4MFcBH
