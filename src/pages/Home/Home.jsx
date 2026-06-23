@@ -33,7 +33,25 @@ function Home() {
             Conecta pasajeros, conductores y entidades en una sola plataforma.
             Gestiona rutas, solicita viajes y administra el sistema desde un solo lugar.
           </p>
+      {!isLoggedIn && (
+  <p className="login-message">
+    Inicia sesión para buscar rutas, horarios y buses disponibles.
+  </p>
+)}
 
+{isLoggedIn && (
+  <div className="search-section">
+    <input
+      type="text"
+      placeholder="¿A qué destino deseas viajar?"
+      className="search-input"
+    />
+
+    <button className="search-button">
+      Buscar buses
+    </button>
+  </div>
+)}
           <div className="home-actions">
             {!isLoggedIn ? (
               <>

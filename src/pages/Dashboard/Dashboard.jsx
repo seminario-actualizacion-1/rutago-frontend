@@ -26,7 +26,65 @@ export default function Dashboard() {
       <div style={{ marginTop: "1.5rem" }}>
         {rol === 1 && <p>Aquí irá la gestión de usuarios, roles, comunas y barrios.</p>}
         {rol === 2 && <p>Aquí irá el panel de conductor: viajes, estado y perfil.</p>}
-        {rol === 3 && <p>Aquí irá el panel de pasajero: solicitar/ver viajes.</p>}
+        {rol === 3 && (
+  <div>
+    <h2>Buscar Ruta</h2>
+
+    <input
+      type="text"
+      placeholder="¿A qué destino deseas viajar?"
+      style={{
+        padding: "10px",
+        width: "300px",
+        borderRadius: "8px",
+        border: "1px solid #ccc",
+      }}
+    />
+
+    <button
+      style={{
+        marginLeft: "10px",
+        padding: "10px 15px",
+        backgroundColor: "#08863A",
+        color: "white",
+        border: "none",
+        borderRadius: "8px",
+        cursor: "pointer",
+      }}
+    >
+      Buscar
+    </button>
+
+    <div style={{ marginTop: "20px" }}>
+      <h3>Resultados</h3>
+
+      <div
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: "10px",
+          padding: "15px",
+          marginBottom: "10px",
+        }}
+      >
+        <h4>Expreso Pacífico</h4>
+        <p>Ruta: Buenaventura → Cali</p>
+        <p>Horario: 08:00 AM</p>
+      </div>
+
+      <div
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: "10px",
+          padding: "15px",
+        }}
+      >
+        <h4>TransBuenaventura</h4>
+        <p>Ruta: Buenaventura → Cali</p>
+        <p>Horario: 10:00 AM</p>
+      </div>
+    </div>
+  </div>
+)}
         {rol === 4 && <p>Aquí irá el panel de entidad externa: vehículos y publicación.</p>}
       </div>
     </div>
