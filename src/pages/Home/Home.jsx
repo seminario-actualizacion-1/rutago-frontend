@@ -56,9 +56,15 @@ setResultados(response.data);s
               onChange={(e) => setDestino(e.target.value)}
             />
 
-            <Button variant="primary" onClick={buscarDestino}>
-              Buscar
-            </Button>
+            <Button
+  variant="primary"
+  onClick={() => {
+    alert("Botón funcionando");
+    buscarDestino();
+  }}
+>
+  Buscar
+</Button>
 
             {resultados.length > 0 && (
               <div style={{ marginTop: "20px" }}>
