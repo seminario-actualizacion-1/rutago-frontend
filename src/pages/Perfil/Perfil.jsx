@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../../api";
-import Card from "../../components/Card/Card";
-import Button from "../../components/Button/Button";
-import Input from "../../components/Input/Input";
 import "./Perfil.css";
 
 function obtenerRol(rolId) {
@@ -21,8 +17,7 @@ function obtenerRol(rolId) {
   }
 }
 
-function Perfil() {
-  const navigate = useNavigate();
+export default function Perfil() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -33,10 +28,6 @@ function Perfil() {
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    fetchPerfil();
-  }, []);
 
   const fetchPerfil = async () => {
     try {
@@ -53,6 +44,11 @@ function Perfil() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPerfil();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -88,101 +84,125 @@ function Perfil() {
   };
 
   if (loading && !user) {
-    return <p style={{ textAlign: "center", marginTop: "2rem" }}>Cargando perfil...</p>;
+    return (
+      <div className="perfil-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando perfil...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
-    return <p style={{ textAlign: "center", marginTop: "2rem" }}>No se pudo cargar el perfil</p>;
+    return (
+      <div className="perfil-container">
+        <p className="error">No se pudo cargar el perfil</p>
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-      <h1 style={{ marginBottom: "1.5rem" }}>Mi Perfil</h1>
-      
-      <Card title="Información Personal">
-        {message && (
-          <div style={{ 
-            padding: "0.75rem", 
-            marginBottom: "1rem", 
-            backgroundColor: "#e8f5e9", 
-            borderRadius: "6px", 
-            color: "#2e7d32" 
-          }}>
-            {message}
-          </div>
-        )}
-        
-        {error && (
-          <div style={{ 
-            padding: "0.75rem", 
-            marginBottom: "1rem", 
-            backgroundColor: "#ffebee", 
-            borderRadius: "6px", 
-            color: "#c62828" 
-          }}>
-            {error}
-          </div>
-        )}
+    <div className="perfil-container">
+      <div className="page-header">
+        <h1>Mi Perfil</h1>
+      </div>
 
-        {!editing ? (
-          <div style={{ display: "grid", gap: "1rem" }}>
-            <div>
-              <strong>Nombre:</strong> {user.nombres}
+      <div className="perfil-content">
+        <div className="bg-white rounded-lg shadow-sm">
+          {message && (
+            <div className="success-message">
+              {message}
             </div>
-            <div>
-              <strong>Apellidos:</strong> {user.apellidos}
+          )}
+
+          {error && (
+            <div className="error-message">
+              {error}
             </div>
-            <div>
-              <strong>Correo:</strong> {user.correo}
+          )}
+
+          {!editing ? (
+            <div className="perfil-info">
+              <div className="perfil-row">
+                <span className="perfil-label">Nombre:</span>
+                <span className="perfil-value">{user.nombres}</span>
+              </div>
+              <div className="perfil-row">
+                <span className="perfil-label">Apellidos:</span>
+                <span className="perfil-value">{user.apellidos}</span>
+              </div>
+              <div className="perfil-row">
+                <span className="perfil-label">Correo:</span>
+                <span className="perfil-value">{user.correo}</span>
+              </div>
+              <div className="perfil-row">
+                <span className="perfil-label">Rol:</span>
+                <span className="perfil-value">{obtenerRol(user.rolId)}</span>
+              </div>
+
+              <div className="perfil-actions">
+                <button onClick={() => setEditing(true)} className="button button-primary">
+                  Editar Perfil
+                </button>
+              </div>
             </div>
-            <div>
-              <strong>Rol:</strong> {obtenerRol(user.rolId)}
-            </div>
-            <div style={{ marginTop: "1rem" }}>
-              <Button variant="primary" onClick={() => setEditing(true)}>
-                Editar Perfil
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSave} style={{ display: "grid", gap: "1rem" }}>
-            <Input
-              name="nombres"
-              label="Nombres"
-              value={formData.nombres}
-              onChange={handleChange}
-            />
-            <Input
-              name="apellidos"
-              label="Apellidos"
-              value={formData.apellidos}
-              onChange={handleChange}
-            />
-            <Input
-              name="correo"
-              label="Correo"
-              type="email"
-              value={formData.correo}
-              onChange={handleChange}
-            />
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-              <Button type="submit" variant="primary" disabled={loading}>
-                {loading ? "Guardando..." : "Guardar Cambios"}
-              </Button>
-              <Button 
-                type="button" 
-                variant="secondary" 
-                onClick={handleCancel}
-                disabled={loading}
-              >
-                Cancelar
-              </Button>
-            </div>
-          </form>
-        )}
-      </Card>
+          ) : (
+            <form onSubmit={handleSave} className="perfil-form">
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+                  Nombres
+                </label>
+                <input
+                  type="text"
+                  name="nombres"
+                  value={formData.nombres}
+                  onChange={handleChange}
+                  className="input"
+                  style={{ width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+                  Apellidos
+                </label>
+                <input
+                  type="text"
+                  name="apellidos"
+                  value={formData.apellidos}
+                  onChange={handleChange}
+                  className="input"
+                  style={{ width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+                  Correo
+                </label>
+                <input
+                  type="email"
+                  name="correo"
+                  value={formData.correo}
+                  onChange={handleChange}
+                  className="input"
+                  style={{ width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                <button type="button" onClick={handleCancel} className="button button-outline">
+                  Cancelar
+                </button>
+                <button type="submit" className="button button-primary" disabled={loading}>
+                  {loading ? "Guardando..." : "Guardar Cambios"}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
-
-export default Perfil;

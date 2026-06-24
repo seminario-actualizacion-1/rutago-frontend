@@ -18,6 +18,7 @@ import Rutas from "./pages/Rutas/Rutas";
 import Entidades from "./pages/Entidades/Entidades";
 import Perfil from "./pages/Perfil/Perfil";
 import Viajes from "./pages/Viajes/Viajes";
+import Usuarios from "./pages/Usuarios/Usuarios";
 import "./index.css";
 
 function getInitialUser() {
@@ -58,6 +59,7 @@ export default function App() {
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/usuarios" element={<Usuarios />} />
               <Route path="/pasajeros" element={<Pasajeros />} />
               <Route path="/conductores" element={<Conductores />} />
               <Route path="/vehiculos" element={<Vehiculos />} />

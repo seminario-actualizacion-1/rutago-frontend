@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button/Button";
-import Card from "../../components/Card/Card";
 import busImage from "../../assets/RutaGo.png";
 import "./Home.css";
 
@@ -25,8 +24,8 @@ function Home() {
             className="home-hero-image"
           />
           <h1 className="home-hero-title">
-            <span style={{ color: "#08863A" }}>Ruta</span>
-            <span style={{ color: "#FDC202", marginLeft: 6 }}>Go</span>
+            <span className="text-verde">Ruta</span>
+            <span className="text-amarillo">Go</span>
           </h1>
           <p className="home-subtitle">Movilidad inteligente para Buenaventura</p>
           <p className="home-description">
