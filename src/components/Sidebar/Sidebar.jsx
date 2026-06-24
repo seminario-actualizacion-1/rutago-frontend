@@ -6,6 +6,8 @@ const menus = {
     titulo: "Administrador",
     modulos: [
       { to: "/dashboard", label: "Inicio" },
+      { to: "/perfil", label: "Mi perfil" },
+      { to: "/usuarios", label: "Usuarios" },
       { to: "/pasajeros", label: "Pasajeros" },
       { to: "/conductores", label: "Conductores" },
       { to: "/vehiculos", label: "Vehículos" },
@@ -13,31 +15,30 @@ const menus = {
       { to: "/comunas", label: "Comunas" },
       { to: "/rutas", label: "Rutas" },
       { to: "/entidades", label: "Entidades" },
-      { to: "/perfil", label: "Mi perfil" },
     ],
   },
   2: {
     titulo: "Conductor",
     modulos: [
       { to: "/dashboard", label: "Inicio" },
-      { to: "/viajes", label: "Mis viajes" },
       { to: "/perfil", label: "Mi perfil" },
+      { to: "/viajes", label: "Mis viajes" },
     ],
   },
   3: {
     titulo: "Pasajero",
     modulos: [
       { to: "/dashboard", label: "Inicio" },
-      { to: "/viajes", label: "Solicitar viaje" },
       { to: "/perfil", label: "Mi perfil" },
+      { to: "/viajes", label: "Solicitar viaje" },
     ],
   },
   4: {
     titulo: "Entidad Externa",
     modulos: [
       { to: "/dashboard", label: "Inicio" },
-      { to: "/vehiculos", label: "Vehículos" },
       { to: "/perfil", label: "Mi perfil" },
+      { to: "/vehiculos", label: "Vehículos" },
     ],
   },
 };

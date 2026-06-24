@@ -28,9 +28,19 @@
 
 .home-hero-title {
   font-size: 2.4rem;
-  color: #08863A;
+  font-weight: 700;
   margin: 0;
   line-height: 1.1;
+  color: #1f2937;
+}
+
+.text-verde {
+  color: #08863A;
+}
+
+.text-amarillo {
+  color: #FDC202;
+  margin-left: 6px;
 }
 
 .home-subtitle {
