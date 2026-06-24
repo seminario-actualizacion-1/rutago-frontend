@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button/Button";
 import busImage from "../../assets/RutaGo.png";
+import Input from "../../components/Input/Input";
+import api from "../../api";
 import "./Home.css";
 
 const features = [
@@ -13,6 +16,18 @@ const features = [
 function Home() {
   const navigate = useNavigate();
   const isLoggedIn = !!localStorage.getItem("token");
+
+  const [destino, setDestino] = useState("");
+const [resultados, setResultados] = useState([]);
+
+const buscarDestino = async () => {
+  try {
+    const response = await api.get(`/rutas/destino/${destino}`);
+    setResultados(response.data);
+  } catch (error) {
+    console.error("Error al buscar destino:", error);
+  }
+};
 
   return (
     <div className="home-container">
@@ -32,6 +47,18 @@ function Home() {
             Conecta pasajeros, conductores y entidades en una sola plataforma.
             Gestiona rutas, solicita viajes y administra el sistema desde un solo lugar.
           </p>
+          <div style={{ marginTop: "20px" }}>
+  <Input
+    name="destino"
+    placeholder="Ingrese destino"
+    value={destino}
+    onChange={(e) => setDestino(e.target.value)}
+  />
+
+  <Button variant="primary" onClick={buscarDestino}>
+    Buscar
+  </Button>
+</div>
 
           <div className="home-actions">
             {!isLoggedIn ? (
