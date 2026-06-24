@@ -7,10 +7,22 @@ import api from "../../api";
 import "./Home.css";
 
 const features = [
-  { title: "Rutas inteligentes", desc: "Encuentra el mejor camino por comunas y barrios de Buenaventura." },
-  { title: "Conductores verificados", desc: "Viaja con conductores registrados y perfiles validados." },
-  { title: "Solicitudes rápidas", desc: "Pide un viaje en segundos y recibe respuestas en tiempo real." },
-  { title: "Control total", desc: "Administra usuarios, vehículos y rutas desde un solo lugar." },
+  {
+    title: "Rutas inteligentes",
+    desc: "Encuentra el mejor camino por comunas y barrios de Buenaventura.",
+  },
+  {
+    title: "Conductores verificados",
+    desc: "Viaja con conductores registrados y perfiles validados.",
+  },
+  {
+    title: "Solicitudes rápidas",
+    desc: "Pide un viaje en segundos y recibe respuestas en tiempo real.",
+  },
+  {
+    title: "Control total",
+    desc: "Administra usuarios, vehículos y rutas desde un solo lugar.",
+  },
 ];
 
 function Home() {
@@ -22,9 +34,11 @@ function Home() {
 
   const buscarDestino = async () => {
     try {
-      const response = await api.get(`/rutas/destino/${encodeURIComponent(destino)}`);
-alert(JSON.stringify(response.data));
-setResultados(response.data);s
+      const response = await api.get(
+        `/rutas/destino/${encodeURIComponent(destino)}`
+      );
+
+      setResultados(response.data);
     } catch (error) {
       console.error("Error al buscar destino:", error);
     }
@@ -34,14 +48,20 @@ setResultados(response.data);s
     <div className="home-container">
       <header className="home-hero">
         <div className="home-hero-content">
-          <img src={busImage} alt="RutaGo" className="home-hero-image" />
+          <img
+            src={busImage}
+            alt="RutaGo"
+            className="home-hero-image"
+          />
 
           <h1 className="home-hero-title">
             <span className="text-verde">Ruta</span>
             <span className="text-amarillo">Go</span>
           </h1>
 
-          <p className="home-subtitle">Movilidad inteligente para Buenaventura</p>
+          <p className="home-subtitle">
+            Movilidad inteligente para Buenaventura
+          </p>
 
           <p className="home-description">
             Conecta pasajeros, conductores y entidades en una sola plataforma.
@@ -56,26 +76,33 @@ setResultados(response.data);s
               onChange={(e) => setDestino(e.target.value)}
             />
 
-            <Button
-  variant="primary"
-  onClick={() => {
-    alert("Botón funcionando");
-    buscarDestino();
-  }}
->
-  Buscar
-</Button>
+            <Button variant="primary" onClick={buscarDestino}>
+              Buscar
+            </Button>
 
             {resultados.length > 0 && (
               <div style={{ marginTop: "20px" }}>
-                <h3>Resultados encontrados:</h3>
+                <h3>Resultados encontrados</h3>
 
                 {resultados.map((ruta) => (
                   <div key={ruta.id} className="feature-card">
                     <h4>{ruta.nombre}</h4>
-                    <p>Origen: {ruta.origen?.nombre}</p>
-                    <p>Destino: {ruta.destino?.nombre}</p>
-                    <p>Descripción: {ruta.descripcion}</p>
+                    <p>
+                      <strong>Origen:</strong> {ruta.origen?.nombre}
+                    </p>
+                    <p>
+                      <strong>Destino:</strong> {ruta.destino?.nombre}
+                    </p>
+                    <p>
+                      <strong>Descripción:</strong> {ruta.descripcion}
+                    </p>
+                    <p>
+                      <strong>Distancia:</strong> {ruta.distanciaKm} km
+                    </p>
+                    <p>
+                      <strong>Tiempo estimado:</strong>{" "}
+                      {ruta.tiempoEstimadoMinutos} minutos
+                    </p>
                   </div>
                 ))}
               </div>
@@ -85,10 +112,17 @@ setResultados(response.data);s
           <div className="home-actions">
             {!isLoggedIn ? (
               <>
-                <Button variant="primary" onClick={() => navigate("/login")}>
+                <Button
+                  variant="primary"
+                  onClick={() => navigate("/login")}
+                >
                   Iniciar Sesión
                 </Button>
-                <Button variant="accent" onClick={() => navigate("/registro")}>
+
+                <Button
+                  variant="accent"
+                  onClick={() => navigate("/registro")}
+                >
                   Crear cuenta
                 </Button>
               </>
@@ -99,6 +133,7 @@ setResultados(response.data);s
 
       <section className="home-features">
         <h2>¿Qué puedes hacer en RutaGo?</h2>
+
         <div className="features-grid">
           {features.map((feature) => (
             <div key={feature.title} className="feature-card">
