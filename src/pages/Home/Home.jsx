@@ -22,8 +22,9 @@ function Home() {
 
   const buscarDestino = async () => {
     try {
-      const response = await api.get(`/rutas/destino/${destino}`);
-      setResultados(response.data);
+      const response = await api.get(`/rutas/destino/${encodeURIComponent(destino)}`);
+alert(JSON.stringify(response.data));
+setResultados(response.data);s
     } catch (error) {
       console.error("Error al buscar destino:", error);
     }
