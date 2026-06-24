@@ -18,53 +18,72 @@ function Home() {
   const isLoggedIn = !!localStorage.getItem("token");
 
   const [destino, setDestino] = useState("");
-const [resultados, setResultados] = useState([]);
+  const [resultados, setResultados] = useState([]);
 
-const buscarDestino = async () => {
-  try {
-    const response = await api.get(`/rutas/destino/${destino}`);
-    setResultados(response.data);
-  } catch (error) {
-    console.error("Error al buscar destino:", error);
-  }
-};
+  const buscarDestino = async () => {
+    try {
+      const response = await api.get(`/rutas/destino/${destino}`);
+      setResultados(response.data);
+    } catch (error) {
+      console.error("Error al buscar destino:", error);
+    }
+  };
 
   return (
     <div className="home-container">
       <header className="home-hero">
         <div className="home-hero-content">
-          <img
-            src={busImage}
-            alt="RutaGo"
-            className="home-hero-image"
-          />
+          <img src={busImage} alt="RutaGo" className="home-hero-image" />
+
           <h1 className="home-hero-title">
             <span className="text-verde">Ruta</span>
             <span className="text-amarillo">Go</span>
           </h1>
+
           <p className="home-subtitle">Movilidad inteligente para Buenaventura</p>
+
           <p className="home-description">
             Conecta pasajeros, conductores y entidades en una sola plataforma.
             Gestiona rutas, solicita viajes y administra el sistema desde un solo lugar.
           </p>
-          <div style={{ marginTop: "20px" }}>
-  <Input
-    name="destino"
-    placeholder="Ingrese destino"
-    value={destino}
-    onChange={(e) => setDestino(e.target.value)}
-  />
 
-  <Button variant="primary" onClick={buscarDestino}>
-    Buscar
-  </Button>
-</div>
+          <div style={{ marginTop: "20px" }}>
+            <Input
+              name="destino"
+              placeholder="Ingrese destino"
+              value={destino}
+              onChange={(e) => setDestino(e.target.value)}
+            />
+
+            <Button variant="primary" onClick={buscarDestino}>
+              Buscar
+            </Button>
+
+            {resultados.length > 0 && (
+              <div style={{ marginTop: "20px" }}>
+                <h3>Resultados encontrados:</h3>
+
+                {resultados.map((ruta) => (
+                  <div key={ruta.id} className="feature-card">
+                    <h4>{ruta.nombre}</h4>
+                    <p>Origen: {ruta.origen?.nombre}</p>
+                    <p>Destino: {ruta.destino?.nombre}</p>
+                    <p>Descripción: {ruta.descripcion}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="home-actions">
             {!isLoggedIn ? (
               <>
-                <Button variant="primary" onClick={() => navigate("/login")}>Iniciar Sesión</Button>
-                <Button variant="accent" onClick={() => navigate("/registro")}>Crear cuenta</Button>
+                <Button variant="primary" onClick={() => navigate("/login")}>
+                  Iniciar Sesión
+                </Button>
+                <Button variant="accent" onClick={() => navigate("/registro")}>
+                  Crear cuenta
+                </Button>
               </>
             ) : null}
           </div>
