@@ -95,10 +95,12 @@ function Home() {
                     {ruta.horarios?.length > 0 ? (
                       ruta.horarios.map((horario) => (
                         <div key={horario.id} className="feature-card">
-                          <p><strong>Placa:</strong> {horario.vehiculo?.placa}</p>
-                          <p><strong>Empresa:</strong> {horario.vehiculo?.perfilEntidad?.razonSocial}</p>
-                          <p><strong>Capacidad:</strong> {horario.vehiculo?.capacidadPasajeros} pasajeros</p>
-                        </div>
+  <p><strong>Placa:</strong> {horario.vehiculo?.placa}</p>
+  <p><strong>Empresa:</strong> {horario.vehiculo?.perfilEntidad?.razonSocial}</p>
+  <p><strong>Capacidad:</strong> {horario.vehiculo?.capacidadPasajeros} pasajeros</p>
+  <p><strong>Hora de salida:</strong> {horario.horaSalida}</p>
+  <p><strong>Frecuencia:</strong> cada {horario.frecuenciaMinutos} minutos</p>
+</div>
                       ))
                     ) : (
                       <p>No hay buses disponibles para esta ruta.</p>
