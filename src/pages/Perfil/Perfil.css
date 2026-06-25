@@ -288,3 +288,9 @@
     padding: 15px;
   }
 }
+.botones-detalle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}

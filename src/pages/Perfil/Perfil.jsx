@@ -34,12 +34,13 @@ export default function Perfil() {
   const [destino, setDestino] = useState("");
   const [resultados, setResultados] = useState([]);
   const [busSeleccionado, setBusSeleccionado] = useState(null);
+  const [detalleActivo, setDetalleActivo] = useState("");
   const [busquedaRealizada, setBusquedaRealizada] = useState(false);
   const [toast, setToast] = useState("");
 
   const mostrarToast = (mensaje) => {
     setToast(mensaje);
-    setTimeout(() => setToast(""), 4000);
+    setTimeout(() => setToast(""), 3500);
   };
 
   const obtenerEstadoTexto = (estado) => {
@@ -115,22 +116,26 @@ export default function Perfil() {
 
       setResultados(response.data);
       setBusSeleccionado(null);
+      setDetalleActivo("");
       setBusquedaRealizada(true);
     } catch (err) {
       console.error("Error al buscar destino:", err);
       setResultados([]);
+      setBusSeleccionado(null);
+      setDetalleActivo("");
       setBusquedaRealizada(true);
     }
   };
 
-  const seleccionarBus = (ruta, horario) => {
+  const mostrarDetalle = (ruta, horario, tipoDetalle) => {
     setBusSeleccionado({
       ruta,
       horario,
       vehiculo: horario.vehiculo,
     });
 
-    mostrarToast("Bus seleccionado correctamente");
+    setDetalleActivo(tipoDetalle);
+    mostrarToast("Información cargada correctamente");
   };
 
   if (loading && !user) {
@@ -254,7 +259,7 @@ export default function Perfil() {
         <div className="bg-white rounded-lg shadow-sm">
           <h2>Buscar buses por destino</h2>
           <p className="perfil-description">
-            Consulta rutas, buses disponibles, horarios y estado del vehículo.
+            Escribe el destino y consulta los buses disponibles paso a paso.
           </p>
 
           <div className="buscador-rutas">
@@ -279,7 +284,7 @@ export default function Perfil() {
 
           {resultados.length > 0 && (
             <div className="resultados-rutas">
-              <h3>Resultados encontrados</h3>
+              <h3>Buses encontrados</h3>
 
               {resultados.map((ruta) => (
                 <div key={ruta.id} className="ruta-card">
@@ -288,46 +293,28 @@ export default function Perfil() {
                   <p>
                     <strong>Origen:</strong> {ruta.origen?.nombre}
                   </p>
+
                   <p>
                     <strong>Destino:</strong> {ruta.destino?.nombre}
-                  </p>
-                  <p>
-                    <strong>Descripción:</strong> {ruta.descripcion}
-                  </p>
-                  <p>
-                    <strong>Distancia:</strong> {ruta.distanciaKm} km
-                  </p>
-                  <p>
-                    <strong>Tiempo estimado:</strong>{" "}
-                    {ruta.tiempoEstimadoMinutos} minutos
                   </p>
 
                   <hr />
 
-                  <h3>Autobuses disponibles</h3>
-
                   {ruta.horarios?.length > 0 ? (
                     ruta.horarios.map((horario) => (
                       <div key={horario.id} className="bus-card">
-                        <p>
-                          <strong>Placa:</strong> {horario.vehiculo?.placa}
-                        </p>
+                        <h3>Bus {horario.vehiculo?.placa}</h3>
+
                         <p>
                           <strong>Empresa:</strong>{" "}
                           {horario.vehiculo?.perfilEntidad?.razonSocial}
                         </p>
+
                         <p>
                           <strong>Capacidad:</strong>{" "}
                           {horario.vehiculo?.capacidadPasajeros} pasajeros
                         </p>
-                        <p>
-                          <strong>Hora de salida:</strong>{" "}
-                          {horario.horaSalida}
-                        </p>
-                        <p>
-                          <strong>Frecuencia:</strong> cada{" "}
-                          {horario.frecuenciaMinutos} minutos
-                        </p>
+
                         <p>
                           <strong>Estado:</strong>{" "}
                           <span
@@ -339,12 +326,43 @@ export default function Perfil() {
                           </span>
                         </p>
 
-                        <button
-                          className="button button-primary"
-                          onClick={() => seleccionarBus(ruta, horario)}
-                        >
-                          Ver resumen
-                        </button>
+                        <div className="botones-detalle">
+                          <button
+                            className="button button-outline"
+                            onClick={() =>
+                              mostrarDetalle(ruta, horario, "horario")
+                            }
+                          >
+                            Ver horario
+                          </button>
+
+                          <button
+                            className="button button-outline"
+                            onClick={() =>
+                              mostrarDetalle(ruta, horario, "frecuencia")
+                            }
+                          >
+                            Ver frecuencia
+                          </button>
+
+                          <button
+                            className="button button-primary"
+                            onClick={() =>
+                              mostrarDetalle(ruta, horario, "resumen")
+                            }
+                          >
+                            Ver resumen
+                          </button>
+
+                          <button
+                            className="button button-outline"
+                            onClick={() =>
+                              mostrarDetalle(ruta, horario, "ubicacion")
+                            }
+                          >
+                            Ver ubicación
+                          </button>
+                        </div>
                       </div>
                     ))
                   ) : (
@@ -355,7 +373,37 @@ export default function Perfil() {
             </div>
           )}
 
-          {busSeleccionado && (
+          {busSeleccionado && detalleActivo === "horario" && (
+            <div className="resumen-card">
+              <h3>Horario del bus</h3>
+              <p>
+                <strong>Bus:</strong> {busSeleccionado.vehiculo?.placa}
+              </p>
+              <p>
+                <strong>Destino:</strong>{" "}
+                {busSeleccionado.ruta?.destino?.nombre}
+              </p>
+              <p>
+                <strong>Hora de salida:</strong>{" "}
+                {busSeleccionado.horario?.horaSalida}
+              </p>
+            </div>
+          )}
+
+          {busSeleccionado && detalleActivo === "frecuencia" && (
+            <div className="resumen-card">
+              <h3>Frecuencia del bus</h3>
+              <p>
+                <strong>Bus:</strong> {busSeleccionado.vehiculo?.placa}
+              </p>
+              <p>
+                <strong>Frecuencia:</strong> cada{" "}
+                {busSeleccionado.horario?.frecuenciaMinutos} minutos
+              </p>
+            </div>
+          )}
+
+          {busSeleccionado && detalleActivo === "resumen" && (
             <div className="resumen-card">
               <h3>Resumen del bus seleccionado</h3>
 
@@ -363,44 +411,59 @@ export default function Perfil() {
                 <strong>Destino:</strong>{" "}
                 {busSeleccionado.ruta?.destino?.nombre}
               </p>
+
               <p>
                 <strong>Horario:</strong>{" "}
                 {busSeleccionado.horario?.horaSalida}
               </p>
+
               <p>
                 <strong>Frecuencia:</strong> cada{" "}
                 {busSeleccionado.horario?.frecuenciaMinutos} minutos
               </p>
+
               <p>
                 <strong>Estado:</strong>{" "}
                 {obtenerEstadoTexto(busSeleccionado.vehiculo?.estado)}
               </p>
+
               <p>
                 <strong>Placa:</strong> {busSeleccionado.vehiculo?.placa}
               </p>
+
               <p>
                 <strong>Empresa:</strong>{" "}
                 {busSeleccionado.vehiculo?.perfilEntidad?.razonSocial}
               </p>
+
               <p>
                 <strong>Capacidad:</strong>{" "}
                 {busSeleccionado.vehiculo?.capacidadPasajeros} pasajeros
               </p>
+            </div>
+          )}
 
-              <hr />
+          {busSeleccionado && detalleActivo === "ubicacion" && (
+            <div className="resumen-card">
+              <h3>Ubicación del bus</h3>
 
-              <h4>Ubicación del bus</h4>
+              <p>
+                <strong>Bus:</strong> {busSeleccionado.vehiculo?.placa}
+              </p>
 
               <div className="mapa-simulado">
                 <div className="bus-icon">🚌</div>
+
                 <p>
                   <strong>Latitud:</strong>{" "}
                   {busSeleccionado.vehiculo?.latitud || "3.8801"}
                 </p>
+
                 <p>
                   <strong>Longitud:</strong>{" "}
                   {busSeleccionado.vehiculo?.longitud || "-77.0312"}
                 </p>
+
                 <small>Ubicación simulada del bus</small>
               </div>
             </div>
