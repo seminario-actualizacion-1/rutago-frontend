@@ -48,20 +48,14 @@ function Home() {
     <div className="home-container">
       <header className="home-hero">
         <div className="home-hero-content">
-          <img
-            src={busImage}
-            alt="RutaGo"
-            className="home-hero-image"
-          />
+          <img src={busImage} alt="RutaGo" className="home-hero-image" />
 
           <h1 className="home-hero-title">
             <span className="text-verde">Ruta</span>
             <span className="text-amarillo">Go</span>
           </h1>
 
-          <p className="home-subtitle">
-            Movilidad inteligente para Buenaventura
-          </p>
+          <p className="home-subtitle">Movilidad inteligente para Buenaventura</p>
 
           <p className="home-description">
             Conecta pasajeros, conductores y entidades en una sola plataforma.
@@ -87,22 +81,28 @@ function Home() {
                 {resultados.map((ruta) => (
                   <div key={ruta.id} className="feature-card">
                     <h4>{ruta.nombre}</h4>
-                    <p>
-                      <strong>Origen:</strong> {ruta.origen?.nombre}
-                    </p>
-                    <p>
-                      <strong>Destino:</strong> {ruta.destino?.nombre}
-                    </p>
-                    <p>
-                      <strong>Descripción:</strong> {ruta.descripcion}
-                    </p>
-                    <p>
-                      <strong>Distancia:</strong> {ruta.distanciaKm} km
-                    </p>
-                    <p>
-                      <strong>Tiempo estimado:</strong>{" "}
-                      {ruta.tiempoEstimadoMinutos} minutos
-                    </p>
+
+                    <p><strong>Origen:</strong> {ruta.origen?.nombre}</p>
+                    <p><strong>Destino:</strong> {ruta.destino?.nombre}</p>
+                    <p><strong>Descripción:</strong> {ruta.descripcion}</p>
+                    <p><strong>Distancia:</strong> {ruta.distanciaKm} km</p>
+                    <p><strong>Tiempo estimado:</strong> {ruta.tiempoEstimadoMinutos} minutos</p>
+
+                    <hr />
+
+                    <h4>Buses disponibles</h4>
+
+                    {ruta.horarios?.length > 0 ? (
+                      ruta.horarios.map((horario) => (
+                        <div key={horario.id} className="feature-card">
+                          <p><strong>Placa:</strong> {horario.vehiculo?.placa}</p>
+                          <p><strong>Empresa:</strong> {horario.vehiculo?.perfilEntidad?.razonSocial}</p>
+                          <p><strong>Capacidad:</strong> {horario.vehiculo?.capacidadPasajeros} pasajeros</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p>No hay buses disponibles para esta ruta.</p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -112,17 +112,11 @@ function Home() {
           <div className="home-actions">
             {!isLoggedIn ? (
               <>
-                <Button
-                  variant="primary"
-                  onClick={() => navigate("/login")}
-                >
+                <Button variant="primary" onClick={() => navigate("/login")}>
                   Iniciar Sesión
                 </Button>
 
-                <Button
-                  variant="accent"
-                  onClick={() => navigate("/registro")}
-                >
+                <Button variant="accent" onClick={() => navigate("/registro")}>
                   Crear cuenta
                 </Button>
               </>
