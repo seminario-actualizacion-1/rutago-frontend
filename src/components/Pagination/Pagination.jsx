@@ -1,4 +1,3 @@
-import React from "react";
 import "./Pagination.css";
 
 const Pagination = ({
@@ -37,7 +36,7 @@ const Pagination = ({
   const pageNumbers = getPageNumbers();
 
   const handleItemsPerPageChange = (e) => {
-    const newLimit = parseInt(e.target.value);
+    const newLimit = parseInt(e.target.value, 10);
     onItemsPerPageChange(newLimit);
   };
 
@@ -71,7 +70,7 @@ const Pagination = ({
           >
             «
           </button>
-          
+
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
@@ -85,7 +84,7 @@ const Pagination = ({
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`pagination-button ${currentPage === page ? 'pagination-button-active' : ''}`}
+              className={`pagination-button ${currentPage === page ? "pagination-button-active" : ""}`}
             >
               {page}
             </button>
@@ -112,7 +111,9 @@ const Pagination = ({
       )}
 
       <div className="pagination-info">
-        Mostrando <span className="pagination-info-bold">{startItem}</span> - <span className="pagination-info-bold">{endItem}</span> de <span className="pagination-info-bold">{totalItems}</span> registros
+        Mostrando <span className="pagination-info-bold">{startItem}</span> -{" "}
+        <span className="pagination-info-bold">{endItem}</span> de{" "}
+        <span className="pagination-info-bold">{totalItems}</span> registros
       </div>
     </div>
   );

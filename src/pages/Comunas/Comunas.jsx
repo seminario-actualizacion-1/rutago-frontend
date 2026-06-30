@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
+import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import { comunasService } from "../../services/comunas.service";
 import "./Comunas.css";
 
@@ -30,7 +31,11 @@ export default function Comunas() {
   };
 
   useEffect(() => {
-    fetchComunas();
+    const loadComunas = async () => {
+      await fetchComunas();
+    };
+
+    loadComunas();
   }, []);
 
   const handleEditar = (comuna) => {
@@ -67,6 +72,19 @@ export default function Comunas() {
     });
   };
 
+  const handleEliminar = async (id) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar esta comuna?")) {
+      return;
+    }
+
+    try {
+      await comunasService.delete(id);
+      await fetchComunas();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   // Pagination logic
   const totalPages = Math.ceil(comunas.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -82,16 +100,22 @@ export default function Comunas() {
     setCurrentPage(1);
   };
 
-  if (loading) return (
-    <div className="comunas-container">
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Cargando comunas...</p>
+  if (loading)
+    return (
+      <div className="comunas-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando comunas...</p>
+        </div>
       </div>
-    </div>
-  );
-  
-  if (error) return <div className="comunas-container"><p className="error">{error}</p></div>;
+    );
+
+  if (error)
+    return (
+      <div className="comunas-container">
+        <p className="error">{error}</p>
+      </div>
+    );
 
   return (
     <div className="comunas-container">
@@ -100,6 +124,18 @@ export default function Comunas() {
       </div>
 
       <div className="table-container">
+        <div className="table-actions" style={{ marginBottom: "1rem" }}>
+          <button
+            onClick={() => {
+              setEditingComuna(null);
+              setFormData({ nombre: "" });
+              setModalOpen(true);
+            }}
+            className="button button-primary"
+          >
+            + Nueva Comuna
+          </button>
+        </div>
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">
@@ -116,17 +152,22 @@ export default function Comunas() {
                   comunasPaginadas.map((comuna) => (
                     <tr key={comuna.id}>
                       <td>{comuna.id}</td>
-                      <td><span className="font-medium">{comuna.nombre}</span></td>
                       <td>
-                        <button onClick={() => handleEditar(comuna)} className="button button-primary">
-                          Editar
-                        </button>
+                        <span className="font-medium">{comuna.nombre}</span>
+                      </td>
+                      <td>
+                        <ActionsMenu
+                          onEdit={() => handleEditar(comuna)}
+                          onDelete={() => handleEliminar(comuna.id)}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="3" className="text-center">No se encontraron comunas</td>
+                    <td colSpan="3" className="text-center">
+                      No se encontraron comunas
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -147,9 +188,10 @@ export default function Comunas() {
                     </div>
 
                     <div className="mobile-card-actions">
-                      <button onClick={() => handleEditar(comuna)} className="mobile-button mobile-button-edit">
-                        Editar
-                      </button>
+                      <ActionsMenu
+                        onEdit={() => handleEditar(comuna)}
+                        onDelete={() => handleEliminar(comuna.id)}
+                      />
                     </div>
                   </div>
                 ))}
@@ -175,22 +217,45 @@ export default function Comunas() {
         onClose={handleCerrarModal}
         title={editingComuna ? "Editar Comuna" : "Nueva Comuna"}
       >
-        <form onSubmit={(e) => { e.preventDefault(); handleGuardar(); }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleGuardar();
+          }}
+        >
           <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Nombre
             </label>
             <input
               type="text"
               value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, nombre: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
             />
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={handleCerrarModal} className="button button-outline">
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              justifyContent: "flex-end",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCerrarModal}
+              className="button button-outline"
+            >
               Cancelar
             </button>
             <button type="submit" className="button button-primary">
@@ -202,4 +267,3 @@ export default function Comunas() {
     </div>
   );
 }
-

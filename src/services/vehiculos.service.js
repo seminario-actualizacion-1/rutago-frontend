@@ -8,6 +8,31 @@ const getAuthHeaders = () => {
   };
 };
 
+const normalizeVehiculoPayload = (vehiculo) => ({
+  ...vehiculo,
+  capacidadPasajeros:
+    vehiculo.capacidadPasajeros === "" ||
+    Number.isNaN(vehiculo.capacidadPasajeros)
+      ? null
+      : Number(vehiculo.capacidadPasajeros),
+  entidadId:
+    vehiculo.entidadId === "" || Number.isNaN(vehiculo.entidadId)
+      ? null
+      : Number(vehiculo.entidadId),
+  latitud:
+    vehiculo.latitud === "" ||
+    vehiculo.latitud == null ||
+    Number.isNaN(vehiculo.latitud)
+      ? null
+      : Number(vehiculo.latitud),
+  longitud:
+    vehiculo.longitud === "" ||
+    vehiculo.longitud == null ||
+    Number.isNaN(vehiculo.longitud)
+      ? null
+      : Number(vehiculo.longitud),
+});
+
 export const vehiculosService = {
   getAll: async () => {
     const response = await fetch(`${API_URL}/vehiculos`, {
@@ -29,9 +54,12 @@ export const vehiculosService = {
     const response = await fetch(`${API_URL}/vehiculos`, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(vehiculo),
+      body: JSON.stringify(normalizeVehiculoPayload(vehiculo)),
     });
-    if (!response.ok) throw new Error("Error al crear vehículo");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al crear vehículo");
+    }
     return response.json();
   },
 
@@ -39,9 +67,12 @@ export const vehiculosService = {
     const response = await fetch(`${API_URL}/vehiculos/${id}`, {
       method: "PUT",
       headers: getAuthHeaders(),
-      body: JSON.stringify(vehiculo),
+      body: JSON.stringify(normalizeVehiculoPayload(vehiculo)),
     });
-    if (!response.ok) throw new Error("Error al actualizar vehículo");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al actualizar vehículo");
+    }
     return response.json();
   },
 

@@ -1,23 +1,31 @@
 import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
+import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import { entidadesService } from "../../services/entidades.service";
 import { usuariosService } from "../../services/usuarios.service";
 import "./Entidades.css";
 
+const emptyForm = {
+  // Datos del usuario (solo para creación / edición de nombre-apellido-correo)
+  nombres: "",
+  apellidos: "",
+  correo: "",
+  contrasena: "",
+  // Datos del perfil de entidad
+  razonSocial: "",
+  nit: "",
+  telefonoContacto: "",
+};
+
 export default function Entidades() {
   const [entidades, setEntidades] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEntidad, setEditingEntidad] = useState(null);
-  const [formData, setFormData] = useState({
-    usuarioId: "",
-    razonSocial: "",
-    nit: "",
-    telefonoContacto: "",
-  });
+  const [formData, setFormData] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,43 +42,97 @@ export default function Entidades() {
     }
   };
 
-  const fetchUsuarios = async () => {
-    try {
-      const data = await usuariosService.getAll();
-      setUsuarios(data.data || []);
-    } catch (err) {
-      console.error("Error al cargar usuarios:", err);
-    }
-  };
-
   useEffect(() => {
-    fetchEntidades();
-    fetchUsuarios();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const loadEntidades = async () => {
+      await fetchEntidades();
+    };
+
+    loadEntidades();
   }, []);
+
+  const handleNueva = () => {
+    setEditingEntidad(null);
+    setFormData(emptyForm);
+    setError("");
+    setModalOpen(true);
+  };
 
   const handleEditar = (entidad) => {
     setEditingEntidad(entidad);
     setFormData({
-      usuarioId: entidad.usuarioId,
-      razonSocial: entidad.razonSocial,
+      nombres: entidad.usuario?.nombres || "",
+      apellidos: entidad.usuario?.apellidos || "",
+      correo: entidad.usuario?.correo || "",
+      contrasena: "", // no se toca la contraseña en edición
+      razonSocial: entidad.razonSocial || "",
       nit: entidad.nit || "",
       telefonoContacto: entidad.telefonoContacto || "",
     });
+    setError("");
     setModalOpen(true);
   };
 
   const handleGuardar = async () => {
+    setSaving(true);
+    setError("");
     try {
       if (editingEntidad) {
-        await entidadesService.update(editingEntidad.id, formData);
+        // ── EDITAR ──────────────────────────────────────────────────
+        // 1. Actualizar datos del usuario asociado
+        await usuariosService.update(editingEntidad.usuarioId, {
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          correo: formData.correo,
+        });
+
+        // 2. Actualizar perfil de entidad
+        await entidadesService.update(editingEntidad.id, {
+          razonSocial: formData.razonSocial,
+          nit: formData.nit,
+          telefonoContacto: formData.telefonoContacto,
+        });
       } else {
-        await entidadesService.create(formData);
+        // ── CREAR ───────────────────────────────────────────────────
+        // 1. Crear el usuario con rol 4 (Entidad Externa)
+        const usuarioResponse = await usuariosService.create({
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          correo: formData.correo,
+          contrasena: formData.contrasena,
+          rolId: 4,
+        });
+
+        // El backend devuelve { success, message, usuario: { id, nombres, correo } }
+        const usuarioId = usuarioResponse.usuario?.id;
+        if (!usuarioId)
+          throw new Error("No se pudo obtener el ID del usuario creado.");
+
+        // 2. Crear el perfil de entidad
+        await entidadesService.create({
+          usuarioId,
+          razonSocial: formData.razonSocial,
+          nit: formData.nit,
+          telefonoContacto: formData.telefonoContacto,
+        });
       }
+
       await fetchEntidades();
       setModalOpen(false);
       setEditingEntidad(null);
-      setFormData({ usuarioId: "", razonSocial: "", nit: "", telefonoContacto: "" });
+      setFormData(emptyForm);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEliminar = async (id) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar esta entidad?"))
+      return;
+    try {
+      await entidadesService.delete(id);
+      await fetchEntidades();
     } catch (err) {
       setError(err.message);
     }
@@ -79,28 +141,24 @@ export default function Entidades() {
   const handleCerrarModal = () => {
     setModalOpen(false);
     setEditingEntidad(null);
-    setFormData({ usuarioId: "", razonSocial: "", nit: "", telefonoContacto: "" });
+    setFormData(emptyForm);
+    setError("");
   };
 
-  const getUsuarioNombre = (usuarioId) => {
-    const usuario = usuarios.find((u) => u.id === usuarioId);
-    return usuario ? `${usuario.nombres} ${usuario.apellidos || ""}` : "Sin usuario";
-  };
+  const field = (key) => ({
+    value: formData[key],
+    onChange: (e) => setFormData({ ...formData, [key]: e.target.value }),
+    className: "input",
+    style: { width: "100%" },
+  });
 
   // Pagination logic
   const totalPages = Math.ceil(entidades.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const entidadesPaginadas = entidades.slice(startIndex, endIndex);
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
+  const entidadesPaginadas = entidades.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   if (loading)
     return (
@@ -112,20 +170,21 @@ export default function Entidades() {
       </div>
     );
 
-  if (error)
-    return (
-      <div className="entidades-container">
-        <p className="error">{error}</p>
-      </div>
-    );
-
   return (
     <div className="entidades-container">
       <div className="page-header">
         <h1>Gestión de Entidades</h1>
       </div>
 
+      {error && !modalOpen && <p className="error">{error}</p>}
+
       <div className="table-container">
+        <div className="table-actions" style={{ marginBottom: "1rem" }}>
+          <button onClick={handleNueva} className="button button-primary">
+            + Nueva Entidad
+          </button>
+        </div>
+
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">
@@ -133,7 +192,8 @@ export default function Entidades() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Usuario</th>
+                  <th>Nombre</th>
+                  <th>Correo</th>
                   <th>Razón Social</th>
                   <th>NIT</th>
                   <th>Teléfono</th>
@@ -145,20 +205,30 @@ export default function Entidades() {
                   entidadesPaginadas.map((entidad) => (
                     <tr key={entidad.id}>
                       <td>{entidad.id}</td>
-                      <td><span className="font-medium">{getUsuarioNombre(entidad.usuarioId)}</span></td>
-                      <td>{entidad.razonSocial}</td>
-                      <td>{entidad.nit || "-"}</td>
-                      <td>{entidad.telefonoContacto || "-"}</td>
                       <td>
-                        <button onClick={() => handleEditar(entidad)} className="button button-primary">
-                          Editar
-                        </button>
+                        <span className="font-medium">
+                          {entidad.usuario
+                            ? `${entidad.usuario.nombres} ${entidad.usuario.apellidos || ""}`
+                            : "—"}
+                        </span>
+                      </td>
+                      <td>{entidad.usuario?.correo || "—"}</td>
+                      <td>{entidad.razonSocial}</td>
+                      <td>{entidad.nit || "—"}</td>
+                      <td>{entidad.telefonoContacto || "—"}</td>
+                      <td>
+                        <ActionsMenu
+                          onEdit={() => handleEditar(entidad)}
+                          onDelete={() => handleEliminar(entidad.id)}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center">No se encontraron entidades</td>
+                    <td colSpan="7" className="text-center">
+                      No se encontraron entidades
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -174,22 +244,29 @@ export default function Entidades() {
                     <div className="mobile-card-header">
                       <div className="mobile-card-info">
                         <h3>{entidad.razonSocial}</h3>
-                        <p>{getUsuarioNombre(entidad.usuarioId)}</p>
-                        <p>NIT: {entidad.nit || "-"}</p>
+                        <p>
+                          {entidad.usuario
+                            ? `${entidad.usuario.nombres} ${entidad.usuario.apellidos || ""}`
+                            : "—"}
+                        </p>
+                        <p>NIT: {entidad.nit || "—"}</p>
                       </div>
                     </div>
-
                     <div className="mobile-card-body">
                       <div className="mobile-card-row">
+                        <span>Correo</span>
+                        <span>{entidad.usuario?.correo || "—"}</span>
+                      </div>
+                      <div className="mobile-card-row">
                         <span>Teléfono</span>
-                        <span>{entidad.telefonoContacto || "-"}</span>
+                        <span>{entidad.telefonoContacto || "—"}</span>
                       </div>
                     </div>
-
                     <div className="mobile-card-actions">
-                      <button onClick={() => handleEditar(entidad)} className="mobile-button mobile-button-edit">
-                        Editar
-                      </button>
+                      <ActionsMenu
+                        onEdit={() => handleEditar(entidad)}
+                        onDelete={() => handleEliminar(entidad.id)}
+                      />
                     </div>
                   </div>
                 ))}
@@ -205,79 +282,175 @@ export default function Entidades() {
           totalPages={totalPages}
           totalItems={entidades.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(n) => {
+            setItemsPerPage(n);
+            setCurrentPage(1);
+          }}
         />
       </div>
 
+      {/* ── MODAL ── */}
       <Modal
         isOpen={modalOpen}
         onClose={handleCerrarModal}
         title={editingEntidad ? "Editar Entidad" : "Nueva Entidad"}
       >
-        <form onSubmit={(e) => { e.preventDefault(); handleGuardar(); }}>
-          <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
-              Usuario
-            </label>
-            <select
-              value={formData.usuarioId}
-              onChange={(e) => setFormData({ ...formData, usuarioId: parseInt(e.target.value) })}
-              className="input"
-              style={{ width: "100%" }}
-              required
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleGuardar();
+          }}
+        >
+          {/* Error dentro del modal */}
+          {error && (
+            <p
+              style={{
+                color: "#ef4444",
+                marginBottom: "1rem",
+                fontSize: "0.875rem",
+              }}
             >
-              <option value="">Seleccionar usuario</option>
-              {usuarios.map((usuario) => (
-                <option key={usuario.id} value={usuario.id}>
-                  {usuario.nombres} {usuario.apellidos || ""}
-                </option>
-              ))}
-            </select>
-          </div>
+              {error}
+            </p>
+          )}
+
+          {/* ── Sección: Datos del usuario ── */}
+          <p
+            style={{
+              fontWeight: "600",
+              marginBottom: "0.75rem",
+              color: "#374151",
+            }}
+          >
+            Datos del usuario
+          </p>
+
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
-              Razón Social
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              Nombres *
             </label>
-            <input
-              type="text"
-              value={formData.razonSocial}
-              onChange={(e) => setFormData({ ...formData, razonSocial: e.target.value })}
-              className="input"
-              style={{ width: "100%" }}
-              required
-            />
+            <input type="text" {...field("nombres")} required />
           </div>
+
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              Apellidos *
+            </label>
+            <input type="text" {...field("apellidos")} required />
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              Correo *
+            </label>
+            <input type="email" {...field("correo")} required />
+          </div>
+
+          {/* Contraseña solo al crear */}
+          {!editingEntidad && (
+            <div style={{ marginBottom: "1.25rem" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
+                Contraseña *
+              </label>
+              <input type="password" {...field("contrasena")} required />
+            </div>
+          )}
+
+          {/* ── Sección: Perfil de entidad ── */}
+          <p
+            style={{
+              fontWeight: "600",
+              margin: "0.5rem 0 0.75rem",
+              color: "#374151",
+            }}
+          >
+            Datos de la entidad
+          </p>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              Razón Social *
+            </label>
+            <input type="text" {...field("razonSocial")} required />
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               NIT
             </label>
-            <input
-              type="text"
-              value={formData.nit}
-              onChange={(e) => setFormData({ ...formData, nit: e.target.value })}
-              className="input"
-              style={{ width: "100%" }}
-            />
+            <input type="text" {...field("nit")} />
           </div>
+
           <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
-              Teléfono Contacto
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              Teléfono de contacto
             </label>
-            <input
-              type="text"
-              value={formData.telefonoContacto}
-              onChange={(e) => setFormData({ ...formData, telefonoContacto: e.target.value })}
-              className="input"
-              style={{ width: "100%" }}
-            />
+            <input type="text" {...field("telefonoContacto")} />
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={handleCerrarModal} className="button button-outline">
+
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              justifyContent: "flex-end",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCerrarModal}
+              className="button button-outline"
+            >
               Cancelar
             </button>
-            <button type="submit" className="button button-primary">
-              Guardar
+            <button
+              type="submit"
+              className="button button-primary"
+              disabled={saving}
+            >
+              {saving ? "Guardando..." : "Guardar"}
             </button>
           </div>
         </form>

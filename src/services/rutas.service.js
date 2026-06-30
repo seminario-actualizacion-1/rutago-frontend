@@ -8,6 +8,32 @@ const getAuthHeaders = () => {
   };
 };
 
+const normalizeRutaPayload = (ruta) => ({
+  ...ruta,
+  origenId:
+    ruta.origenId === "" || ruta.origenId == null || Number.isNaN(ruta.origenId)
+      ? null
+      : Number(ruta.origenId),
+  destinoId:
+    ruta.destinoId === "" ||
+    ruta.destinoId == null ||
+    Number.isNaN(ruta.destinoId)
+      ? null
+      : Number(ruta.destinoId),
+  distanciaKm:
+    ruta.distanciaKm === "" ||
+    ruta.distanciaKm == null ||
+    Number.isNaN(ruta.distanciaKm)
+      ? null
+      : Number(ruta.distanciaKm),
+  tiempoEstimadoMinutos:
+    ruta.tiempoEstimadoMinutos === "" ||
+    ruta.tiempoEstimadoMinutos == null ||
+    Number.isNaN(ruta.tiempoEstimadoMinutos)
+      ? null
+      : Number(ruta.tiempoEstimadoMinutos),
+});
+
 export const rutasService = {
   getAll: async () => {
     const response = await fetch(`${API_URL}/rutas`, {
@@ -29,9 +55,12 @@ export const rutasService = {
     const response = await fetch(`${API_URL}/rutas`, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(ruta),
+      body: JSON.stringify(normalizeRutaPayload(ruta)),
     });
-    if (!response.ok) throw new Error("Error al crear ruta");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al crear ruta");
+    }
     return response.json();
   },
 
@@ -39,9 +68,12 @@ export const rutasService = {
     const response = await fetch(`${API_URL}/rutas/${id}`, {
       method: "PUT",
       headers: getAuthHeaders(),
-      body: JSON.stringify(ruta),
+      body: JSON.stringify(normalizeRutaPayload(ruta)),
     });
-    if (!response.ok) throw new Error("Error al actualizar ruta");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al actualizar ruta");
+    }
     return response.json();
   },
 
@@ -50,7 +82,10 @@ export const rutasService = {
       method: "DELETE",
       headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error("Error al eliminar ruta");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al eliminar ruta");
+    }
     return response.json();
   },
 };

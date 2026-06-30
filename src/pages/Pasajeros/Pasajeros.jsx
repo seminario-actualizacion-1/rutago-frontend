@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
+import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import { usuariosService } from "../../services/usuarios.service";
 import "./Pasajeros.css";
 
@@ -32,9 +33,12 @@ export default function Pasajeros() {
     }
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    fetchPasajeros();
+    const loadPasajeros = async () => {
+      await fetchPasajeros();
+    };
+
+    loadPasajeros();
   }, []);
 
   const handleEditar = (pasajero) => {
@@ -65,6 +69,21 @@ export default function Pasajeros() {
     setModalOpen(false);
     setEditingPasajero(null);
     setFormData({ nombres: "", apellidos: "", correo: "" });
+  };
+
+  const handleEliminar = async (id) => {
+    if (
+      !window.confirm("¿Estás seguro de que deseas eliminar este pasajero?")
+    ) {
+      return;
+    }
+
+    try {
+      await usuariosService.delete(id);
+      await fetchPasajeros();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   // Pagination logic
@@ -124,19 +143,24 @@ export default function Pasajeros() {
                   pasajerosPaginados.map((pasajero) => (
                     <tr key={pasajero.id}>
                       <td>{pasajero.id}</td>
-                      <td><span className="font-medium">{pasajero.nombres}</span></td>
+                      <td>
+                        <span className="font-medium">{pasajero.nombres}</span>
+                      </td>
                       <td>{pasajero.apellidos || "-"}</td>
                       <td>{pasajero.correo}</td>
                       <td>
-                        <button onClick={() => handleEditar(pasajero)} className="button button-primary">
-                          Editar
-                        </button>
+                        <ActionsMenu
+                          onEdit={() => handleEditar(pasajero)}
+                          onDelete={() => handleEliminar(pasajero.id)}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="text-center">No se encontraron pasajeros</td>
+                    <td colSpan="5" className="text-center">
+                      No se encontraron pasajeros
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -165,9 +189,10 @@ export default function Pasajeros() {
                     </div>
 
                     <div className="mobile-card-actions">
-                      <button onClick={() => handleEditar(pasajero)} className="mobile-button mobile-button-edit">
-                        Editar
-                      </button>
+                      <ActionsMenu
+                        onEdit={() => handleEditar(pasajero)}
+                        onDelete={() => handleEliminar(pasajero.id)}
+                      />
                     </div>
                   </div>
                 ))}
@@ -193,47 +218,86 @@ export default function Pasajeros() {
         onClose={handleCerrarModal}
         title={editingPasajero ? "Editar Pasajero" : "Nuevo Pasajero"}
       >
-        <form onSubmit={(e) => { e.preventDefault(); handleGuardar(); }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleGuardar();
+          }}
+        >
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Nombres
             </label>
             <input
               type="text"
               value={formData.nombres}
-              onChange={(e) => setFormData({ ...formData, nombres: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, nombres: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
             />
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Apellidos
             </label>
             <input
               type="text"
               value={formData.apellidos}
-              onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, apellidos: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
             />
           </div>
           <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Correo
             </label>
             <input
               type="email"
               value={formData.correo}
-              onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, correo: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
             />
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={handleCerrarModal} className="button button-outline">
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              justifyContent: "flex-end",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCerrarModal}
+              className="button button-outline"
+            >
               Cancelar
             </button>
             <button type="submit" className="button button-primary">

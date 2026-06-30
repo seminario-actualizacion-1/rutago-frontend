@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
+import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import { rutasService } from "../../services/rutas.service";
 import { comunasService } from "../../services/comunas.service";
 import "./Rutas.css";
@@ -46,8 +47,11 @@ export default function Rutas() {
   };
 
   useEffect(() => {
-    fetchRutas();
-    fetchComunas();
+    const loadData = async () => {
+      await Promise.all([fetchRutas(), fetchComunas()]);
+    };
+
+    loadData();
   }, []);
 
   const handleEditar = (ruta) => {
@@ -99,6 +103,19 @@ export default function Rutas() {
     });
   };
 
+  const handleEliminar = async (id) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar esta ruta?")) {
+      return;
+    }
+
+    try {
+      await rutasService.delete(id);
+      await fetchRutas();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const getComunaNombre = (comunaId) => {
     const comuna = comunas.find((c) => c.id === comunaId);
     return comuna ? comuna.nombre : "Sin comuna";
@@ -119,16 +136,22 @@ export default function Rutas() {
     setCurrentPage(1);
   };
 
-  if (loading) return (
-    <div className="rutas-container">
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Cargando rutas...</p>
+  if (loading)
+    return (
+      <div className="rutas-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando rutas...</p>
+        </div>
       </div>
-    </div>
-  );
-  
-  if (error) return <div className="rutas-container"><p className="error">{error}</p></div>;
+    );
+
+  if (error)
+    return (
+      <div className="rutas-container">
+        <p className="error">{error}</p>
+      </div>
+    );
 
   return (
     <div className="rutas-container">
@@ -137,6 +160,25 @@ export default function Rutas() {
       </div>
 
       <div className="table-container">
+        <div className="table-actions" style={{ marginBottom: "1rem" }}>
+          <button
+            onClick={() => {
+              setEditingRuta(null);
+              setFormData({
+                nombre: "",
+                origenId: "",
+                destinoId: "",
+                descripcion: "",
+                distanciaKm: "",
+                tiempoEstimadoMinutos: "",
+              });
+              setModalOpen(true);
+            }}
+            className="button button-primary"
+          >
+            + Nueva Ruta
+          </button>
+        </div>
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">
@@ -157,21 +199,26 @@ export default function Rutas() {
                   rutasPaginadas.map((ruta) => (
                     <tr key={ruta.id}>
                       <td>{ruta.id}</td>
-                      <td><span className="font-medium">{ruta.nombre}</span></td>
+                      <td>
+                        <span className="font-medium">{ruta.nombre}</span>
+                      </td>
                       <td>{getComunaNombre(ruta.origenId)}</td>
                       <td>{getComunaNombre(ruta.destinoId)}</td>
                       <td>{ruta.distanciaKm || "-"}</td>
                       <td>{ruta.tiempoEstimadoMinutos || "-"}</td>
                       <td>
-                        <button onClick={() => handleEditar(ruta)} className="button button-primary">
-                          Editar
-                        </button>
+                        <ActionsMenu
+                          onEdit={() => handleEditar(ruta)}
+                          onDelete={() => handleEliminar(ruta.id)}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="text-center">No se encontraron rutas</td>
+                    <td colSpan="7" className="text-center">
+                      No se encontraron rutas
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -201,9 +248,10 @@ export default function Rutas() {
                     </div>
 
                     <div className="mobile-card-actions">
-                      <button onClick={() => handleEditar(ruta)} className="mobile-button mobile-button-edit">
-                        Editar
-                      </button>
+                      <ActionsMenu
+                        onEdit={() => handleEditar(ruta)}
+                        onDelete={() => handleEliminar(ruta.id)}
+                      />
                     </div>
                   </div>
                 ))}
@@ -229,27 +277,48 @@ export default function Rutas() {
         onClose={handleCerrarModal}
         title={editingRuta ? "Editar Ruta" : "Nueva Ruta"}
       >
-        <form onSubmit={(e) => { e.preventDefault(); handleGuardar(); }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleGuardar();
+          }}
+        >
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Nombre
             </label>
             <input
               type="text"
               value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, nombre: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
             />
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Origen
             </label>
             <select
               value={formData.origenId}
-              onChange={(e) => setFormData({ ...formData, origenId: parseInt(e.target.value) })}
+              onChange={(e) =>
+                setFormData({ ...formData, origenId: parseInt(e.target.value) })
+              }
               className="input"
               style={{ width: "100%" }}
               required
@@ -263,12 +332,23 @@ export default function Rutas() {
             </select>
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Destino
             </label>
             <select
               value={formData.destinoId}
-              onChange={(e) => setFormData({ ...formData, destinoId: parseInt(e.target.value) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  destinoId: parseInt(e.target.value),
+                })
+              }
               className="input"
               style={{ width: "100%" }}
               required
@@ -282,43 +362,83 @@ export default function Rutas() {
             </select>
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Descripción
             </label>
             <textarea
               value={formData.descripcion}
-              onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, descripcion: e.target.value })
+              }
               className="input"
               style={{ width: "100%", minHeight: "80px" }}
             />
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Distancia (km)
             </label>
             <input
               type="number"
               step="0.1"
               value={formData.distanciaKm}
-              onChange={(e) => setFormData({ ...formData, distanciaKm: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  distanciaKm: parseFloat(e.target.value),
+                })
+              }
               className="input"
               style={{ width: "100%" }}
             />
           </div>
           <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Tiempo Estimado (minutos)
             </label>
             <input
               type="number"
               value={formData.tiempoEstimadoMinutos}
-              onChange={(e) => setFormData({ ...formData, tiempoEstimadoMinutos: parseInt(e.target.value) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  tiempoEstimadoMinutos: parseInt(e.target.value),
+                })
+              }
               className="input"
               style={{ width: "100%" }}
             />
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={handleCerrarModal} className="button button-outline">
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              justifyContent: "flex-end",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCerrarModal}
+              className="button button-outline"
+            >
               Cancelar
             </button>
             <button type="submit" className="button button-primary">
@@ -330,4 +450,3 @@ export default function Rutas() {
     </div>
   );
 }
-

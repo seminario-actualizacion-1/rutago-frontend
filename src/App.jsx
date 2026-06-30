@@ -15,6 +15,7 @@ import Vehiculos from "./pages/Vehiculos/Vehiculos";
 import Barrios from "./pages/Barrios/Barrios";
 import Comunas from "./pages/Comunas/Comunas";
 import Rutas from "./pages/Rutas/Rutas";
+import Horarios from "./pages/Horarios/Horarios";
 import Entidades from "./pages/Entidades/Entidades";
 import Perfil from "./pages/Perfil/Perfil";
 import Viajes from "./pages/Viajes/Viajes";
@@ -48,8 +49,18 @@ export default function App() {
         <div className="app-body">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Login />} />
-            <Route path="/registro" element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Registro />} />
+            <Route
+              path="/login"
+              element={
+                isLoggedIn ? <Navigate to="/dashboard" replace /> : <Login />
+              }
+            />
+            <Route
+              path="/registro"
+              element={
+                isLoggedIn ? <Navigate to="/dashboard" replace /> : <Registro />
+              }
+            />
             <Route path="/recuperar-password" element={<RecuperarPassword />} />
             <Route
               element={
@@ -66,6 +77,7 @@ export default function App() {
               <Route path="/barrios" element={<Barrios />} />
               <Route path="/comunas" element={<Comunas />} />
               <Route path="/rutas" element={<Rutas />} />
+              <Route path="/horarios" element={<Horarios />} />
               <Route path="/entidades" element={<Entidades />} />
               <Route path="/perfil" element={<Perfil />} />
               <Route path="/viajes" element={<Viajes />} />

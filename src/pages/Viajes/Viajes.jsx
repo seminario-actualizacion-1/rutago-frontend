@@ -5,13 +5,26 @@ import "./Viajes.css";
 
 function obtenerEstadoColor(estado) {
   const colors = {
-    PENDIENTE: "badge-pendiente",
+    BUSCANDO: "badge-pendiente",
     ACEPTADO: "badge-aceptado",
     EN_CURSO: "badge-en-curso",
     FINALIZADO: "badge-finalizado",
     CANCELADO: "badge-cancelado",
   };
   return colors[estado] || "badge-default";
+}
+
+function obtenerNombrePersona(usuario) {
+  if (!usuario) return "No asignado";
+  return (
+    `${usuario.nombres || ""} ${usuario.apellidos || ""}`.trim() ||
+    usuario.correo ||
+    "No asignado"
+  );
+}
+
+function obtenerNombreBarrio(barrio) {
+  return barrio?.nombre || "No definido";
 }
 
 export default function Viajes() {
@@ -35,8 +48,11 @@ export default function Viajes() {
   };
 
   useEffect(() => {
-    fetchViajes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const loadViajes = async () => {
+      await fetchViajes();
+    };
+
+    loadViajes();
   }, []);
 
   // Pagination logic
@@ -74,7 +90,7 @@ export default function Viajes() {
   return (
     <div className="viajes-container">
       <div className="page-header">
-        <h1>Gestión de Viajes</h1>
+        <h1>Seguimiento de Recorridos</h1>
       </div>
 
       <div className="table-container">
@@ -86,8 +102,11 @@ export default function Viajes() {
                 <tr>
                   <th>ID</th>
                   <th>Estado</th>
+                  <th>Origen</th>
+                  <th>Destino</th>
+                  <th>Pasajero</th>
+                  <th>Conductor</th>
                   <th>Precio</th>
-                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,16 +114,25 @@ export default function Viajes() {
                   viajesPaginados.map((viaje) => (
                     <tr key={viaje.id}>
                       <td>{viaje.id}</td>
-                      <td><span className={`badge ${obtenerEstadoColor(viaje.estado)}`}>{viaje.estado || "-"}</span></td>
-                      <td>${viaje.precioEstimado || "-"}</td>
                       <td>
-                        <button className="button button-primary">Editar</button>
+                        <span
+                          className={`badge ${obtenerEstadoColor(viaje.estado)}`}
+                        >
+                          {viaje.estado || "-"}
+                        </span>
                       </td>
+                      <td>{obtenerNombreBarrio(viaje.barrioOrigen)}</td>
+                      <td>{obtenerNombreBarrio(viaje.barrioDestino)}</td>
+                      <td>{obtenerNombrePersona(viaje.pasajero)}</td>
+                      <td>{obtenerNombrePersona(viaje.conductor)}</td>
+                      <td>${viaje.precioEstimado || "-"}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="text-center">No se encontraron viajes</td>
+                    <td colSpan="6" className="text-center">
+                      No se encontraron recorridos registrados
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -119,14 +147,32 @@ export default function Viajes() {
                   <div key={viaje.id} className="mobile-card">
                     <div className="mobile-card-header">
                       <div className="mobile-card-info">
-                        <h3>Viaje #{viaje.id}</h3>
+                        <h3>Recorrido #{viaje.id}</h3>
                       </div>
-                      <span className={`mobile-badge ${obtenerEstadoColor(viaje.estado)}`}>
+                      <span
+                        className={`mobile-badge ${obtenerEstadoColor(viaje.estado)}`}
+                      >
                         {(viaje.estado || "-").toUpperCase()}
                       </span>
                     </div>
 
                     <div className="mobile-card-body">
+                      <div className="mobile-card-row">
+                        <span>Origen</span>
+                        <span>{obtenerNombreBarrio(viaje.barrioOrigen)}</span>
+                      </div>
+                      <div className="mobile-card-row">
+                        <span>Destino</span>
+                        <span>{obtenerNombreBarrio(viaje.barrioDestino)}</span>
+                      </div>
+                      <div className="mobile-card-row">
+                        <span>Pasajero</span>
+                        <span>{obtenerNombrePersona(viaje.pasajero)}</span>
+                      </div>
+                      <div className="mobile-card-row">
+                        <span>Conductor</span>
+                        <span>{obtenerNombrePersona(viaje.conductor)}</span>
+                      </div>
                       <div className="mobile-card-row">
                         <span>Precio</span>
                         <span>${viaje.precioEstimado || "-"}</span>
@@ -136,7 +182,7 @@ export default function Viajes() {
                 ))}
               </div>
             ) : (
-              <div className="mobile-empty">No hay viajes disponibles</div>
+              <div className="mobile-empty">No hay recorridos disponibles</div>
             )}
           </div>
         </div>
