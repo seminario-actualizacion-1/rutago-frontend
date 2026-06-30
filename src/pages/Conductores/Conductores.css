@@ -1,0 +1,142 @@
+/* Contenedor principal */
+
+.conductores {
+    padding: 30px;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+}
+
+
+/* Título */
+
+.conductores h1 {
+    text-align: center;
+    color: #0d6efd;
+    margin-bottom: 25px;
+}
+
+
+/* Buscador y filtros */
+
+.conductores input,
+.conductores select {
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 15px;
+}
+
+
+/* Tabla */
+
+.conductores table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+
+/* Encabezados */
+
+.conductores th {
+    background-color: #0d6efd;
+    color: white;
+    padding: 12px;
+}
+
+
+/* Celdas */
+
+.conductores td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+
+/* Efecto al pasar el mouse */
+
+.conductores tbody tr:hover {
+    background-color: #f0f8ff;
+}
+
+
+/* Botones */
+
+.conductores button {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 3px;
+}
+
+
+/* Efecto botón */
+
+.conductores button:hover {
+    background-color: #0b5ed7;
+}
+
+
+/* Panel de información */
+
+.informacion {
+    margin-top: 30px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Título del panel */
+
+.informacion h2 {
+    color: #0d6efd;
+    margin-bottom: 15px;
+}
+
+
+/* Información */
+
+.informacion p {
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+
+/* Botones del panel */
+
+.informacion button {
+    margin-top: 10px;
+    margin-right: 10px;
+}
+
+
+/* Adaptación para celulares */
+
+@media (max-width: 768px) {
+    .conductores input,
+    .conductores select {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .conductores table {
+        font-size: 14px;
+    }
+    .conductores th,
+    .conductores td {
+        padding: 8px;
+    }
+    .informacion button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
