@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
+import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import { barriosService } from "../../services/barrios.service";
 import { comunasService } from "../../services/comunas.service";
 import "./Barrios.css";
@@ -43,8 +44,11 @@ export default function Barrios() {
   };
 
   useEffect(() => {
-    fetchBarrios();
-    fetchComunas();
+    const loadData = async () => {
+      await Promise.all([fetchBarrios(), fetchComunas()]);
+    };
+
+    loadData();
   }, []);
 
   const handleEditar = (barrio) => {
@@ -82,6 +86,19 @@ export default function Barrios() {
       nombre: "",
       comunaId: "",
     });
+  };
+
+  const handleEliminar = async (id) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este barrio?")) {
+      return;
+    }
+
+    try {
+      await barriosService.delete(id);
+      await fetchBarrios();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const getComunaNombre = (comunaId) => {
@@ -124,16 +141,22 @@ export default function Barrios() {
     setCurrentPage(1);
   };
 
-  if (loading) return (
-    <div className="barrios-container">
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Cargando barrios...</p>
+  if (loading)
+    return (
+      <div className="barrios-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando barrios...</p>
+        </div>
       </div>
-    </div>
-  );
-  
-  if (error) return <div className="barrios-container"><p className="error">{error}</p></div>;
+    );
+
+  if (error)
+    return (
+      <div className="barrios-container">
+        <p className="error">{error}</p>
+      </div>
+    );
 
   return (
     <div className="barrios-container">
@@ -141,8 +164,24 @@ export default function Barrios() {
         <h1>Gestión de Barrios</h1>
       </div>
 
-      <div className="filter-container" style={{ marginBottom: "1rem", background: "white", padding: "1rem", borderRadius: "0.5rem" }}>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", fontSize: "0.875rem", color: "#374151" }}>
+      <div
+        className="filter-container"
+        style={{
+          marginBottom: "1rem",
+          background: "white",
+          padding: "1rem",
+          borderRadius: "0.5rem",
+        }}
+      >
+        <label
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: "500",
+            fontSize: "0.875rem",
+            color: "#374151",
+          }}
+        >
           Filtrar por Comuna
         </label>
         <select
@@ -161,6 +200,18 @@ export default function Barrios() {
       </div>
 
       <div className="table-container">
+        <div className="table-actions" style={{ marginBottom: "1rem" }}>
+          <button
+            onClick={() => {
+              setEditingBarrio(null);
+              setFormData({ nombre: "", comunaId: "" });
+              setModalOpen(true);
+            }}
+            className="button button-primary"
+          >
+            + Nuevo Barrio
+          </button>
+        </div>
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">
@@ -178,18 +229,23 @@ export default function Barrios() {
                   barriosPaginados.map((barrio) => (
                     <tr key={barrio.id}>
                       <td>{barrio.id}</td>
-                      <td><span className="font-medium">{barrio.nombre}</span></td>
+                      <td>
+                        <span className="font-medium">{barrio.nombre}</span>
+                      </td>
                       <td>{getComunaNombre(barrio.comunaId)}</td>
                       <td>
-                        <button onClick={() => handleEditar(barrio)} className="button button-primary">
-                          Editar
-                        </button>
+                        <ActionsMenu
+                          onEdit={() => handleEditar(barrio)}
+                          onDelete={() => handleEliminar(barrio.id)}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="text-center">No se encontraron barrios</td>
+                    <td colSpan="4" className="text-center">
+                      No se encontraron barrios
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -211,9 +267,10 @@ export default function Barrios() {
                     </div>
 
                     <div className="mobile-card-actions">
-                      <button onClick={() => handleEditar(barrio)} className="mobile-button mobile-button-edit">
-                        Editar
-                      </button>
+                      <ActionsMenu
+                        onEdit={() => handleEditar(barrio)}
+                        onDelete={() => handleEliminar(barrio.id)}
+                      />
                     </div>
                   </div>
                 ))}
@@ -239,27 +296,48 @@ export default function Barrios() {
         onClose={handleCerrarModal}
         title={editingBarrio ? "Editar Barrio" : "Nuevo Barrio"}
       >
-        <form onSubmit={(e) => { e.preventDefault(); handleGuardar(); }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleGuardar();
+          }}
+        >
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Nombre
             </label>
             <input
               type="text"
               value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, nombre: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
             />
           </div>
           <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Comuna
             </label>
             <select
               value={formData.comunaId}
-              onChange={(e) => setFormData({ ...formData, comunaId: parseInt(e.target.value) })}
+              onChange={(e) =>
+                setFormData({ ...formData, comunaId: parseInt(e.target.value) })
+              }
               className="input"
               style={{ width: "100%" }}
               required
@@ -272,8 +350,18 @@ export default function Barrios() {
               ))}
             </select>
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={handleCerrarModal} className="button button-outline">
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              justifyContent: "flex-end",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCerrarModal}
+              className="button button-outline"
+            >
               Cancelar
             </button>
             <button type="submit" className="button button-primary">
@@ -285,4 +373,3 @@ export default function Barrios() {
     </div>
   );
 }
-

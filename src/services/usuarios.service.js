@@ -27,9 +27,9 @@ export const usuariosService = {
     return response.json();
   },
 
-  // Crear un nuevo usuario
+  // Crear un nuevo usuario (el backend usa /registro como endpoint de creación)
   create: async (usuario) => {
-    const response = await fetch(`${API_URL}/usuarios`, {
+    const response = await fetch(`${API_URL}/usuarios/registro`, {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify(usuario),
@@ -62,11 +62,14 @@ export const usuariosService = {
   // Cambiar rol de un usuario
   changeRole: async (id, rolId) => {
     const response = await fetch(`${API_URL}/usuarios/${id}/rol`, {
-      method: "PATCH",
+      method: "PUT",
       headers: getAuthHeaders(),
       body: JSON.stringify({ rolId }),
     });
-    if (!response.ok) throw new Error("Error al cambiar rol");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al cambiar rol");
+    }
     return response.json();
   },
 };

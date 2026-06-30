@@ -8,6 +8,16 @@ const getAuthHeaders = () => {
   };
 };
 
+const normalizeEntidadPayload = (entidad) => ({
+  ...entidad,
+  usuarioId:
+    entidad.usuarioId === "" ||
+    entidad.usuarioId == null ||
+    Number.isNaN(entidad.usuarioId)
+      ? null
+      : Number(entidad.usuarioId),
+});
+
 export const entidadesService = {
   getAll: async () => {
     const response = await fetch(`${API_URL}/perfiles-entidad`, {
@@ -29,9 +39,12 @@ export const entidadesService = {
     const response = await fetch(`${API_URL}/perfiles-entidad`, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(entidad),
+      body: JSON.stringify(normalizeEntidadPayload(entidad)),
     });
-    if (!response.ok) throw new Error("Error al crear entidad");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al crear entidad");
+    }
     return response.json();
   },
 
@@ -39,9 +52,12 @@ export const entidadesService = {
     const response = await fetch(`${API_URL}/perfiles-entidad/${id}`, {
       method: "PUT",
       headers: getAuthHeaders(),
-      body: JSON.stringify(entidad),
+      body: JSON.stringify(normalizeEntidadPayload(entidad)),
     });
-    if (!response.ok) throw new Error("Error al actualizar entidad");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al actualizar entidad");
+    }
     return response.json();
   },
 
@@ -50,7 +66,10 @@ export const entidadesService = {
       method: "DELETE",
       headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error("Error al eliminar entidad");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al eliminar entidad");
+    }
     return response.json();
   },
 };

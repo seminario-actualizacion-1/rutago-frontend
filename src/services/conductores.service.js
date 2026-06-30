@@ -8,6 +8,22 @@ const getAuthHeaders = () => {
   };
 };
 
+const normalizeConductorPayload = (conductor) => ({
+  ...conductor,
+  usuarioId:
+    conductor.usuarioId === "" ||
+    conductor.usuarioId == null ||
+    Number.isNaN(conductor.usuarioId)
+      ? null
+      : Number(conductor.usuarioId),
+  vehiculoId:
+    conductor.vehiculoId === "" ||
+    conductor.vehiculoId == null ||
+    Number.isNaN(conductor.vehiculoId)
+      ? null
+      : Number(conductor.vehiculoId),
+});
+
 export const conductoresService = {
   getAll: async () => {
     const response = await fetch(`${API_URL}/perfiles-conductor`, {
@@ -29,9 +45,12 @@ export const conductoresService = {
     const response = await fetch(`${API_URL}/perfiles-conductor`, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(conductor),
+      body: JSON.stringify(normalizeConductorPayload(conductor)),
     });
-    if (!response.ok) throw new Error("Error al crear conductor");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al crear conductor");
+    }
     return response.json();
   },
 
@@ -39,9 +58,12 @@ export const conductoresService = {
     const response = await fetch(`${API_URL}/perfiles-conductor/${id}`, {
       method: "PUT",
       headers: getAuthHeaders(),
-      body: JSON.stringify(conductor),
+      body: JSON.stringify(normalizeConductorPayload(conductor)),
     });
-    if (!response.ok) throw new Error("Error al actualizar conductor");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al actualizar conductor");
+    }
     return response.json();
   },
 
@@ -50,7 +72,10 @@ export const conductoresService = {
       method: "DELETE",
       headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error("Error al eliminar conductor");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || "Error al eliminar conductor");
+    }
     return response.json();
   },
 };

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../api";
+import { perfilConductorService } from "../../services/perfilConductor.service";
+import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import "./Perfil.css";
 
 function obtenerRol(rolId) {
@@ -30,6 +32,18 @@ export default function Perfil() {
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [perfilEspecializado, setPerfilEspecializado] = useState(null);
+  const [editingEntidad, setEditingEntidad] = useState(false);
+  const [editingConductor, setEditingConductor] = useState(false);
+  const [entidadFormData, setEntidadFormData] = useState({
+    razonSocial: "",
+    nit: "",
+    telefonoContacto: "",
+  });
+  const [conductorFormData, setConductorFormData] = useState({
+    licenciaConducir: "",
+    estado: "DISPONIBLE",
+  });
 
   const [destino, setDestino] = useState("");
   const [resultados, setResultados] = useState([]);
@@ -58,12 +72,63 @@ export default function Perfil() {
   const fetchPerfil = async () => {
     try {
       const response = await api.get("/usuarios/me/perfil");
-      setUser(response.data.data);
+      const usuario = response.data.data;
+
+      setUser(usuario);
       setFormData({
-        nombres: response.data.data.nombres,
-        apellidos: response.data.data.apellidos,
-        correo: response.data.data.correo,
+        nombres: usuario.nombres,
+        apellidos: usuario.apellidos,
+        correo: usuario.correo,
       });
+
+      if (usuario.rolId === 2) {
+        try {
+          const perfilResponse = await perfilConductorService.getMiPerfil();
+          const perfilConductor = perfilResponse.data || null;
+          setPerfilEspecializado(perfilConductor);
+          setConductorFormData({
+            licenciaConducir: perfilConductor?.licenciaConducir || "",
+            estado: perfilConductor?.estado || "DISPONIBLE",
+          });
+        } catch {
+          const perfilConductor = usuario.perfilConductor || null;
+          setPerfilEspecializado(perfilConductor);
+          setConductorFormData({
+            licenciaConducir: perfilConductor?.licenciaConducir || "",
+            estado: perfilConductor?.estado || "DISPONIBLE",
+          });
+        }
+      } else if (usuario.rolId === 4) {
+        try {
+          const perfilResponse = await perfilEntidadService.getMiPerfil();
+          const perfilEntidad = perfilResponse.data || null;
+          setPerfilEspecializado(perfilEntidad);
+          setEntidadFormData({
+            razonSocial: perfilEntidad?.razonSocial || "",
+            nit: perfilEntidad?.nit || "",
+            telefonoContacto: perfilEntidad?.telefonoContacto || "",
+          });
+        } catch {
+          const perfilEntidad = usuario.perfilEntidad || null;
+          setPerfilEspecializado(perfilEntidad);
+          setEntidadFormData({
+            razonSocial: perfilEntidad?.razonSocial || "",
+            nit: perfilEntidad?.nit || "",
+            telefonoContacto: perfilEntidad?.telefonoContacto || "",
+          });
+        }
+      } else {
+        setPerfilEspecializado(null);
+        setEntidadFormData({
+          razonSocial: "",
+          nit: "",
+          telefonoContacto: "",
+        });
+        setConductorFormData({
+          licenciaConducir: "",
+          estado: "DISPONIBLE",
+        });
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Error al cargar el perfil");
     } finally {
@@ -72,7 +137,11 @@ export default function Perfil() {
   };
 
   useEffect(() => {
-    fetchPerfil();
+    const loadPerfil = async () => {
+      await fetchPerfil();
+    };
+
+    loadPerfil();
   }, []);
 
   const handleChange = (e) => {
@@ -108,13 +177,84 @@ export default function Perfil() {
     setError("");
   };
 
+  const handleEntidadChange = (e) => {
+    setEntidadFormData({
+      ...entidadFormData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleConductorChange = (e) => {
+    setConductorFormData({
+      ...conductorFormData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleEntidadSave = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+    setError("");
+
+    try {
+      await perfilEntidadService.updateMiPerfil(entidadFormData);
+      setMessage("Perfil de entidad actualizado correctamente");
+      setEditingEntidad(false);
+      await fetchPerfil();
+    } catch (err) {
+      setError(err.message || "Error al actualizar el perfil de entidad");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEntidadCancel = () => {
+    setEditingEntidad(false);
+    setEntidadFormData({
+      razonSocial: perfilEspecializado?.razonSocial || "",
+      nit: perfilEspecializado?.nit || "",
+      telefonoContacto: perfilEspecializado?.telefonoContacto || "",
+    });
+    setMessage("");
+    setError("");
+  };
+
+  const handleConductorSave = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+    setError("");
+
+    try {
+      await perfilConductorService.updateMiPerfil(conductorFormData);
+      setMessage("Perfil de conductor actualizado correctamente");
+      setEditingConductor(false);
+      await fetchPerfil();
+    } catch (err) {
+      setError(err.message || "Error al actualizar el perfil de conductor");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConductorCancel = () => {
+    setEditingConductor(false);
+    setConductorFormData({
+      licenciaConducir: perfilEspecializado?.licenciaConducir || "",
+      estado: perfilEspecializado?.estado || "DISPONIBLE",
+    });
+    setMessage("");
+    setError("");
+  };
+
   const buscarDestino = async () => {
     try {
       const response = await api.get(
-        `/rutas/destino/${encodeURIComponent(destino)}`
+        `/rutas/destino/${encodeURIComponent(destino)}`,
       );
 
-      setResultados(response.data);
+      setResultados(response.data?.data || []);
       setBusSeleccionado(null);
       setDetalleActivo("");
       setBusquedaRealizada(true);
@@ -192,6 +332,58 @@ export default function Perfil() {
                 <span className="perfil-value">{obtenerRol(user.rolId)}</span>
               </div>
 
+              {user.rolId === 2 && perfilEspecializado && (
+                <>
+                  <div className="perfil-row">
+                    <span className="perfil-label">Licencia:</span>
+                    <span className="perfil-value">
+                      {perfilEspecializado.licenciaConducir || "No registrada"}
+                    </span>
+                  </div>
+
+                  <div className="perfil-row">
+                    <span className="perfil-label">Vehículo asignado:</span>
+                    <span className="perfil-value">
+                      {perfilEspecializado.vehiculo
+                        ? `${perfilEspecializado.vehiculo.placa} - ${perfilEspecializado.vehiculo.marca} ${perfilEspecializado.vehiculo.modelo}`
+                        : "Sin vehículo asignado"}
+                    </span>
+                  </div>
+
+                  <div className="perfil-row">
+                    <span className="perfil-label">Estado:</span>
+                    <span className="perfil-value">
+                      {perfilEspecializado.estado || "No definido"}
+                    </span>
+                  </div>
+                </>
+              )}
+
+              {user.rolId === 4 && perfilEspecializado && (
+                <>
+                  <div className="perfil-row">
+                    <span className="perfil-label">Razón social:</span>
+                    <span className="perfil-value">
+                      {perfilEspecializado.razonSocial || "No registrada"}
+                    </span>
+                  </div>
+
+                  <div className="perfil-row">
+                    <span className="perfil-label">NIT:</span>
+                    <span className="perfil-value">
+                      {perfilEspecializado.nit || "No registrado"}
+                    </span>
+                  </div>
+
+                  <div className="perfil-row">
+                    <span className="perfil-label">Teléfono de contacto:</span>
+                    <span className="perfil-value">
+                      {perfilEspecializado.telefonoContacto || "No registrado"}
+                    </span>
+                  </div>
+                </>
+              )}
+
               <div className="perfil-actions">
                 <button
                   onClick={() => setEditing(true)}
@@ -199,6 +391,24 @@ export default function Perfil() {
                 >
                   Editar Perfil
                 </button>
+                {user.rolId === 2 && perfilEspecializado && (
+                  <button
+                    onClick={() => setEditingConductor(true)}
+                    className="button button-outline"
+                    style={{ marginLeft: "0.75rem" }}
+                  >
+                    Editar Perfil de Conductor
+                  </button>
+                )}
+                {user.rolId === 4 && perfilEspecializado && (
+                  <button
+                    onClick={() => setEditingEntidad(true)}
+                    className="button button-outline"
+                    style={{ marginLeft: "0.75rem" }}
+                  >
+                    Editar Perfil de Entidad
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -254,6 +464,109 @@ export default function Perfil() {
           )}
         </div>
       </div>
+
+      {user.rolId === 2 && perfilEspecializado && editingConductor && (
+        <div className="perfil-content">
+          <div className="bg-white rounded-lg shadow-sm">
+            <h2>Editar perfil de conductor</h2>
+            <form onSubmit={handleConductorSave} className="perfil-form">
+              <label>Licencia de conducir</label>
+              <input
+                type="text"
+                name="licenciaConducir"
+                value={conductorFormData.licenciaConducir}
+                onChange={handleConductorChange}
+                className="input"
+              />
+
+              <label>Estado</label>
+              <select
+                name="estado"
+                value={conductorFormData.estado}
+                onChange={handleConductorChange}
+                className="input"
+              >
+                <option value="DISPONIBLE">Disponible</option>
+                <option value="EN_VIAJE">En viaje</option>
+                <option value="INACTIVO">Inactivo</option>
+              </select>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  onClick={handleConductorCancel}
+                  className="button button-outline"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="button button-primary"
+                  disabled={loading}
+                >
+                  {loading ? "Guardando..." : "Guardar Perfil de Conductor"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {user.rolId === 4 && perfilEspecializado && editingEntidad && (
+        <div className="perfil-content">
+          <div className="bg-white rounded-lg shadow-sm">
+            <h2>Editar perfil de entidad</h2>
+            <form onSubmit={handleEntidadSave} className="perfil-form">
+              <label>Razón social</label>
+              <input
+                type="text"
+                name="razonSocial"
+                value={entidadFormData.razonSocial}
+                onChange={handleEntidadChange}
+                className="input"
+                required
+              />
+
+              <label>NIT</label>
+              <input
+                type="text"
+                name="nit"
+                value={entidadFormData.nit}
+                onChange={handleEntidadChange}
+                className="input"
+              />
+
+              <label>Teléfono de contacto</label>
+              <input
+                type="text"
+                name="telefonoContacto"
+                value={entidadFormData.telefonoContacto}
+                onChange={handleEntidadChange}
+                className="input"
+              />
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  onClick={handleEntidadCancel}
+                  className="button button-outline"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="button button-primary"
+                  disabled={loading}
+                >
+                  {loading ? "Guardando..." : "Guardar Perfil de Entidad"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="perfil-content">
         <div className="bg-white rounded-lg shadow-sm">
@@ -319,7 +632,7 @@ export default function Perfil() {
                           <strong>Estado:</strong>{" "}
                           <span
                             className={`estado-badge ${obtenerEstadoClase(
-                              horario.vehiculo?.estado
+                              horario.vehiculo?.estado,
                             )}`}
                           >
                             {obtenerEstadoTexto(horario.vehiculo?.estado)}
@@ -413,8 +726,7 @@ export default function Perfil() {
               </p>
 
               <p>
-                <strong>Horario:</strong>{" "}
-                {busSeleccionado.horario?.horaSalida}
+                <strong>Horario:</strong> {busSeleccionado.horario?.horaSalida}
               </p>
 
               <p>

@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
+import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import { vehiculosService } from "../../services/vehiculos.service";
+import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import "./Vehiculos.css";
 
 export default function Vehiculos() {
   const [vehiculos, setVehiculos] = useState([]);
+  const [entidades, setEntidades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -18,6 +21,8 @@ export default function Vehiculos() {
     capacidadPasajeros: "",
     entidadId: "",
     estado: "EN_TERMINAL",
+    latitud: "",
+    longitud: "",
   });
 
   // Pagination state
@@ -35,8 +40,21 @@ export default function Vehiculos() {
     }
   };
 
+  const fetchEntidades = async () => {
+    try {
+      const data = await perfilEntidadService.getAll();
+      setEntidades(data.data || []);
+    } catch (err) {
+      console.error("Error al cargar entidades:", err);
+    }
+  };
+
   useEffect(() => {
-    fetchVehiculos();
+    const loadData = async () => {
+      await Promise.all([fetchVehiculos(), fetchEntidades()]);
+    };
+
+    loadData();
   }, []);
 
   const handleEditar = (vehiculo) => {
@@ -49,6 +67,8 @@ export default function Vehiculos() {
       capacidadPasajeros: vehiculo.capacidadPasajeros,
       entidadId: vehiculo.entidadId,
       estado: vehiculo.estado,
+      latitud: vehiculo.latitud || "",
+      longitud: vehiculo.longitud || "",
     });
     setModalOpen(true);
   };
@@ -71,6 +91,8 @@ export default function Vehiculos() {
         capacidadPasajeros: "",
         entidadId: "",
         estado: "EN_TERMINAL",
+        latitud: "",
+        longitud: "",
       });
     } catch (err) {
       setError(err.message);
@@ -88,14 +110,31 @@ export default function Vehiculos() {
       capacidadPasajeros: "",
       entidadId: "",
       estado: "EN_TERMINAL",
+      latitud: "",
+      longitud: "",
     });
+  };
+
+  const handleEliminar = async (id) => {
+    if (
+      !window.confirm("¿Estás seguro de que deseas eliminar este vehículo?")
+    ) {
+      return;
+    }
+
+    try {
+      await vehiculosService.delete(id);
+      await fetchVehiculos();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const getEstadoColor = (estado) => {
     const colors = {
-      "EN_TERMINAL": "badge-en-terminal",
-      "EN_RUTA": "badge-en-ruta",
-      "PROXIMO": "badge-proximo",
+      EN_TERMINAL: "badge-en-terminal",
+      EN_RUTA: "badge-en-ruta",
+      PROXIMO: "badge-proximo",
     };
     return colors[estado] || "badge-default";
   };
@@ -115,16 +154,22 @@ export default function Vehiculos() {
     setCurrentPage(1);
   };
 
-  if (loading) return (
-    <div className="vehiculos-container">
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Cargando vehículos...</p>
+  if (loading)
+    return (
+      <div className="vehiculos-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando vehículos...</p>
+        </div>
       </div>
-    </div>
-  );
-  
-  if (error) return <div className="vehiculos-container"><p className="error">{error}</p></div>;
+    );
+
+  if (error)
+    return (
+      <div className="vehiculos-container">
+        <p className="error">{error}</p>
+      </div>
+    );
 
   return (
     <div className="vehiculos-container">
@@ -133,6 +178,28 @@ export default function Vehiculos() {
       </div>
 
       <div className="table-container">
+        <div className="table-actions" style={{ marginBottom: "1rem" }}>
+          <button
+            onClick={() => {
+              setEditingVehiculo(null);
+              setFormData({
+                placa: "",
+                marca: "",
+                modelo: "",
+                color: "",
+                capacidadPasajeros: "",
+                entidadId: "",
+                estado: "EN_TERMINAL",
+                latitud: "",
+                longitud: "",
+              });
+              setModalOpen(true);
+            }}
+            className="button button-primary"
+          >
+            + Nuevo Vehículo
+          </button>
+        </div>
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">
@@ -154,22 +221,33 @@ export default function Vehiculos() {
                   vehiculosPaginados.map((vehiculo) => (
                     <tr key={vehiculo.id}>
                       <td>{vehiculo.id}</td>
-                      <td><span className="font-medium">{vehiculo.placa}</span></td>
+                      <td>
+                        <span className="font-medium">{vehiculo.placa}</span>
+                      </td>
                       <td>{vehiculo.marca}</td>
                       <td>{vehiculo.modelo}</td>
                       <td>{vehiculo.color}</td>
                       <td>{vehiculo.capacidadPasajeros}</td>
-                      <td><span className={`badge ${getEstadoColor(vehiculo.estado)}`}>{vehiculo.estado}</span></td>
                       <td>
-                        <button onClick={() => handleEditar(vehiculo)} className="button button-primary">
-                          Editar
-                        </button>
+                        <span
+                          className={`badge ${getEstadoColor(vehiculo.estado)}`}
+                        >
+                          {vehiculo.estado}
+                        </span>
+                      </td>
+                      <td>
+                        <ActionsMenu
+                          onEdit={() => handleEditar(vehiculo)}
+                          onDelete={() => handleEliminar(vehiculo.id)}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="text-center">No se encontraron vehículos</td>
+                    <td colSpan="8" className="text-center">
+                      No se encontraron vehículos
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -185,10 +263,14 @@ export default function Vehiculos() {
                     <div className="mobile-card-header">
                       <div className="mobile-card-info">
                         <h3>{vehiculo.placa}</h3>
-                        <p>{vehiculo.marca} {vehiculo.modelo}</p>
+                        <p>
+                          {vehiculo.marca} {vehiculo.modelo}
+                        </p>
                         <p>Color: {vehiculo.color}</p>
                       </div>
-                      <span className={`mobile-badge ${getEstadoColor(vehiculo.estado)}`}>
+                      <span
+                        className={`mobile-badge ${getEstadoColor(vehiculo.estado)}`}
+                      >
                         {vehiculo.estado}
                       </span>
                     </div>
@@ -201,9 +283,10 @@ export default function Vehiculos() {
                     </div>
 
                     <div className="mobile-card-actions">
-                      <button onClick={() => handleEditar(vehiculo)} className="mobile-button mobile-button-edit">
-                        Editar
-                      </button>
+                      <ActionsMenu
+                        onEdit={() => handleEditar(vehiculo)}
+                        onDelete={() => handleEliminar(vehiculo.id)}
+                      />
                     </div>
                   </div>
                 ))}
@@ -229,79 +312,167 @@ export default function Vehiculos() {
         onClose={handleCerrarModal}
         title={editingVehiculo ? "Editar Vehículo" : "Nuevo Vehículo"}
       >
-        <form onSubmit={(e) => { e.preventDefault(); handleGuardar(); }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleGuardar();
+          }}
+        >
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Placa
             </label>
             <input
               type="text"
               value={formData.placa}
-              onChange={(e) => setFormData({ ...formData, placa: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, placa: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
             />
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Marca
             </label>
             <input
               type="text"
               value={formData.marca}
-              onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, marca: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
             />
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Modelo
             </label>
             <input
               type="text"
               value={formData.modelo}
-              onChange={(e) => setFormData({ ...formData, modelo: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, modelo: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
             />
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Color
             </label>
             <input
               type="text"
               value={formData.color}
-              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, color: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
             />
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Capacidad de Pasajeros
             </label>
             <input
               type="number"
               value={formData.capacidadPasajeros}
-              onChange={(e) => setFormData({ ...formData, capacidadPasajeros: parseInt(e.target.value) })}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData({
+                  ...formData,
+                  capacidadPasajeros: value === "" ? "" : parseInt(value, 10),
+                });
+              }}
               className="input"
               style={{ width: "100%" }}
               required
             />
           </div>
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+          <div style={{ marginBottom: "1rem" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              Entidad
+            </label>
+            <select
+              value={formData.entidadId}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData({
+                  ...formData,
+                  entidadId: value === "" ? "" : parseInt(value, 10),
+                });
+              }}
+              className="input"
+              style={{ width: "100%" }}
+              required
+            >
+              <option value="">Seleccionar entidad</option>
+              {entidades.map((entidad) => (
+                <option key={entidad.id} value={entidad.id}>
+                  {entidad.razonSocial}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: "1rem" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Estado
             </label>
             <select
               value={formData.estado}
-              onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, estado: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
@@ -311,8 +482,68 @@ export default function Vehiculos() {
               <option value="PROXIMO">Próximo</option>
             </select>
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={handleCerrarModal} className="button button-outline">
+          <div style={{ marginBottom: "1rem" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              Latitud (opcional)
+            </label>
+            <input
+              type="number"
+              step="any"
+              value={formData.latitud}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData({
+                  ...formData,
+                  latitud: value === "" ? "" : parseFloat(value),
+                });
+              }}
+              className="input"
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              Longitud (opcional)
+            </label>
+            <input
+              type="number"
+              step="any"
+              value={formData.longitud}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData({
+                  ...formData,
+                  longitud: value === "" ? "" : parseFloat(value),
+                });
+              }}
+              className="input"
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              justifyContent: "flex-end",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCerrarModal}
+              className="button button-outline"
+            >
               Cancelar
             </button>
             <button type="submit" className="button button-primary">
@@ -324,4 +555,3 @@ export default function Vehiculos() {
     </div>
   );
 }
-

@@ -1,10 +1,22 @@
 import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
+import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import { conductoresService } from "../../services/conductores.service";
 import { usuariosService } from "../../services/usuarios.service";
 import { vehiculosService } from "../../services/vehiculos.service";
 import "./Conductores.css";
+
+const emptyForm = {
+  nombres: "",
+  apellidos: "",
+  correo: "",
+  contrasena: "",
+  usuarioId: "",
+  vehiculoId: "",
+  licenciaConducir: "",
+  estado: "DISPONIBLE",
+};
 
 export default function Conductores() {
   const [conductores, setConductores] = useState([]);
@@ -14,12 +26,7 @@ export default function Conductores() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConductor, setEditingConductor] = useState(null);
-  const [formData, setFormData] = useState({
-    usuarioId: "",
-    vehiculoId: "",
-    licenciaConducir: "",
-    estado: "DISPONIBLE",
-  });
+  const [formData, setFormData] = useState(emptyForm);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,34 +62,80 @@ export default function Conductores() {
   };
 
   useEffect(() => {
-    fetchConductores();
-    fetchUsuarios();
-    fetchVehiculos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const loadData = async () => {
+      await Promise.all([
+        fetchConductores(),
+        fetchUsuarios(),
+        fetchVehiculos(),
+      ]);
+    };
+
+    loadData();
   }, []);
+
+  const handleNuevo = () => {
+    setEditingConductor(null);
+    setFormData(emptyForm);
+    setError("");
+    setModalOpen(true);
+  };
 
   const handleEditar = (conductor) => {
     setEditingConductor(conductor);
     setFormData({
+      nombres: conductor.usuario?.nombres || "",
+      apellidos: conductor.usuario?.apellidos || "",
+      correo: conductor.usuario?.correo || "",
+      contrasena: "",
       usuarioId: conductor.usuarioId,
       vehiculoId: conductor.vehiculoId || "",
       licenciaConducir: conductor.licenciaConducir || "",
       estado: conductor.estado || "DISPONIBLE",
     });
+    setError("");
     setModalOpen(true);
   };
 
   const handleGuardar = async () => {
     try {
       if (editingConductor) {
-        await conductoresService.update(editingConductor.id, formData);
+        await usuariosService.update(editingConductor.usuarioId, {
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          correo: formData.correo,
+        });
+
+        await conductoresService.update(editingConductor.id, {
+          usuarioId: editingConductor.usuarioId,
+          vehiculoId: formData.vehiculoId || null,
+          licenciaConducir: formData.licenciaConducir,
+          estado: formData.estado,
+        });
       } else {
-        await conductoresService.create(formData);
+        const usuarioResponse = await usuariosService.create({
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          correo: formData.correo,
+          contrasena: formData.contrasena,
+          rolId: 2,
+        });
+
+        const usuarioId = usuarioResponse.usuario?.id;
+        if (!usuarioId)
+          throw new Error("No se pudo obtener el ID del usuario creado.");
+
+        await conductoresService.create({
+          usuarioId,
+          vehiculoId: formData.vehiculoId || null,
+          licenciaConducir: formData.licenciaConducir,
+          estado: formData.estado,
+        });
       }
       await fetchConductores();
+      await fetchUsuarios();
       setModalOpen(false);
       setEditingConductor(null);
-      setFormData({ usuarioId: "", vehiculoId: "", licenciaConducir: "", estado: "DISPONIBLE" });
+      setFormData(emptyForm);
     } catch (err) {
       setError(err.message);
     }
@@ -91,16 +144,42 @@ export default function Conductores() {
   const handleCerrarModal = () => {
     setModalOpen(false);
     setEditingConductor(null);
-    setFormData({ usuarioId: "", vehiculoId: "", licenciaConducir: "", estado: "DISPONIBLE" });
+    setFormData(emptyForm);
+    setError("");
   };
 
-  const getUsuarioNombre = (usuarioId) => {
-    const usuario = usuarios.find((u) => u.id === usuarioId);
-    return usuario ? `${usuario.nombres} ${usuario.apellidos || ""}` : "Sin usuario";
+  const handleEliminar = async (id) => {
+    if (
+      !window.confirm("¿Estás seguro de que deseas eliminar este conductor?")
+    ) {
+      return;
+    }
+
+    try {
+      await conductoresService.delete(id);
+      await fetchConductores();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  const getVehiculoPlaca = (vehiculoId) => {
-    const vehiculo = vehiculos.find((v) => v.id === vehiculoId);
+  const getUsuarioNombre = (conductor) => {
+    if (conductor.usuario) {
+      return `${conductor.usuario.nombres} ${conductor.usuario.apellidos || ""}`.trim();
+    }
+
+    const usuario = usuarios.find((u) => u.id === conductor.usuarioId);
+    return usuario
+      ? `${usuario.nombres} ${usuario.apellidos || ""}`.trim()
+      : "Sin usuario";
+  };
+
+  const getVehiculoPlaca = (conductor) => {
+    if (conductor.vehiculo) {
+      return conductor.vehiculo.placa;
+    }
+
+    const vehiculo = vehiculos.find((v) => v.id === conductor.vehiculoId);
     return vehiculo ? vehiculo.placa : "Sin vehículo";
   };
 
@@ -152,6 +231,11 @@ export default function Conductores() {
       </div>
 
       <div className="table-container">
+        <div className="table-actions" style={{ marginBottom: "1rem" }}>
+          <button onClick={handleNuevo} className="button button-primary">
+            + Nuevo Conductor
+          </button>
+        </div>
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">
@@ -171,20 +255,33 @@ export default function Conductores() {
                   conductoresPaginados.map((conductor) => (
                     <tr key={conductor.id}>
                       <td>{conductor.id}</td>
-                      <td><span className="font-medium">{getUsuarioNombre(conductor.usuarioId)}</span></td>
-                      <td>{getVehiculoPlaca(conductor.vehiculoId)}</td>
-                      <td>{conductor.licenciaConducir || "-"}</td>
-                      <td><span className={`badge ${getEstadoColor(conductor.estado)}`}>{conductor.estado || "DISPONIBLE"}</span></td>
                       <td>
-                        <button onClick={() => handleEditar(conductor)} className="button button-primary">
-                          Editar
-                        </button>
+                        <span className="font-medium">
+                          {getUsuarioNombre(conductor)}
+                        </span>
+                      </td>
+                      <td>{getVehiculoPlaca(conductor)}</td>
+                      <td>{conductor.licenciaConducir || "-"}</td>
+                      <td>
+                        <span
+                          className={`badge ${getEstadoColor(conductor.estado)}`}
+                        >
+                          {conductor.estado || "DISPONIBLE"}
+                        </span>
+                      </td>
+                      <td>
+                        <ActionsMenu
+                          onEdit={() => handleEditar(conductor)}
+                          onDelete={() => handleEliminar(conductor.id)}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center">No se encontraron conductores</td>
+                    <td colSpan="6" className="text-center">
+                      No se encontraron conductores
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -199,11 +296,13 @@ export default function Conductores() {
                   <div key={conductor.id} className="mobile-card">
                     <div className="mobile-card-header">
                       <div className="mobile-card-info">
-                        <h3>{getUsuarioNombre(conductor.usuarioId)}</h3>
-                        <p>{getVehiculoPlaca(conductor.vehiculoId)}</p>
+                        <h3>{getUsuarioNombre(conductor)}</h3>
+                        <p>{getVehiculoPlaca(conductor)}</p>
                         <p>Licencia: {conductor.licenciaConducir || "-"}</p>
                       </div>
-                      <span className={`mobile-badge ${getEstadoColor(conductor.estado)}`}>
+                      <span
+                        className={`mobile-badge ${getEstadoColor(conductor.estado)}`}
+                      >
                         {(conductor.estado || "DISPONIBLE").toUpperCase()}
                       </span>
                     </div>
@@ -216,9 +315,10 @@ export default function Conductores() {
                     </div>
 
                     <div className="mobile-card-actions">
-                      <button onClick={() => handleEditar(conductor)} className="mobile-button mobile-button-edit">
-                        Editar
-                      </button>
+                      <ActionsMenu
+                        onEdit={() => handleEditar(conductor)}
+                        onDelete={() => handleEliminar(conductor.id)}
+                      />
                     </div>
                   </div>
                 ))}
@@ -244,33 +344,183 @@ export default function Conductores() {
         onClose={handleCerrarModal}
         title={editingConductor ? "Editar Conductor" : "Nuevo Conductor"}
       >
-        <form onSubmit={(e) => { e.preventDefault(); handleGuardar(); }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleGuardar();
+          }}
+        >
+          {!editingConductor ? (
+            <>
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.5rem",
+                    fontWeight: "500",
+                  }}
+                >
+                  Nombres
+                </label>
+                <input
+                  type="text"
+                  value={formData.nombres}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nombres: e.target.value })
+                  }
+                  className="input"
+                  style={{ width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.5rem",
+                    fontWeight: "500",
+                  }}
+                >
+                  Apellidos
+                </label>
+                <input
+                  type="text"
+                  value={formData.apellidos}
+                  onChange={(e) =>
+                    setFormData({ ...formData, apellidos: e.target.value })
+                  }
+                  className="input"
+                  style={{ width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.5rem",
+                    fontWeight: "500",
+                  }}
+                >
+                  Correo
+                </label>
+                <input
+                  type="email"
+                  value={formData.correo}
+                  onChange={(e) =>
+                    setFormData({ ...formData, correo: e.target.value })
+                  }
+                  className="input"
+                  style={{ width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.5rem",
+                    fontWeight: "500",
+                  }}
+                >
+                  Contraseña
+                </label>
+                <input
+                  type="password"
+                  value={formData.contrasena}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contrasena: e.target.value })
+                  }
+                  className="input"
+                  style={{ width: "100%" }}
+                  required
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.5rem",
+                    fontWeight: "500",
+                  }}
+                >
+                  Nombres
+                </label>
+                <input
+                  type="text"
+                  value={formData.nombres}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nombres: e.target.value })
+                  }
+                  className="input"
+                  style={{ width: "100%" }}
+                  required
+                />
+              </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.5rem",
+                    fontWeight: "500",
+                  }}
+                >
+                  Apellidos
+                </label>
+                <input
+                  type="text"
+                  value={formData.apellidos}
+                  onChange={(e) =>
+                    setFormData({ ...formData, apellidos: e.target.value })
+                  }
+                  className="input"
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.5rem",
+                    fontWeight: "500",
+                  }}
+                >
+                  Correo
+                </label>
+                <input
+                  type="email"
+                  value={formData.correo}
+                  onChange={(e) =>
+                    setFormData({ ...formData, correo: e.target.value })
+                  }
+                  className="input"
+                  style={{ width: "100%" }}
+                  required
+                />
+              </div>
+            </>
+          )}
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
-              Usuario
-            </label>
-            <select
-              value={formData.usuarioId}
-              onChange={(e) => setFormData({ ...formData, usuarioId: parseInt(e.target.value) })}
-              className="input"
-              style={{ width: "100%" }}
-              required
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
             >
-              <option value="">Seleccionar usuario</option>
-              {usuarios.map((usuario) => (
-                <option key={usuario.id} value={usuario.id}>
-                  {usuario.nombres} {usuario.apellidos || ""}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
               Vehículo
             </label>
             <select
               value={formData.vehiculoId}
-              onChange={(e) => setFormData({ ...formData, vehiculoId: e.target.value ? parseInt(e.target.value) : "" })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  vehiculoId: e.target.value ? parseInt(e.target.value) : "",
+                })
+              }
               className="input"
               style={{ width: "100%" }}
             >
@@ -283,24 +533,40 @@ export default function Conductores() {
             </select>
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Licencia
             </label>
             <input
               type="text"
               value={formData.licenciaConducir}
-              onChange={(e) => setFormData({ ...formData, licenciaConducir: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, licenciaConducir: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
             />
           </div>
           <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Estado
             </label>
             <select
               value={formData.estado}
-              onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, estado: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
               required
@@ -310,8 +576,18 @@ export default function Conductores() {
               <option value="INACTIVO">Inactivo</option>
             </select>
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={handleCerrarModal} className="button button-outline">
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              justifyContent: "flex-end",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCerrarModal}
+              className="button button-outline"
+            >
               Cancelar
             </button>
             <button type="submit" className="button button-primary">

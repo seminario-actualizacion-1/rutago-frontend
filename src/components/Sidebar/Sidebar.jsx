@@ -14,6 +14,7 @@ const menus = {
       { to: "/barrios", label: "Barrios" },
       { to: "/comunas", label: "Comunas" },
       { to: "/rutas", label: "Rutas" },
+      { to: "/horarios", label: "Horarios" },
       { to: "/entidades", label: "Entidades" },
     ],
   },
