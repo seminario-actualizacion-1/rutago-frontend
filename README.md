@@ -2,215 +2,321 @@
 
 ## Sistema Inteligente de Consulta y Monitoreo de Rutas de Transporte en Tiempo Real
 
-RutaGo es una plataforma web diseñada para mejorar la experiencia de los usuarios del transporte urbano e intermunicipal mediante herramientas de consulta de rutas, horarios y seguimiento de vehículos en tiempo real.
+RutaGo es una plataforma web diseñada para facilitar la movilidad urbana e intermunicipal mediante la consulta de rutas, horarios, ubicación de vehículos y administración del sistema desde una única plataforma.
 
 ---
 
-## 🎯 Objetivo General
+# 🎯 Objetivo General
 
-Desarrollar una aplicación web que permita a los usuarios consultar rutas, horarios y ubicación de vehículos en tiempo real, optimizando la experiencia de movilidad y reduciendo los tiempos de espera.
-
----
-
-## ❗ Problemática
-
-Actualmente muchos pasajeros desconocen la ubicación exacta de los vehículos, los horarios reales de llegada y posibles retrasos en las rutas. Esta situación genera incertidumbre, pérdida de tiempo y dificultades para planificar desplazamientos.
-
-RutaGo busca solucionar esta problemática mediante una plataforma accesible y fácil de usar.
+Desarrollar una aplicación web que permita a los usuarios consultar rutas, horarios y ubicación de vehículos en tiempo real, optimizando la movilidad y reduciendo los tiempos de espera.
 
 ---
 
-## 👥 Usuarios del Sistema
+# ❗ Problemática
+
+Actualmente muchos pasajeros desconocen la ubicación de los vehículos, los horarios reales de salida y posibles retrasos de las rutas, ocasionando pérdidas de tiempo e incertidumbre.
+
+RutaGo busca solucionar esta problemática mediante una plataforma moderna, sencilla y accesible.
+
+---
+
+# 👥 Usuarios del Sistema
 
 - 👤 Pasajeros
 - 🚌 Conductores
-- 🏢 Empresas Transportadoras
+- 🏢 Entidades transportadoras
 - ⚙️ Administradores
 
 ---
 
-## ⚙️ Funcionalidades Principales
+# ⚙️ Funcionalidades
 
-- Registro de usuarios.
-- Inicio y cierre de sesión.
-- Gestión de perfiles.
-- Consulta de rutas por destino.
-- Visualización de buses disponibles.
-- Consulta de horarios.
-- Seguimiento GPS en tiempo real.
-- Estado de los vehículos.
-- Gestión de rutas y horarios.
-- Notificaciones automáticas (futuras versiones).
+## Usuarios
+
+- Registro
+- Inicio de sesión
+- Recuperación de contraseña
+- Cerrar sesión
+- Gestión de perfil
+
+## Pasajeros
+
+- Buscar rutas
+- Consultar horarios
+- Ver buses disponibles
+- Consultar información del vehículo
+
+## Administrador
+
+- Gestión de Vehículos
+- Gestión de Rutas
+- Gestión de Horarios
+- Gestión de Conductores
+- Gestión de Comunas
+- Gestión de Barrios
+- Gestión de Entidades
+- Gestión de Pasajeros
+
+## Futuras versiones
+
+- Seguimiento GPS en tiempo real
+- Estado de buses
+- Notificaciones automáticas
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+# 🛠 Tecnologías Utilizadas
 
 | Tecnología | Uso |
 |------------|-----|
 | React | Frontend |
 | Vite | Entorno de desarrollo |
-| JavaScript | Lógica de negocio |
+| JavaScript | Lógica del sistema |
+| HTML5 | Estructura |
+| CSS3 | Estilos |
 | Express.js | Backend |
 | MySQL | Base de datos |
-| GitHub | Control de versiones |
-| GitHub Actions | Integración continua |
-| ESLint | Calidad de código |
+| Axios | Consumo de API |
+| React Router DOM | Navegación |
+| Git | Control de versiones |
+| GitHub | Repositorio |
+| GitHub Actions | CI/CD |
 | Trello | Gestión Scrum |
+| ESLint | Calidad del código |
 
 ---
 
-## 🌐 Arquitectura General
+# 🏗 Arquitectura
 
-```text
-Frontend (React + Vite)
-          │
-          ▼
-      API REST
-     (Express.js)
-          │
-          ▼
-        MySQL
+```
+             Usuario
+
+                │
+
+        Frontend (React)
+
+                │
+
+           Axios (API)
+
+                │
+
+      Backend (Express.js)
+
+                │
+
+            MySQL
 ```
 
 ---
 
-## 💻 Frontend
+# 💻 Frontend
 
-### Tecnologías
+## Páginas implementadas
 
-- React
-- Vite
-- JavaScript
-- HTML5
-- CSS3
-- ESLint
-
-### Características
-
-- Interfaz moderna y responsiva.
-- Hot Module Replacement (HMR).
-- Arquitectura escalable.
-- Componentes reutilizables.
-- Compatible con dispositivos móviles y escritorio.
-
----
-
-## 🔧 Backend
-
-### Tecnologías Propuestas
-
-- Node.js
-- Express.js
-
-### Funcionalidades
-
-- Gestión de usuarios.
-- Gestión de rutas.
-- Gestión de buses.
-- Gestión de horarios.
-- Autenticación y autorización.
-- API REST.
+- Home
+- Login
+- Registro
+- Recuperar contraseña
+- Dashboard
+- Perfil
+- Vehículos
+- Rutas
+- Conductores
+- Pasajeros
+- Comunas
+- Barrios
+- Entidades
 
 ---
 
-## 🗄️ Base de Datos
+## Componentes
 
-### Motor
-
-MySQL
-
-### Entidades Principales
-
-- Usuario
-- Rol
-- Bus
-- Ruta
-- Horario
-- Ubicación
-- Historial
+- Navbar
+- Sidebar
+- Button
+- Card
+- Input
+- Footer
+- Logo
+- DashboardLayout
+- ProtectedRoute
 
 ---
 
-## 🚀 Integración Continua
+# 🔧 Backend
 
-El proyecto utiliza GitHub y GitHub Actions para automatizar tareas de integración y control de versiones.
+## Funcionalidades implementadas
+
+- API REST
+- Autenticación
+- Roles
+- CRUD de Usuarios
+- CRUD de Vehículos
+- CRUD de Rutas
+- CRUD de Horarios
+- CRUD de Comunas
+- CRUD de Barrios
+- CRUD de Conductores
+- CRUD de Entidades
 
 ---
 
-## 💻 Frontend
+# 🗄 Base de Datos
 
-### Correr proyecto
+Motor:
+
+**MySQL**
+
+## Tablas principales
+
+- Usuarios
+- Roles
+- Vehículos
+- Rutas
+- Horarios
+- Barrios
+- Comunas
+- Perfil Conductor
+- Perfil Entidad
+- Viajes
+
+---
+
+# 🚀 Instalación
+
+## Frontend
 
 ```bash
-# Desde la carpeta rutago-frontend/
-
-# Instalar dependencias
 npm install
-
-# Modo desarrollo
 npm run dev
-
-# Build para producción
-npm run build
 ```
 
-### Url local
+Aplicación local:
 
+```
 http://localhost:5173
+```
 
 ---
 
-## 🚀 Integración Continua
+## Backend
 
-## 📋 Metodología Scrum
+```bash
+npm install
+npm start
+```
+
+---
+
+# 📋 Metodología Scrum
 
 Herramienta utilizada:
 
 **Trello**
 
-### Equipo Scrum
+---
+
+# 👨‍💻 Equipo
 
 | Rol | Integrante |
 |------|------------|
-| Scrum Master | Edward |
-| Desarrollador Backend | Cristian Valderrama |
-| Desarrolladora Frontend | STEFANY Potosí |
-| Administrador de Base de Datos | Santiago Estupiñán |
-| QA Tester | Guap |
+| Scrum Master | Edward Suárez |
+| Backend | Cristian Valderrama |
+| Frontend | Stefany Potosí |
+| Base de Datos | Santiago Estupiñán |
+| QA | Equipo RutaGo |
 
 ---
 
-## 📊 Estado del Proyecto
+# 📊 Estado del Proyecto
 
-### Completado
+## ✅ Completado
 
-- Configuración de React + Vite.
-- Configuración de ESLint.
-- Configuración de GitHub Actions.
-- Estructura inicial del Frontend.
-
-### En Desarrollo
-
-- Componentes React.
-- Consulta de rutas.
-- Diseño de interfaces.
-
-### Pendiente
-
-- Integración con Express.js.
-- Conexión con MySQL.
-- Geolocalización en tiempo real.
-- Sistema de notificaciones.
+- Configuración del proyecto React + Vite.
+- Backend Express.
+- Base de datos MySQL.
+- Sistema de autenticación.
+- Registro.
+- Login.
+- Recuperación de contraseña.
+- Gestión de perfiles.
+- Dashboard.
+- CRUD de Vehículos.
+- CRUD de Rutas.
+- CRUD de Horarios.
+- Gestión de Comunas.
+- Gestión de Barrios.
+- API REST.
+- Integración Frontend - Backend.
+- GitHub Actions.
 
 ---
 
-## 📄 Licencia
+## 🚧 En desarrollo
 
-Proyecto académico desarrollado con fines educativos para la implementación de soluciones tecnológicas orientadas al monitoreo y seguimiento de rutas de transporte en tiempo real.
+- Buscador de buses por destino.
+- Visualización de buses disponibles.
+- Consulta de horarios.
+- Vista detallada de buses.
 
-## 🔗 Enlaces
+---
 
-- Backend: https://github.com/seminario-actualizacion-1/rutago-backend
+## 📌 Pendiente
 
-- TRELLO : https://trello.com/b/zR4MFcBH
+- Seguimiento GPS en tiempo real.
+- Estado de buses en tiempo real.
+- Notificaciones automáticas.
+
+---
+
+# 📂 Estructura del Proyecto
+
+```
+rutago-frontend
+│
+├── public
+├── src
+│   ├── api
+│   ├── assets
+│   ├── components
+│   ├── context
+│   ├── hooks
+│   ├── pages
+│   ├── App.jsx
+│   ├── App.css
+│   ├── main.jsx
+│   └── index.css
+│
+├── package.json
+├── vite.config.js
+└── README.md
+```
+
+---
+
+# 🚀 Control de Versiones
+
+Se utiliza Git y GitHub mediante el flujo de trabajo basado en ramas (Git Flow), permitiendo el desarrollo colaborativo y el control de versiones del proyecto.
+
+---
+
+# 📄 Licencia
+
+Proyecto académico desarrollado con fines educativos para la asignatura Seminario de Actualización.
+
+---
+
+# 🔗 Repositorios
+
+**Frontend**
+
+https://github.com/seminario-actualizacion-1/rutago-frontend
+
+**Backend**
+
+https://github.com/seminario-actualizacion-1/rutago-backend
+
+**Trello**
+
+https://trello.com/b/zR4MFcBH
