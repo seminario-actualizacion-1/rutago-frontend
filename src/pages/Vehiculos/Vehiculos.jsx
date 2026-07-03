@@ -12,6 +12,14 @@ export default function Vehiculos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [pagination, setPagination] = useState({
+    paginaActual: 1,
+    registrosPorPagina: 10,
+    totalPaginas: 1,
+    totalRegistros: 0,
+    tienePaginaAnterior: false,
+    tienePaginaSiguiente: false,
+  });
   const [editingVehiculo, setEditingVehiculo] = useState(null);
   const [formData, setFormData] = useState({
     placa: "",
@@ -29,35 +37,45 @@ export default function Vehiculos() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const fetchVehiculos = async () => {
-    try {
-      const data = await vehiculosService.getAll();
-      setVehiculos(data.data || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchEntidades = async () => {
-    try {
-      const data = await perfilEntidadService.getAll();
-      setEntidades(data.data || []);
-    } catch (err) {
-      console.error("Error al cargar entidades:", err);
-    }
-  };
-
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchVehiculos(), fetchEntidades()]);
+      try {
+        setLoading(true);
+        const [vehiculosData, entidadesData] = await Promise.all([
+          vehiculosService.getAll({
+            paginaActual: currentPage,
+            registrosPorPagina: itemsPerPage,
+          }),
+          perfilEntidadService.getAll({
+            paginaActual: 1,
+            registrosPorPagina: 100,
+          }),
+        ]);
+
+        setVehiculos(vehiculosData.data || []);
+        setPagination(
+          vehiculosData.paginacion || {
+            paginaActual: currentPage,
+            registrosPorPagina: itemsPerPage,
+            totalPaginas: 1,
+            totalRegistros: vehiculosData.data?.length || 0,
+            tienePaginaAnterior: false,
+            tienePaginaSiguiente: false,
+          },
+        );
+        setEntidades(entidadesData.data || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadData();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   const handleEditar = (vehiculo) => {
+    setError("");
     setEditingVehiculo(vehiculo);
     setFormData({
       placa: vehiculo.placa,
@@ -80,7 +98,22 @@ export default function Vehiculos() {
       } else {
         await vehiculosService.create(formData);
       }
-      await fetchVehiculos();
+      setCurrentPage(1);
+      const data = await vehiculosService.getAll({
+        paginaActual: 1,
+        registrosPorPagina: itemsPerPage,
+      });
+      setVehiculos(data.data || []);
+      setPagination(
+        data.paginacion || {
+          paginaActual: 1,
+          registrosPorPagina: itemsPerPage,
+          totalPaginas: 1,
+          totalRegistros: data.data?.length || 0,
+          tienePaginaAnterior: false,
+          tienePaginaSiguiente: false,
+        },
+      );
       setModalOpen(false);
       setEditingVehiculo(null);
       setFormData({
@@ -100,6 +133,7 @@ export default function Vehiculos() {
   };
 
   const handleCerrarModal = () => {
+    setError("");
     setModalOpen(false);
     setEditingVehiculo(null);
     setFormData({
@@ -124,7 +158,22 @@ export default function Vehiculos() {
 
     try {
       await vehiculosService.delete(id);
-      await fetchVehiculos();
+      setCurrentPage(1);
+      const data = await vehiculosService.getAll({
+        paginaActual: 1,
+        registrosPorPagina: itemsPerPage,
+      });
+      setVehiculos(data.data || []);
+      setPagination(
+        data.paginacion || {
+          paginaActual: 1,
+          registrosPorPagina: itemsPerPage,
+          totalPaginas: 1,
+          totalRegistros: data.data?.length || 0,
+          tienePaginaAnterior: false,
+          tienePaginaSiguiente: false,
+        },
+      );
     } catch (err) {
       setError(err.message);
     }
@@ -139,20 +188,7 @@ export default function Vehiculos() {
     return colors[estado] || "badge-default";
   };
 
-  // Pagination logic
-  const totalPages = Math.ceil(vehiculos.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const vehiculosPaginados = vehiculos.slice(startIndex, endIndex);
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
+  const vehiculosPaginados = vehiculos;
 
   if (loading)
     return (
@@ -164,18 +200,12 @@ export default function Vehiculos() {
       </div>
     );
 
-  if (error)
-    return (
-      <div className="vehiculos-container">
-        <p className="error">{error}</p>
-      </div>
-    );
-
   return (
     <div className="vehiculos-container">
       <div className="page-header">
         <h1>Gestión de Vehículos</h1>
       </div>
+      {error && !modalOpen && <p className="error">{error}</p>}
 
       <div className="table-container">
         <div className="table-actions" style={{ marginBottom: "1rem" }}>
@@ -299,11 +329,14 @@ export default function Vehiculos() {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={vehiculos.length}
+          totalPages={pagination.totalPaginas || 1}
+          totalItems={pagination.totalRegistros || vehiculos.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(n) => {
+            setItemsPerPage(n);
+            setCurrentPage(1);
+          }}
         />
       </div>
 
@@ -532,6 +565,7 @@ export default function Vehiculos() {
               style={{ width: "100%" }}
             />
           </div>
+          {error && <p className="error">{error}</p>}
           <div
             style={{
               display: "flex",

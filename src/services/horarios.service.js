@@ -1,5 +1,17 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
+const buildQueryString = (params = {}) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.append(key, value);
+    }
+  });
+
+  return searchParams.toString();
+};
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
@@ -11,11 +23,15 @@ const getAuthHeaders = () => {
 const normalizeHorarioPayload = (horario) => ({
   ...horario,
   vehiculoId:
-    horario.vehiculoId === "" || horario.vehiculoId == null || Number.isNaN(horario.vehiculoId)
+    horario.vehiculoId === "" ||
+    horario.vehiculoId == null ||
+    Number.isNaN(horario.vehiculoId)
       ? null
       : Number(horario.vehiculoId),
   rutaId:
-    horario.rutaId === "" || horario.rutaId == null || Number.isNaN(horario.rutaId)
+    horario.rutaId === "" ||
+    horario.rutaId == null ||
+    Number.isNaN(horario.rutaId)
       ? null
       : Number(horario.rutaId),
   frecuenciaMinutos:
@@ -27,10 +43,14 @@ const normalizeHorarioPayload = (horario) => ({
 });
 
 export const horariosService = {
-  getAll: async () => {
-    const response = await fetch(`${API_URL}/horarios`, {
-      headers: getAuthHeaders(),
-    });
+  getAll: async (params = {}) => {
+    const query = buildQueryString(params);
+    const response = await fetch(
+      `${API_URL}/horarios${query ? `?${query}` : ""}`,
+      {
+        headers: getAuthHeaders(),
+      },
+    );
     if (!response.ok) throw new Error("Error al cargar horarios");
     return response.json();
   },

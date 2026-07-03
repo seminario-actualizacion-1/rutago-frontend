@@ -25,53 +25,64 @@ export default function Conductores() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [pagination, setPagination] = useState({
+    paginaActual: 1,
+    registrosPorPagina: 10,
+    totalPaginas: 1,
+    totalRegistros: 0,
+    tienePaginaAnterior: false,
+    tienePaginaSiguiente: false,
+  });
   const [editingConductor, setEditingConductor] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  const fetchConductores = async () => {
-    try {
-      const data = await conductoresService.getAll();
-      setConductores(data.data || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUsuarios = async () => {
-    try {
-      const data = await usuariosService.getAll();
-      setUsuarios(data.data || []);
-    } catch (err) {
-      console.error("Error al cargar usuarios:", err);
-    }
-  };
-
-  const fetchVehiculos = async () => {
-    try {
-      const data = await vehiculosService.getAll();
-      setVehiculos(data.data || []);
-    } catch (err) {
-      console.error("Error al cargar vehículos:", err);
-    }
-  };
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([
-        fetchConductores(),
-        fetchUsuarios(),
-        fetchVehiculos(),
-      ]);
+      try {
+        setLoading(true);
+        const [conductoresData, usuariosData, vehiculosData] =
+          await Promise.all([
+            conductoresService.getAll({
+              paginaActual: currentPage,
+              registrosPorPagina: itemsPerPage,
+            }),
+            usuariosService.getAll({
+              paginaActual: 1,
+              registrosPorPagina: 100,
+            }),
+            vehiculosService.getAll({
+              paginaActual: 1,
+              registrosPorPagina: 100,
+            }),
+          ]);
+
+        setConductores(conductoresData.data || []);
+        setPagination(
+          conductoresData.paginacion || {
+            paginaActual: currentPage,
+            registrosPorPagina: itemsPerPage,
+            totalPaginas: 1,
+            totalRegistros: conductoresData.data?.length || 0,
+            tienePaginaAnterior: false,
+            tienePaginaSiguiente: false,
+          },
+        );
+        setUsuarios(usuariosData.data || []);
+        setVehiculos(vehiculosData.data || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadData();
-  }, []);
+  }, [currentPage, itemsPerPage, refreshKey]);
 
   const handleNuevo = () => {
     setEditingConductor(null);
@@ -99,14 +110,20 @@ export default function Conductores() {
   const handleGuardar = async () => {
     try {
       if (editingConductor) {
-        await usuariosService.update(editingConductor.usuarioId, {
-          nombres: formData.nombres,
-          apellidos: formData.apellidos,
-          correo: formData.correo,
-        });
+        // Resolver usuarioId: puede venir como propiedad plana o anidada
+        const usuarioIdEdicion =
+          editingConductor.usuarioId ?? editingConductor.usuario?.id ?? null;
+
+        // Solo actualizar el usuario si existe la asociación
+        if (usuarioIdEdicion) {
+          await usuariosService.update(usuarioIdEdicion, {
+            nombres: formData.nombres,
+            apellidos: formData.apellidos,
+            correo: formData.correo,
+          });
+        }
 
         await conductoresService.update(editingConductor.id, {
-          usuarioId: editingConductor.usuarioId,
           vehiculoId: formData.vehiculoId || null,
           licenciaConducir: formData.licenciaConducir,
           estado: formData.estado,
@@ -131,8 +148,34 @@ export default function Conductores() {
           estado: formData.estado,
         });
       }
-      await fetchConductores();
-      await fetchUsuarios();
+      setCurrentPage(1);
+      const [conductoresData, usuariosData, vehiculosData] = await Promise.all([
+        conductoresService.getAll({
+          paginaActual: 1,
+          registrosPorPagina: itemsPerPage,
+        }),
+        usuariosService.getAll({
+          paginaActual: 1,
+          registrosPorPagina: 100,
+        }),
+        vehiculosService.getAll({
+          paginaActual: 1,
+          registrosPorPagina: 100,
+        }),
+      ]);
+      setConductores(conductoresData.data || []);
+      setPagination(
+        conductoresData.paginacion || {
+          paginaActual: currentPage,
+          registrosPorPagina: itemsPerPage,
+          totalPaginas: 1,
+          totalRegistros: conductoresData.data?.length || 0,
+          tienePaginaAnterior: false,
+          tienePaginaSiguiente: false,
+        },
+      );
+      setUsuarios(usuariosData.data || []);
+      setVehiculos(vehiculosData.data || []);
       setModalOpen(false);
       setEditingConductor(null);
       setFormData(emptyForm);
@@ -157,7 +200,8 @@ export default function Conductores() {
 
     try {
       await conductoresService.delete(id);
-      await fetchConductores();
+      setCurrentPage(1);
+      setRefreshKey(k => k + 1);
     } catch (err) {
       setError(err.message);
     }
@@ -192,20 +236,7 @@ export default function Conductores() {
     return colors[estado] || "badge-default";
   };
 
-  // Pagination logic
-  const totalPages = Math.ceil(conductores.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const conductoresPaginados = conductores.slice(startIndex, endIndex);
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
+  const conductoresPaginados = conductores;
 
   if (loading)
     return (
@@ -217,18 +248,12 @@ export default function Conductores() {
       </div>
     );
 
-  if (error)
-    return (
-      <div className="conductores-container">
-        <p className="error">{error}</p>
-      </div>
-    );
-
   return (
     <div className="conductores-container">
       <div className="page-header">
         <h1>Gestión de Conductores</h1>
       </div>
+      {error && !modalOpen && <p className="error">{error}</p>}
 
       <div className="table-container">
         <div className="table-actions" style={{ marginBottom: "1rem" }}>
@@ -331,11 +356,14 @@ export default function Conductores() {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={conductores.length}
+          totalPages={pagination.totalPaginas || 1}
+          totalItems={pagination.totalRegistros || conductores.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(n) => {
+            setItemsPerPage(n);
+            setCurrentPage(1);
+          }}
         />
       </div>
 
@@ -576,6 +604,7 @@ export default function Conductores() {
               <option value="INACTIVO">Inactivo</option>
             </select>
           </div>
+          {error && <p className="error">{error}</p>}
           <div
             style={{
               display: "flex",

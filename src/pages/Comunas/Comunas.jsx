@@ -11,6 +11,14 @@ export default function Comunas() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingComuna, setEditingComuna] = useState(null);
+  const [pagination, setPagination] = useState({
+    paginaActual: 1,
+    registrosPorPagina: 10,
+    totalPaginas: 1,
+    totalRegistros: 0,
+    tienePaginaAnterior: false,
+    tienePaginaSiguiente: false,
+  });
   const [formData, setFormData] = useState({
     nombre: "",
   });
@@ -19,10 +27,24 @@ export default function Comunas() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const fetchComunas = async () => {
+  const fetchComunas = async (page = currentPage, limit = itemsPerPage) => {
     try {
-      const data = await comunasService.getAll();
+      setLoading(true);
+      const data = await comunasService.getAll({
+        paginaActual: page,
+        registrosPorPagina: limit,
+      });
       setComunas(data.data || []);
+      setPagination(
+        data.paginacion || {
+          paginaActual: page,
+          registrosPorPagina: limit,
+          totalPaginas: 1,
+          totalRegistros: data.data?.length || 0,
+          tienePaginaAnterior: false,
+          tienePaginaSiguiente: false,
+        },
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -32,13 +54,14 @@ export default function Comunas() {
 
   useEffect(() => {
     const loadComunas = async () => {
-      await fetchComunas();
+      await fetchComunas(currentPage, itemsPerPage);
     };
 
     loadComunas();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   const handleEditar = (comuna) => {
+    setError("");
     setEditingComuna(comuna);
     setFormData({
       nombre: comuna.nombre,
@@ -53,7 +76,8 @@ export default function Comunas() {
       } else {
         await comunasService.create(formData);
       }
-      await fetchComunas();
+      setCurrentPage(1);
+      await fetchComunas(1, itemsPerPage);
       setModalOpen(false);
       setEditingComuna(null);
       setFormData({
@@ -65,6 +89,7 @@ export default function Comunas() {
   };
 
   const handleCerrarModal = () => {
+    setError("");
     setModalOpen(false);
     setEditingComuna(null);
     setFormData({
@@ -79,17 +104,14 @@ export default function Comunas() {
 
     try {
       await comunasService.delete(id);
-      await fetchComunas();
+      setCurrentPage(1);
+      await fetchComunas(1, itemsPerPage);
     } catch (err) {
       setError(err.message);
     }
   };
 
-  // Pagination logic
-  const totalPages = Math.ceil(comunas.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const comunasPaginadas = comunas.slice(startIndex, endIndex);
+  const comunasPaginadas = comunas;
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -110,23 +132,18 @@ export default function Comunas() {
       </div>
     );
 
-  if (error)
-    return (
-      <div className="comunas-container">
-        <p className="error">{error}</p>
-      </div>
-    );
-
   return (
     <div className="comunas-container">
       <div className="page-header">
         <h1>Gestión de Comunas</h1>
       </div>
+      {error && !modalOpen && <p className="error">{error}</p>}
 
       <div className="table-container">
         <div className="table-actions" style={{ marginBottom: "1rem" }}>
           <button
             onClick={() => {
+              setError("");
               setEditingComuna(null);
               setFormData({ nombre: "" });
               setModalOpen(true);
@@ -204,8 +221,8 @@ export default function Comunas() {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={comunas.length}
+          totalPages={pagination.totalPaginas || 1}
+          totalItems={pagination.totalRegistros || comunas.length}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
           onItemsPerPageChange={handleItemsPerPageChange}
@@ -244,6 +261,7 @@ export default function Comunas() {
               required
             />
           </div>
+          {error && <p className="error">{error}</p>}
           <div
             style={{
               display: "flex",

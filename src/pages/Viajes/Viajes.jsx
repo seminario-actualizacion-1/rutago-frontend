@@ -31,35 +31,49 @@ export default function Viajes() {
   const [viajes, setViajes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pagination, setPagination] = useState({
+    paginaActual: 1,
+    registrosPorPagina: 10,
+    totalPaginas: 1,
+    totalRegistros: 0,
+    tienePaginaAnterior: false,
+    tienePaginaSiguiente: false,
+  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const fetchViajes = async () => {
-    try {
-      const data = await viajesService.getAll();
-      setViajes(data.data || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     const loadViajes = async () => {
-      await fetchViajes();
+      try {
+        setLoading(true);
+        const data = await viajesService.getAll({
+          paginaActual: currentPage,
+          registrosPorPagina: itemsPerPage,
+        });
+        setViajes(data.data || []);
+        setPagination(
+          data.paginacion || {
+            paginaActual: currentPage,
+            registrosPorPagina: itemsPerPage,
+            totalPaginas: 1,
+            totalRegistros: data.data?.length || 0,
+            tienePaginaAnterior: false,
+            tienePaginaSiguiente: false,
+          },
+        );
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadViajes();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(viajes.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const viajesPaginados = viajes.slice(startIndex, endIndex);
+  const viajesPaginados = viajes;
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -80,18 +94,12 @@ export default function Viajes() {
       </div>
     );
 
-  if (error)
-    return (
-      <div className="viajes-container">
-        <p className="error">{error}</p>
-      </div>
-    );
-
   return (
     <div className="viajes-container">
       <div className="page-header">
         <h1>Seguimiento de Recorridos</h1>
       </div>
+      {error && <p className="error">{error}</p>}
 
       <div className="table-container">
         <div className="bg-white rounded-lg shadow-sm">
@@ -189,8 +197,8 @@ export default function Viajes() {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={viajes.length}
+          totalPages={pagination.totalPaginas || 1}
+          totalItems={pagination.totalRegistros || viajes.length}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
           onItemsPerPageChange={handleItemsPerPageChange}

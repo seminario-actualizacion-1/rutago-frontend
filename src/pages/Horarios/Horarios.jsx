@@ -46,15 +46,37 @@ export default function Horarios() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingHorario, setEditingHorario] = useState(null);
+  const [pagination, setPagination] = useState({
+    paginaActual: 1,
+    registrosPorPagina: 10,
+    totalPaginas: 1,
+    totalRegistros: 0,
+    tienePaginaAnterior: false,
+    tienePaginaSiguiente: false,
+  });
   const [formData, setFormData] = useState(emptyForm);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const fetchHorarios = async () => {
+  const fetchHorarios = async (page = currentPage, limit = itemsPerPage) => {
     try {
-      const data = await horariosService.getAll();
+      setLoading(true);
+      const data = await horariosService.getAll({
+        paginaActual: page,
+        registrosPorPagina: limit,
+      });
       setHorarios(data.data || []);
+      setPagination(
+        data.paginacion || {
+          paginaActual: page,
+          registrosPorPagina: limit,
+          totalPaginas: 1,
+          totalRegistros: data.data?.length || 0,
+          tienePaginaAnterior: false,
+          tienePaginaSiguiente: false,
+        },
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -62,31 +84,34 @@ export default function Horarios() {
     }
   };
 
-  const fetchRutas = async () => {
-    try {
-      const data = await rutasService.getAll();
-      setRutas(data.data || []);
-    } catch (err) {
-      console.error("Error al cargar rutas:", err);
-    }
-  };
-
-  const fetchVehiculos = async () => {
-    try {
-      const data = await vehiculosService.getAll();
-      setVehiculos(data.data || []);
-    } catch (err) {
-      console.error("Error al cargar vehículos:", err);
-    }
-  };
-
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchHorarios(), fetchRutas(), fetchVehiculos()]);
+      try {
+        setLoading(true);
+        const [rutasData, vehiculosData] = await Promise.all([
+          rutasService.getAll({
+            paginaActual: 1,
+            registrosPorPagina: 100,
+          }),
+          vehiculosService.getAll({
+            paginaActual: 1,
+            registrosPorPagina: 100,
+          }),
+        ]);
+        setRutas(rutasData.data || []);
+        setVehiculos(vehiculosData.data || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
-
     loadData();
   }, []);
+
+  useEffect(() => {
+    fetchHorarios(currentPage, itemsPerPage);
+  }, [currentPage, itemsPerPage]);
 
   const handleNuevo = () => {
     setEditingHorario(null);
@@ -118,7 +143,8 @@ export default function Horarios() {
         await horariosService.create(formData);
       }
       setError("");
-      await fetchHorarios();
+      setCurrentPage(1);
+      await fetchHorarios(1, itemsPerPage);
       setModalOpen(false);
       setEditingHorario(null);
       setFormData(emptyForm);
@@ -141,7 +167,8 @@ export default function Horarios() {
 
     try {
       await horariosService.delete(id);
-      await fetchHorarios();
+      setCurrentPage(1);
+      await fetchHorarios(1, itemsPerPage);
     } catch (err) {
       setError(err.message);
     }
@@ -159,12 +186,7 @@ export default function Horarios() {
     return ruta ? ruta.nombre : "Sin ruta";
   };
 
-  const totalPages = Math.ceil(horarios.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const horariosPaginados = horarios.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  const horariosPaginados = horarios;
 
   if (loading) {
     return (
@@ -177,19 +199,12 @@ export default function Horarios() {
     );
   }
 
-  if (error && !modalOpen) {
-    return (
-      <div className="rutas-container">
-        <p className="error">{error}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="rutas-container">
       <div className="page-header">
         <h1>Gestión de Horarios</h1>
       </div>
+      {error && !modalOpen && <p className="error">{error}</p>}
 
       <div className="table-container">
         <div className="table-actions" style={{ marginBottom: "1rem" }}>
@@ -288,8 +303,8 @@ export default function Horarios() {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={horarios.length}
+          totalPages={pagination.totalPaginas || 1}
+          totalItems={pagination.totalRegistros || horarios.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={(value) => {

@@ -1,5 +1,17 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
+const buildQueryString = (params = {}) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.append(key, value);
+    }
+  });
+
+  return searchParams.toString();
+};
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
@@ -18,11 +30,21 @@ const normalizeEntidadPayload = (entidad) => ({
       : Number(entidad.usuarioId),
 });
 
+const normalizeEntidadUpdatePayload = (entidad) => {
+  const payload = { ...entidad };
+  delete payload.usuarioId;
+  return payload;
+};
+
 export const entidadesService = {
-  getAll: async () => {
-    const response = await fetch(`${API_URL}/perfiles-entidad`, {
-      headers: getAuthHeaders(),
-    });
+  getAll: async (params = {}) => {
+    const query = buildQueryString(params);
+    const response = await fetch(
+      `${API_URL}/perfiles-entidad${query ? `?${query}` : ""}`,
+      {
+        headers: getAuthHeaders(),
+      },
+    );
     if (!response.ok) throw new Error("Error al cargar entidades");
     return response.json();
   },
@@ -52,7 +74,7 @@ export const entidadesService = {
     const response = await fetch(`${API_URL}/perfiles-entidad/${id}`, {
       method: "PUT",
       headers: getAuthHeaders(),
-      body: JSON.stringify(normalizeEntidadPayload(entidad)),
+      body: JSON.stringify(normalizeEntidadUpdatePayload(entidad)),
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);

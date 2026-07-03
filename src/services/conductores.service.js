@@ -1,5 +1,17 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
+const buildQueryString = (params = {}) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.append(key, value);
+    }
+  });
+
+  return searchParams.toString();
+};
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
@@ -24,11 +36,27 @@ const normalizeConductorPayload = (conductor) => ({
       : Number(conductor.vehiculoId),
 });
 
+const normalizeConductorUpdatePayload = (conductor) => {
+  const payload = { ...conductor };
+  delete payload.usuarioId;
+  payload.vehiculoId =
+    payload.vehiculoId === "" ||
+    payload.vehiculoId == null ||
+    Number.isNaN(payload.vehiculoId)
+      ? null
+      : Number(payload.vehiculoId);
+  return payload;
+};
+
 export const conductoresService = {
-  getAll: async () => {
-    const response = await fetch(`${API_URL}/perfiles-conductor`, {
-      headers: getAuthHeaders(),
-    });
+  getAll: async (params = {}) => {
+    const query = buildQueryString(params);
+    const response = await fetch(
+      `${API_URL}/perfiles-conductor${query ? `?${query}` : ""}`,
+      {
+        headers: getAuthHeaders(),
+      },
+    );
     if (!response.ok) throw new Error("Error al cargar conductores");
     return response.json();
   },
@@ -58,7 +86,7 @@ export const conductoresService = {
     const response = await fetch(`${API_URL}/perfiles-conductor/${id}`, {
       method: "PUT",
       headers: getAuthHeaders(),
-      body: JSON.stringify(normalizeConductorPayload(conductor)),
+      body: JSON.stringify(normalizeConductorUpdatePayload(conductor)),
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);

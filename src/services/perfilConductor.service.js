@@ -1,5 +1,17 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
+const buildQueryString = (params = {}) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.append(key, value);
+    }
+  });
+
+  return searchParams.toString();
+};
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
@@ -25,10 +37,14 @@ const normalizePerfilConductorPayload = (perfil) => ({
 });
 
 export const perfilConductorService = {
-  getAll: async () => {
-    const response = await fetch(`${API_URL}/perfiles-conductor`, {
-      headers: getAuthHeaders(),
-    });
+  getAll: async (params = {}) => {
+    const query = buildQueryString(params);
+    const response = await fetch(
+      `${API_URL}/perfiles-conductor${query ? `?${query}` : ""}`,
+      {
+        headers: getAuthHeaders(),
+      },
+    );
     if (!response.ok) throw new Error("Error al cargar perfiles de conductor");
     return response.json();
   },

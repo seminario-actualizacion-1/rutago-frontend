@@ -6,16 +6,17 @@ import { usuariosService } from "../../services/usuarios.service";
 import { vehiculosService } from "../../services/vehiculos.service";
 import { perfilConductorService } from "../../services/perfilConductor.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
+import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 import "./Usuarios.css";
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [vehiculos, setVehiculos] = useState([]);
-  const [filtroRol, setFiltroRol] = useState("todos");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUsuario, setEditingUsuario] = useState(null);
+  const [filtroRol, setFiltroRol] = useState("");
   const [formData, setFormData] = useState({
     nombres: "",
     apellidos: "",
@@ -30,16 +31,51 @@ export default function Usuarios() {
     razonSocial: "",
     nit: "",
     telefonoContacto: "",
+    // Campos de Pasajero
+    telefono: "",
+    direccion: "",
+    tipoDocumento: "",
+    numeroDocumento: "",
+    fechaNacimiento: "",
+  });
+
+  const [pagination, setPagination] = useState({
+    paginaActual: 1,
+    registrosPorPagina: 10,
+    totalPaginas: 1,
+    totalRegistros: 0,
+    tienePaginaAnterior: false,
+    tienePaginaSiguiente: false,
   });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const fetchUsuarios = async () => {
+  const fetchUsuarios = async (page = currentPage, limit = itemsPerPage, rolFiltro = filtroRol) => {
     try {
-      const data = await usuariosService.getAll();
+      setLoading(true);
+      const params = {
+        paginaActual: page,
+        registrosPorPagina: limit,
+      };
+      
+      if (rolFiltro) {
+        params.rolId = rolFiltro;
+      }
+      
+      const data = await usuariosService.getAll(params);
       setUsuarios(data.data || []);
+      setPagination(
+        data.paginacion || {
+          paginaActual: page,
+          registrosPorPagina: limit,
+          totalPaginas: 1,
+          totalRegistros: data.data?.length || 0,
+          tienePaginaAnterior: false,
+          tienePaginaSiguiente: false,
+        },
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -49,7 +85,11 @@ export default function Usuarios() {
 
   const fetchVehiculos = async () => {
     try {
-      const data = await vehiculosService.getAll();
+      // Obtener todos los vehículos (sin paginación para el select)
+      const data = await vehiculosService.getAll({
+        paginaActual: 1,
+        registrosPorPagina: 100,
+      });
       setVehiculos(data.data || []);
     } catch (err) {
       console.error("Error al cargar vehículos:", err);
@@ -58,11 +98,19 @@ export default function Usuarios() {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchUsuarios(), fetchVehiculos()]);
+      await Promise.all([
+        fetchUsuarios(currentPage, itemsPerPage, filtroRol),
+        fetchVehiculos(),
+      ]);
     };
 
     loadData();
-  }, []);
+  }, [currentPage, itemsPerPage, filtroRol]);
+
+  const handleFiltroRolChange = (rolId) => {
+    setFiltroRol(rolId);
+    setCurrentPage(1);
+  };
 
   const handleEditar = async (usuario) => {
     try {
@@ -111,6 +159,13 @@ export default function Usuarios() {
         razonSocial: usuarioEditando.perfilEntidad?.razonSocial || "",
         nit: usuarioEditando.perfilEntidad?.nit || "",
         telefonoContacto: usuarioEditando.perfilEntidad?.telefonoContacto || "",
+        telefono: usuarioEditando.perfilPasajero?.telefono || "",
+        direccion: usuarioEditando.perfilPasajero?.direccion || "",
+        tipoDocumento: usuarioEditando.perfilPasajero?.tipoDocumento || "",
+        numeroDocumento: usuarioEditando.perfilPasajero?.numeroDocumento || "",
+        fechaNacimiento: usuarioEditando.perfilPasajero?.fechaNacimiento
+          ? usuarioEditando.perfilPasajero.fechaNacimiento.split("T")[0]
+          : "",
       };
 
       setEditingUsuario(usuarioEditando);
@@ -155,13 +210,16 @@ export default function Usuarios() {
         }
       }
 
-      // Opción A: mantener un único perfil especializado acorde al rol actual
       if (rolId !== 2 && editingUsuario?.perfilConductor) {
         await perfilConductorService.delete(editingUsuario.perfilConductor.id);
       }
 
       if (rolId !== 4 && editingUsuario?.perfilEntidad) {
         await perfilEntidadService.delete(editingUsuario.perfilEntidad.id);
+      }
+
+      if (rolId !== 3 && editingUsuario?.perfilPasajero) {
+        await perfilPasajeroService.delete(editingUsuario.perfilPasajero.id);
       }
 
       // Guardar perfil adicional según rol
@@ -197,9 +255,28 @@ export default function Usuarios() {
         } else {
           await perfilEntidadService.create(perfilEntidadData);
         }
+      } else if (rolId === 3) {
+        const perfilPasajeroData = {
+          usuarioId,
+          telefono: formData.telefono,
+          direccion: formData.direccion,
+          tipoDocumento: formData.tipoDocumento,
+          numeroDocumento: formData.numeroDocumento,
+          fechaNacimiento: formData.fechaNacimiento || null,
+        };
+
+        if (editingUsuario && editingUsuario.perfilPasajero) {
+          await perfilPasajeroService.update(
+            editingUsuario.perfilPasajero.id,
+            perfilPasajeroData,
+          );
+        } else {
+          await perfilPasajeroService.create(perfilPasajeroData);
+        }
       }
 
-      await fetchUsuarios();
+      setCurrentPage(1);
+      await fetchUsuarios(1, itemsPerPage, filtroRol);
       setModalOpen(false);
       setEditingUsuario(null);
       setFormData({
@@ -214,6 +291,11 @@ export default function Usuarios() {
         razonSocial: "",
         nit: "",
         telefonoContacto: "",
+        telefono: "",
+        direccion: "",
+        tipoDocumento: "",
+        numeroDocumento: "",
+        fechaNacimiento: "",
       });
     } catch (err) {
       setError(err.message);
@@ -221,6 +303,7 @@ export default function Usuarios() {
   };
 
   const handleCerrarModal = () => {
+    setError("");
     setModalOpen(false);
     setEditingUsuario(null);
     setFormData({
@@ -235,6 +318,11 @@ export default function Usuarios() {
       razonSocial: "",
       nit: "",
       telefonoContacto: "",
+      telefono: "",
+      direccion: "",
+      tipoDocumento: "",
+      numeroDocumento: "",
+      fechaNacimiento: "",
     });
   };
 
@@ -256,25 +344,21 @@ export default function Usuarios() {
         await perfilEntidadService.delete(usuario.perfilEntidad.id);
       }
 
+      if (usuario.perfilPasajero) {
+        await perfilPasajeroService.delete(usuario.perfilPasajero.id);
+      }
+
       await usuariosService.delete(usuario.id);
-      await fetchUsuarios();
+      setCurrentPage(1);
+      await fetchUsuarios(1, itemsPerPage, filtroRol);
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const usuariosFiltrados =
-    filtroRol === "todos"
-      ? usuarios
-      : usuarios.filter((u) => u.rolId === parseInt(filtroRol));
-
   const rolSeleccionado = Number(formData.rolId);
 
-  // Pagination logic
-  const totalPages = Math.ceil(usuariosFiltrados.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const usuariosPaginados = usuariosFiltrados.slice(startIndex, endIndex);
+  const usuariosPaginados = usuarios;
 
   const getRolNombre = (rolId) => {
     const roles = {
@@ -296,15 +380,6 @@ export default function Usuarios() {
     return colors[rolId] || "badge-default";
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
-
   if (loading)
     return (
       <div className="usuarios-container">
@@ -315,42 +390,52 @@ export default function Usuarios() {
       </div>
     );
 
-  if (error)
-    return (
-      <div className="usuarios-container">
-        <p className="error">{error}</p>
-      </div>
-    );
-
   return (
     <div className="usuarios-container">
       <div className="page-header">
         <h1>Gestión de Usuarios</h1>
       </div>
+      {error && !modalOpen && <p className="error">{error}</p>}
 
-      <div className="filter-container">
-        <label className="filter-label">
-          Filtrar por rol:
-          <select
-            value={filtroRol}
-            onChange={(e) => {
-              setFiltroRol(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="filter-select"
-          >
-            <option value="todos">Todos</option>
-            <option value="1">Administrador</option>
-            <option value="2">Conductor</option>
-            <option value="3">Pasajero</option>
-            <option value="4">Entidad Externa</option>
-          </select>
+      {/* Filtro por rol */}
+      <div
+        className="filter-container"
+        style={{
+          marginBottom: "1rem",
+          background: "white",
+          padding: "1rem",
+          borderRadius: "0.5rem",
+        }}
+      >
+        <label
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: "500",
+            fontSize: "0.875rem",
+            color: "#374151",
+          }}
+        >
+          Filtrar por rol
         </label>
+        <select
+          value={filtroRol}
+          onChange={(e) => handleFiltroRolChange(e.target.value)}
+          className="input"
+          style={{ width: "100%", maxWidth: "300px" }}
+        >
+          <option value="">Todos los roles</option>
+          <option value="1">Administrador</option>
+          <option value="2">Conductor</option>
+          <option value="3">Pasajero</option>
+          <option value="4">Entidad Externa</option>
+        </select>
       </div>
 
       <div className="table-actions" style={{ marginBottom: "1rem" }}>
         <button
           onClick={() => {
+            setError("");
             setEditingUsuario(null);
             setFormData({
               nombres: "",
@@ -364,6 +449,11 @@ export default function Usuarios() {
               razonSocial: "",
               nit: "",
               telefonoContacto: "",
+              telefono: "",
+              direccion: "",
+              tipoDocumento: "",
+              numeroDocumento: "",
+              fechaNacimiento: "",
             });
             setModalOpen(true);
           }}
@@ -465,11 +555,14 @@ export default function Usuarios() {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={usuariosFiltrados.length}
+          totalPages={pagination.totalPaginas || 1}
+          totalItems={pagination.totalRegistros || usuarios.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(n) => {
+            setItemsPerPage(n);
+            setCurrentPage(1);
+          }}
         />
       </div>
 
@@ -753,6 +846,67 @@ export default function Usuarios() {
             </>
           )}
 
+          {rolSeleccionado === 3 && (
+            <>
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Teléfono</label>
+                <input
+                  type="text"
+                  value={formData.telefono}
+                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                  className="input"
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Dirección</label>
+                <input
+                  type="text"
+                  value={formData.direccion}
+                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                  className="input"
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Tipo de Documento</label>
+                <select
+                  value={formData.tipoDocumento}
+                  onChange={(e) => setFormData({ ...formData, tipoDocumento: e.target.value })}
+                  className="input"
+                  style={{ width: "100%" }}
+                >
+                  <option value="">Seleccionar</option>
+                  <option value="CC">Cédula de Ciudadanía</option>
+                  <option value="CE">Cédula de Extranjería</option>
+                  <option value="TI">Tarjeta de Identidad</option>
+                  <option value="PA">Pasaporte</option>
+                </select>
+              </div>
+              <div style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Número de Documento</label>
+                <input
+                  type="text"
+                  value={formData.numeroDocumento}
+                  onChange={(e) => setFormData({ ...formData, numeroDocumento: e.target.value })}
+                  className="input"
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Fecha de Nacimiento</label>
+                <input
+                  type="date"
+                  value={formData.fechaNacimiento}
+                  onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })}
+                  className="input"
+                  style={{ width: "100%" }}
+                />
+              </div>
+            </>
+          )}
+
+          {error && <p className="error">{error}</p>}
           <div
             style={{
               display: "flex",
