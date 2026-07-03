@@ -20,6 +20,7 @@ import Entidades from "./pages/Entidades/Entidades";
 import Perfil from "./pages/Perfil/Perfil";
 import Viajes from "./pages/Viajes/Viajes";
 import Usuarios from "./pages/Usuarios/Usuarios";
+import { usuariosService } from "./services/usuarios.service";
 import "./index.css";
 
 function getInitialUser() {
@@ -33,6 +34,7 @@ function getInitialUser() {
 
 export default function App() {
   const [user, setUser] = useState(getInitialUser);
+  const [verificandoToken, setVerificandoToken] = useState(true);
 
   useEffect(() => {
     const handleStorage = () => setUser(getInitialUser());
@@ -40,7 +42,66 @@ export default function App() {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  const isLoggedIn = !!user?.token;
+  // Verificar token al iniciar la aplicación
+  useEffect(() => {
+    const verificarSesion = async () => {
+      const token = localStorage.getItem("token");
+      const user = getInitialUser();
+
+      if (!token || !user) {
+        setVerificandoToken(false);
+        return;
+      }
+
+      try {
+        const response = await usuariosService.verificarToken();
+
+        // Actualizar datos del usuario si es necesario
+        if (response.success && response.usuario) {
+          const userActualizado = {
+            ...user,
+            token,
+            usuario: response.usuario,
+          };
+          localStorage.setItem("rutago_user", JSON.stringify(userActualizado));
+          setUser(userActualizado);
+        }
+      } catch (error) {
+        console.error("Token inválido o expirado:", error);
+        // Limpiar sesión si el token no es válido
+        localStorage.removeItem("token");
+        localStorage.removeItem("rutago_user");
+        setUser(null);
+      } finally {
+        setVerificandoToken(false);
+      }
+    };
+
+    verificarSesion();
+  }, []);
+
+  const isLoggedIn = !!localStorage.getItem("token");
+
+  // Mostrar pantalla de carga mientras verifica el token
+  if (verificandoToken) {
+    return (
+      <div className="app">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+            flexDirection: "column",
+            gap: "1rem",
+          }}
+        >
+          <div className="spinner"></div>
+          <p>Verificando sesión...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>

@@ -4,12 +4,15 @@ import Logo from "../Logo/Logo";
 
 export default function Navbar() {
   const location = useLocation();
-  const ocultarEn = ["/login", "/registro", "/recuperar-password"];
+  const ocultarEn = ["/login", "/registro", "/recuperar-password", "/dashboard", "/usuarios", "/pasajeros", "/conductores", "/vehiculos", "/barrios", "/comunas", "/rutas", "/horarios", "/entidades", "/perfil", "/viajes"];
 
   const isLoggedIn = !!localStorage.getItem("token");
 
+  if (isLoggedIn && ocultarEn.includes(location.pathname)) return null;
+
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("rutago_user");
     window.location.href = "/login";
   };
 
@@ -27,22 +30,34 @@ export default function Navbar() {
           <div className="navbar-links">
             {!ocultarEn.includes(location.pathname) && (
               <>
-                <Link to="/login" className={`nav-link ${location.pathname === "/login" ? "active" : ""}`}>
+                <Link
+                  to="/login"
+                  className={`nav-link ${location.pathname === "/login" ? "active" : ""}`}
+                >
                   Iniciar Sesión
                 </Link>
-                <Link to="/registro" className={`nav-link ${location.pathname === "/registro" ? "active" : ""}`}>
+                <Link
+                  to="/registro"
+                  className={`nav-link ${location.pathname === "/registro" ? "active" : ""}`}
+                >
                   Registrarse
                 </Link>
               </>
             )}
             {location.pathname === "/login" && (
-              <Link to="/registro" className="nav-btn nav-btn-accent">Registrarse</Link>
+              <Link to="/registro" className="nav-btn nav-btn-accent">
+                Registrarse
+              </Link>
             )}
             {location.pathname === "/registro" && (
-              <Link to="/login" className="nav-btn nav-btn-primary">Iniciar Sesión</Link>
+              <Link to="/login" className="nav-btn nav-btn-primary">
+                Iniciar Sesión
+              </Link>
             )}
             {location.pathname === "/recuperar-password" && (
-              <Link to="/login" className="nav-btn nav-btn-primary">Volver a Login</Link>
+              <Link to="/login" className="nav-btn nav-btn-primary">
+                Volver a Login
+              </Link>
             )}
           </div>
         )}

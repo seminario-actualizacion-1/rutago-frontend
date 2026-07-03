@@ -1,5 +1,17 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
+const buildQueryString = (params = {}) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.append(key, value);
+    }
+  });
+
+  return searchParams.toString();
+};
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
@@ -10,10 +22,14 @@ const getAuthHeaders = () => {
 
 export const usuariosService = {
   // Obtener todos los usuarios
-  getAll: async () => {
-    const response = await fetch(`${API_URL}/usuarios`, {
-      headers: getAuthHeaders(),
-    });
+  getAll: async (params = {}) => {
+    const query = buildQueryString(params);
+    const response = await fetch(
+      `${API_URL}/usuarios${query ? `?${query}` : ""}`,
+      {
+        headers: getAuthHeaders(),
+      },
+    );
     if (!response.ok) throw new Error("Error al cargar usuarios");
     return response.json();
   },
@@ -69,6 +85,17 @@ export const usuariosService = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
       throw new Error(errorData?.message || "Error al cambiar rol");
+    }
+    return response.json();
+  },
+
+  // Verificar si el token es válido
+  verificarToken: async () => {
+    const response = await fetch(`${API_URL}/usuarios/verificar-token`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error("Token inválido o expirado");
     }
     return response.json();
   },

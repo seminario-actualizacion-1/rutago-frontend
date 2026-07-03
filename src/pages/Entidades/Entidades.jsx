@@ -26,29 +26,48 @@ export default function Entidades() {
   const [editingEntidad, setEditingEntidad] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [pagination, setPagination] = useState({
+    paginaActual: 1,
+    registrosPorPagina: 10,
+    totalPaginas: 1,
+    totalRegistros: 0,
+    tienePaginaAnterior: false,
+    tienePaginaSiguiente: false,
+  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  const fetchEntidades = async () => {
-    try {
-      const data = await entidadesService.getAll();
-      setEntidades(data.data || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const loadEntidades = async () => {
-      await fetchEntidades();
+      try {
+        setLoading(true);
+        const data = await entidadesService.getAll({
+          paginaActual: currentPage,
+          registrosPorPagina: itemsPerPage,
+        });
+        setEntidades(data.data || []);
+        setPagination(
+          data.paginacion || {
+            paginaActual: currentPage,
+            registrosPorPagina: itemsPerPage,
+            totalPaginas: 1,
+            totalRegistros: data.data?.length || 0,
+            tienePaginaAnterior: false,
+            tienePaginaSiguiente: false,
+          },
+        );
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadEntidades();
-  }, []);
+  }, [currentPage, itemsPerPage, refreshKey]);
 
   const handleNueva = () => {
     setEditingEntidad(null);
@@ -78,12 +97,18 @@ export default function Entidades() {
     try {
       if (editingEntidad) {
         // ── EDITAR ──────────────────────────────────────────────────
-        // 1. Actualizar datos del usuario asociado
-        await usuariosService.update(editingEntidad.usuarioId, {
-          nombres: formData.nombres,
-          apellidos: formData.apellidos,
-          correo: formData.correo,
-        });
+        // Resolver el id del usuario: puede venir como propiedad plana o anidada
+        const usuarioIdEdicion =
+          editingEntidad.usuarioId ?? editingEntidad.usuario?.id ?? null;
+
+        // 1. Actualizar datos del usuario solo si existe la asociación
+        if (usuarioIdEdicion) {
+          await usuariosService.update(usuarioIdEdicion, {
+            nombres: formData.nombres,
+            apellidos: formData.apellidos,
+            correo: formData.correo,
+          });
+        }
 
         // 2. Actualizar perfil de entidad
         await entidadesService.update(editingEntidad.id, {
@@ -107,16 +132,31 @@ export default function Entidades() {
         if (!usuarioId)
           throw new Error("No se pudo obtener el ID del usuario creado.");
 
-        // 2. Crear el perfil de entidad
+        // 2. Crear el perfil de entidad (pasamos usuarioId como número explícito)
         await entidadesService.create({
-          usuarioId,
+          usuarioId: Number(usuarioId),
           razonSocial: formData.razonSocial,
           nit: formData.nit,
           telefonoContacto: formData.telefonoContacto,
         });
       }
 
-      await fetchEntidades();
+      setCurrentPage(1);
+      const data = await entidadesService.getAll({
+        paginaActual: 1,
+        registrosPorPagina: itemsPerPage,
+      });
+      setEntidades(data.data || []);
+      setPagination(
+        data.paginacion || {
+          paginaActual: 1,
+          registrosPorPagina: itemsPerPage,
+          totalPaginas: 1,
+          totalRegistros: data.data?.length || 0,
+          tienePaginaAnterior: false,
+          tienePaginaSiguiente: false,
+        },
+      );
       setModalOpen(false);
       setEditingEntidad(null);
       setFormData(emptyForm);
@@ -132,7 +172,8 @@ export default function Entidades() {
       return;
     try {
       await entidadesService.delete(id);
-      await fetchEntidades();
+      setCurrentPage(1);
+      setRefreshKey(k => k + 1);
     } catch (err) {
       setError(err.message);
     }
@@ -152,13 +193,7 @@ export default function Entidades() {
     style: { width: "100%" },
   });
 
-  // Pagination logic
-  const totalPages = Math.ceil(entidades.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const entidadesPaginadas = entidades.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  const entidadesPaginadas = entidades;
 
   if (loading)
     return (
@@ -279,8 +314,8 @@ export default function Entidades() {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={entidades.length}
+          totalPages={pagination.totalPaginas || 1}
+          totalItems={pagination.totalRegistros || entidades.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}
           onItemsPerPageChange={(n) => {

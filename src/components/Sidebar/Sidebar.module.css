@@ -79,6 +79,31 @@
   text-decoration: none;
 }
 
+.logoutContainer {
+  margin-top: auto;
+  padding: 1rem 0.75rem;
+  border-top: 1px solid #e5e4e7;
+}
+
+.logoutButton {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #e53e3e;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.logoutButton:hover {
+  background: rgba(229, 62, 62, 0.08);
+}
+
 .apiItem {
   display: flex;
   align-items: center;

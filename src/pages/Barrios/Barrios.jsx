@@ -14,6 +14,14 @@ export default function Barrios() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBarrio, setEditingBarrio] = useState(null);
   const [filtroComuna, setFiltroComuna] = useState("");
+  const [pagination, setPagination] = useState({
+    paginaActual: 1,
+    registrosPorPagina: 10,
+    totalPaginas: 1,
+    totalRegistros: 0,
+    tienePaginaAnterior: false,
+    tienePaginaSiguiente: false,
+  });
   const [formData, setFormData] = useState({
     nombre: "",
     comunaId: "",
@@ -23,10 +31,25 @@ export default function Barrios() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const fetchBarrios = async () => {
+  const fetchBarrios = async (page = currentPage, limit = itemsPerPage, comunaId) => {
     try {
-      const data = await barriosService.getAll();
+      setLoading(true);
+      const data = await barriosService.getAll({
+        paginaActual: page,
+        registrosPorPagina: limit,
+        ...(comunaId && { comunaId }),
+      });
       setBarrios(data.data || []);
+      setPagination(
+        data.paginacion || {
+          paginaActual: page,
+          registrosPorPagina: limit,
+          totalPaginas: 1,
+          totalRegistros: data.data?.length || 0,
+          tienePaginaAnterior: false,
+          tienePaginaSiguiente: false,
+        },
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -36,7 +59,7 @@ export default function Barrios() {
 
   const fetchComunas = async () => {
     try {
-      const data = await comunasService.getAll();
+      const data = await comunasService.getAll({ paginaActual: 1, registrosPorPagina: 100 });
       setComunas(data.data || []);
     } catch (err) {
       console.error("Error al cargar comunas:", err);
@@ -44,14 +67,15 @@ export default function Barrios() {
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      await Promise.all([fetchBarrios(), fetchComunas()]);
-    };
-
-    loadData();
+    fetchComunas();
   }, []);
 
+  useEffect(() => {
+    fetchBarrios(currentPage, itemsPerPage, filtroComuna || undefined);
+  }, [currentPage, itemsPerPage, filtroComuna]);
+
   const handleEditar = (barrio) => {
+    setError("");
     setEditingBarrio(barrio);
     setFormData({
       nombre: barrio.nombre,
@@ -67,7 +91,8 @@ export default function Barrios() {
       } else {
         await barriosService.create(formData);
       }
-      await fetchBarrios();
+      setCurrentPage(1);
+      await fetchBarrios(1, itemsPerPage, filtroComuna || undefined);
       setModalOpen(false);
       setEditingBarrio(null);
       setFormData({
@@ -80,6 +105,7 @@ export default function Barrios() {
   };
 
   const handleCerrarModal = () => {
+    setError("");
     setModalOpen(false);
     setEditingBarrio(null);
     setFormData({
@@ -95,7 +121,8 @@ export default function Barrios() {
 
     try {
       await barriosService.delete(id);
-      await fetchBarrios();
+      setCurrentPage(1);
+      await fetchBarrios(1, itemsPerPage, filtroComuna || undefined);
     } catch (err) {
       setError(err.message);
     }
@@ -106,25 +133,7 @@ export default function Barrios() {
     return comuna ? comuna.nombre : "Sin comuna";
   };
 
-  const fetchBarriosPorComuna = async (comunaId) => {
-    try {
-      let data;
-      if (comunaId) {
-        data = await barriosService.getByComuna(comunaId);
-      } else {
-        data = await barriosService.getAll();
-      }
-      setBarrios(data.data || []);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // Pagination logic
-  const totalPages = Math.ceil(barrios.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const barriosPaginados = barrios.slice(startIndex, endIndex);
+  const barriosPaginados = barrios;
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -137,7 +146,6 @@ export default function Barrios() {
 
   const handleFiltroComunaChange = (comunaId) => {
     setFiltroComuna(comunaId);
-    fetchBarriosPorComuna(comunaId);
     setCurrentPage(1);
   };
 
@@ -151,18 +159,12 @@ export default function Barrios() {
       </div>
     );
 
-  if (error)
-    return (
-      <div className="barrios-container">
-        <p className="error">{error}</p>
-      </div>
-    );
-
   return (
     <div className="barrios-container">
       <div className="page-header">
         <h1>Gestión de Barrios</h1>
       </div>
+      {error && <p className="error">{error}</p>}
 
       <div
         className="filter-container"
@@ -203,6 +205,7 @@ export default function Barrios() {
         <div className="table-actions" style={{ marginBottom: "1rem" }}>
           <button
             onClick={() => {
+              setError("");
               setEditingBarrio(null);
               setFormData({ nombre: "", comunaId: "" });
               setModalOpen(true);
@@ -283,8 +286,8 @@ export default function Barrios() {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={barrios.length}
+          totalPages={pagination.totalPaginas || 1}
+          totalItems={pagination.totalRegistros || barrios.length}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
           onItemsPerPageChange={handleItemsPerPageChange}
@@ -350,6 +353,7 @@ export default function Barrios() {
               ))}
             </select>
           </div>
+      {error && <p className="error">{error}</p>}
           <div
             style={{
               display: "flex",

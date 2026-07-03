@@ -13,6 +13,14 @@ export default function Rutas() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRuta, setEditingRuta] = useState(null);
+  const [pagination, setPagination] = useState({
+    paginaActual: 1,
+    registrosPorPagina: 10,
+    totalPaginas: 1,
+    totalRegistros: 0,
+    tienePaginaAnterior: false,
+    tienePaginaSiguiente: false,
+  });
   const [formData, setFormData] = useState({
     nombre: "",
     origenId: "",
@@ -26,10 +34,24 @@ export default function Rutas() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const fetchRutas = async () => {
+  const fetchRutas = async (page = currentPage, limit = itemsPerPage) => {
     try {
-      const data = await rutasService.getAll();
+      setLoading(true);
+      const data = await rutasService.getAll({
+        paginaActual: page,
+        registrosPorPagina: limit,
+      });
       setRutas(data.data || []);
+      setPagination(
+        data.paginacion || {
+          paginaActual: page,
+          registrosPorPagina: limit,
+          totalPaginas: 1,
+          totalRegistros: data.data?.length || 0,
+          tienePaginaAnterior: false,
+          tienePaginaSiguiente: false,
+        },
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -37,24 +59,45 @@ export default function Rutas() {
     }
   };
 
-  const fetchComunas = async () => {
-    try {
-      const data = await comunasService.getAll();
-      setComunas(data.data || []);
-    } catch (err) {
-      console.error("Error al cargar comunas:", err);
-    }
-  };
-
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchRutas(), fetchComunas()]);
+      try {
+        setLoading(true);
+        const [rutasData, comunasData] = await Promise.all([
+          rutasService.getAll({
+            paginaActual: currentPage,
+            registrosPorPagina: itemsPerPage,
+          }),
+          comunasService.getAll({
+            paginaActual: 1,
+            registrosPorPagina: 100,
+          }),
+        ]);
+
+        setRutas(rutasData.data || []);
+        setPagination(
+          rutasData.paginacion || {
+            paginaActual: currentPage,
+            registrosPorPagina: itemsPerPage,
+            totalPaginas: 1,
+            totalRegistros: rutasData.data?.length || 0,
+            tienePaginaAnterior: false,
+            tienePaginaSiguiente: false,
+          },
+        );
+        setComunas(comunasData.data || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadData();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   const handleEditar = (ruta) => {
+    setError("");
     setEditingRuta(ruta);
     setFormData({
       nombre: ruta.nombre,
@@ -74,7 +117,8 @@ export default function Rutas() {
       } else {
         await rutasService.create(formData);
       }
-      await fetchRutas();
+      setCurrentPage(1);
+      await fetchRutas(1, itemsPerPage);
       setModalOpen(false);
       setEditingRuta(null);
       setFormData({
@@ -91,6 +135,7 @@ export default function Rutas() {
   };
 
   const handleCerrarModal = () => {
+    setError("");
     setModalOpen(false);
     setEditingRuta(null);
     setFormData({
@@ -110,7 +155,8 @@ export default function Rutas() {
 
     try {
       await rutasService.delete(id);
-      await fetchRutas();
+      setCurrentPage(1);
+      await fetchRutas(1, itemsPerPage);
     } catch (err) {
       setError(err.message);
     }
@@ -121,20 +167,7 @@ export default function Rutas() {
     return comuna ? comuna.nombre : "Sin comuna";
   };
 
-  // Pagination logic
-  const totalPages = Math.ceil(rutas.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const rutasPaginadas = rutas.slice(startIndex, endIndex);
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
+  const rutasPaginadas = rutas;
 
   if (loading)
     return (
@@ -146,18 +179,12 @@ export default function Rutas() {
       </div>
     );
 
-  if (error)
-    return (
-      <div className="rutas-container">
-        <p className="error">{error}</p>
-      </div>
-    );
-
   return (
     <div className="rutas-container">
       <div className="page-header">
         <h1>Gestión de Rutas</h1>
       </div>
+      {error && !modalOpen && <p className="error">{error}</p>}
 
       <div className="table-container">
         <div className="table-actions" style={{ marginBottom: "1rem" }}>
@@ -264,11 +291,14 @@ export default function Rutas() {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={rutas.length}
+          totalPages={pagination.totalPaginas || 1}
+          totalItems={pagination.totalRegistros || rutas.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(n) => {
+            setItemsPerPage(n);
+            setCurrentPage(1);
+          }}
         />
       </div>
 
@@ -427,6 +457,7 @@ export default function Rutas() {
               style={{ width: "100%" }}
             />
           </div>
+          {error && <p className="error">{error}</p>}
           <div
             style={{
               display: "flex",

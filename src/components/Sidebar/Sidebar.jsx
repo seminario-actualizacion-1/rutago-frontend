@@ -15,6 +15,7 @@ const menus = {
       { to: "/comunas", label: "Comunas" },
       { to: "/rutas", label: "Rutas" },
       { to: "/horarios", label: "Horarios" },
+      { to: "/viajes", label: "Viajes" },
       { to: "/entidades", label: "Entidades" },
     ],
   },
@@ -53,6 +54,12 @@ export default function Sidebar({ rol }) {
   const config = obtenerRol(rol);
   const titulo = config.titulo;
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("rutago_user");
+    window.location.href = "/login";
+  };
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.header}>
@@ -74,6 +81,11 @@ export default function Sidebar({ rol }) {
               {item.label}
             </NavLink>
           ))}
+        </div>
+        <div className={styles.logoutContainer}>
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            Cerrar Sesión
+          </button>
         </div>
       </nav>
     </aside>
