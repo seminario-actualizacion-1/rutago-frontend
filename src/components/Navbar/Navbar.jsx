@@ -4,11 +4,9 @@ import Logo from "../Logo/Logo";
 
 export default function Navbar() {
   const location = useLocation();
-  const ocultarEn = ["/login", "/registro", "/recuperar-password", "/dashboard", "/usuarios", "/pasajeros", "/conductores", "/vehiculos", "/barrios", "/comunas", "/rutas", "/horarios", "/entidades", "/perfil", "/viajes"];
+  const ocultarEn = ["/login", "/registro", "/recuperar-password"];
 
   const isLoggedIn = !!localStorage.getItem("token");
-
-  if (isLoggedIn && ocultarEn.includes(location.pathname)) return null;
 
   const handleLogout = () => {
     localStorage.removeItem("token");
