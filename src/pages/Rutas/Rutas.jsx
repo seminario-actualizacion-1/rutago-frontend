@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
+import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { rutasService } from "../../services/rutas.service";
 import { comunasService } from "../../services/comunas.service";
 import "./Rutas.css";
@@ -33,13 +34,19 @@ export default function Rutas() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("id");
+  const [sortOrder, setSortOrder] = useState("ASC");
 
-  const fetchRutas = async (page = currentPage, limit = itemsPerPage) => {
+  const fetchRutas = async (page = currentPage, limit = itemsPerPage, q = searchTerm) => {
     try {
       setLoading(true);
       const data = await rutasService.getAll({
         paginaActual: page,
         registrosPorPagina: limit,
+        q: q || undefined,
+        sortBy,
+        sortOrder,
       });
       setRutas(data.data || []);
       setPagination(
@@ -67,6 +74,9 @@ export default function Rutas() {
           rutasService.getAll({
             paginaActual: currentPage,
             registrosPorPagina: itemsPerPage,
+            q: searchTerm || undefined,
+            sortBy,
+            sortOrder,
           }),
           comunasService.getAll({
             paginaActual: 1,
@@ -94,7 +104,18 @@ export default function Rutas() {
     };
 
     loadData();
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, searchTerm, sortBy, sortOrder]);
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
 
   const handleEditar = (ruta) => {
     setError("");
@@ -169,6 +190,11 @@ export default function Rutas() {
 
   const rutasPaginadas = rutas;
 
+  const sortOptions = [
+    { value: "id", label: "ID" },
+    { value: "nombre", label: "Nombre" }
+  ];
+
   if (loading)
     return (
       <div className="rutas-container">
@@ -206,6 +232,16 @@ export default function Rutas() {
             + Nueva Ruta
           </button>
         </div>
+
+      <TableToolbar
+        searchValue={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Buscar por nombre, origen o destino..."
+        sortOptions={sortOptions}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">

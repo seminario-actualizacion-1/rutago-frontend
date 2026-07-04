@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
+import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 import { usuariosService } from "../../services/usuarios.service";
 import "./Pasajeros.css";
@@ -10,6 +11,7 @@ const emptyForm = {
   nombres: "",
   apellidos: "",
   correo: "",
+  contrasena: "",
   telefono: "",
   direccion: "",
   tipoDocumento: "",
@@ -32,16 +34,28 @@ export default function Pasajeros() {
     tienePaginaSiguiente: false,
   });
   const [formData, setFormData] = useState(emptyForm);
-
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const fetchPasajeros = async (page = currentPage, limit = itemsPerPage) => {
+  const handleNuevo = () => {
+    setEditingPasajero(null);
+    setFormData(emptyForm);
+    setError("");
+    setModalOpen(true);
+  };
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("id");
+  const [sortOrder, setSortOrder] = useState("ASC");
+
+  const fetchPasajeros = async (page = currentPage, limit = itemsPerPage, q = searchTerm) => {
     try {
       setLoading(true);
       const data = await perfilPasajeroService.getAll({
         paginaActual: page,
         registrosPorPagina: limit,
+        q: q || undefined,
+        sortBy,
+        sortOrder,
       });
       setPasajeros(data.data || []);
       setPagination(
@@ -62,8 +76,8 @@ export default function Pasajeros() {
   };
 
   useEffect(() => {
-    fetchPasajeros(currentPage, itemsPerPage);
-  }, [currentPage, itemsPerPage]);
+    fetchPasajeros(currentPage, itemsPerPage, searchTerm);
+  }, [currentPage, itemsPerPage, searchTerm, sortBy, sortOrder]);
 
   const handleEditar = (perfil) => {
     setError("");
@@ -101,16 +115,54 @@ export default function Pasajeros() {
             correo: formData.correo,
           });
         }
+      } else {
+        const usuarioResponse = await usuariosService.create({
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          correo: formData.correo,
+          contrasena: formData.contrasena,
+          rolId: 3,
+        });
+
+        const usuarioId = usuarioResponse.usuario?.id;
+        if (!usuarioId)
+          throw new Error("No se pudo obtener el ID del usuario creado.");
+
+        await perfilPasajeroService.create({
+          usuarioId,
+          telefono: formData.telefono,
+          direccion: formData.direccion,
+          tipoDocumento: formData.tipoDocumento,
+          numeroDocumento: formData.numeroDocumento,
+          fechaNacimiento: formData.fechaNacimiento || null,
+        });
       }
       setError("");
       setCurrentPage(1);
-      await fetchPasajeros(1, itemsPerPage);
+      await fetchPasajeros(1, itemsPerPage, searchTerm);
       setModalOpen(false);
       setEditingPasajero(null);
       setFormData(emptyForm);
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const sortOptions = [
+    { value: "id", label: "ID" },
+    { value: "telefono", label: "Teléfono" },
+    { value: "numeroDocumento", label: "Documento" },
+  ];
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
   };
 
   const handleCerrarModal = () => {
@@ -130,7 +182,7 @@ export default function Pasajeros() {
     try {
       await perfilPasajeroService.delete(id);
       setCurrentPage(1);
-      await fetchPasajeros(1, itemsPerPage);
+      await fetchPasajeros(1, itemsPerPage, searchTerm);
     } catch (err) {
       setError(err.message);
     }
@@ -154,6 +206,22 @@ export default function Pasajeros() {
       {error && !modalOpen && <p className="error">{error}</p>}
 
       <div className="table-container">
+        <div className="table-actions" style={{ marginBottom: "1rem" }}>
+          <button onClick={handleNuevo} className="button button-primary">
+            + Nuevo Pasajero
+          </button>
+        </div>
+
+      <TableToolbar
+        searchValue={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Buscar por nombres, apellidos, correo o documento..."
+        sortOptions={sortOptions}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
+
         <div className="bg-white rounded-lg shadow-sm">
           <div className="desktop-table">
             <table className="table">
@@ -180,9 +248,22 @@ export default function Pasajeros() {
                       <td>{perfil.usuario?.correo || "-"}</td>
                       <td>{perfil.telefono || "-"}</td>
                       <td>
-                        {perfil.tipoDocumento
-                          ? `${perfil.tipoDocumento} ${perfil.numeroDocumento || ""}`
-                          : "-"}
+                        {perfil.tipoDocumento && perfil.numeroDocumento ? (
+                          <div style={{ display: "flex", flexDirection: "column" }}>
+                            <span className="font-medium">{perfil.numeroDocumento}</span>
+                            <span style={{ fontSize: "0.7rem", color: "#6b7280", textTransform: "uppercase" }}>
+                              {perfil.tipoDocumento}
+                            </span>
+                          </div>
+                        ) : perfil.numeroDocumento ? (
+                          perfil.numeroDocumento
+                        ) : perfil.tipoDocumento ? (
+                          <span style={{ fontSize: "0.7rem", color: "#6b7280", textTransform: "uppercase" }}>
+                            {perfil.tipoDocumento}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
                       </td>
                       <td>
                         <ActionsMenu
@@ -305,6 +386,21 @@ export default function Pasajeros() {
               required
             />
           </div>
+          {!editingPasajero && (
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+                Contraseña
+              </label>
+              <input
+                type="password"
+                value={formData.contrasena}
+                onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+                className="input"
+                style={{ width: "100%" }}
+                required
+              />
+            </div>
+          )}
           <div style={{ marginBottom: "1rem" }}>
             <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
               Teléfono

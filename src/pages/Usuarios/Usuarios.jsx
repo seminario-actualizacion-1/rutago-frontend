@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
+import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { usuariosService } from "../../services/usuarios.service";
 import { vehiculosService } from "../../services/vehiculos.service";
 import { perfilConductorService } from "../../services/perfilConductor.service";
@@ -16,7 +17,6 @@ export default function Usuarios() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUsuario, setEditingUsuario] = useState(null);
-  const [filtroRol, setFiltroRol] = useState("");
   const [formData, setFormData] = useState({
     nombres: "",
     apellidos: "",
@@ -51,17 +51,24 @@ export default function Usuarios() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ rolId: "" });
+  const [sortBy, setSortBy] = useState("id");
+  const [sortOrder, setSortOrder] = useState("ASC");
 
-  const fetchUsuarios = async (page = currentPage, limit = itemsPerPage, rolFiltro = filtroRol) => {
+  const fetchUsuarios = async (page = currentPage, limit = itemsPerPage, q = searchTerm, flt = filters) => {
     try {
       setLoading(true);
       const params = {
         paginaActual: page,
         registrosPorPagina: limit,
+        q: q || undefined,
+        sortBy,
+        sortOrder,
       };
       
-      if (rolFiltro) {
-        params.rolId = rolFiltro;
+      if (flt.rolId) {
+        params.rolId = flt.rolId;
       }
       
       const data = await usuariosService.getAll(params);
@@ -99,16 +106,27 @@ export default function Usuarios() {
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([
-        fetchUsuarios(currentPage, itemsPerPage, filtroRol),
+        fetchUsuarios(currentPage, itemsPerPage, searchTerm, filters),
         fetchVehiculos(),
       ]);
     };
 
     loadData();
-  }, [currentPage, itemsPerPage, filtroRol]);
+  }, [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder]);
 
-  const handleFiltroRolChange = (rolId) => {
-    setFiltroRol(rolId);
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
     setCurrentPage(1);
   };
 
@@ -276,7 +294,7 @@ export default function Usuarios() {
       }
 
       setCurrentPage(1);
-      await fetchUsuarios(1, itemsPerPage, filtroRol);
+      await fetchUsuarios(1, itemsPerPage, searchTerm, filters);
       setModalOpen(false);
       setEditingUsuario(null);
       setFormData({
@@ -350,7 +368,7 @@ export default function Usuarios() {
 
       await usuariosService.delete(usuario.id);
       setCurrentPage(1);
-      await fetchUsuarios(1, itemsPerPage, filtroRol);
+      await fetchUsuarios(1, itemsPerPage, searchTerm, filters);
     } catch (err) {
       setError(err.message);
     }
@@ -380,6 +398,14 @@ export default function Usuarios() {
     return colors[rolId] || "badge-default";
   };
 
+  const sortOptions = [
+    { value: "id", label: "ID" },
+    { value: "nombres", label: "Nombres" },
+    { value: "apellidos", label: "Apellidos" },
+    { value: "correo", label: "Correo" },
+    { value: "rolId", label: "Rol" }
+  ];
+
   if (loading)
     return (
       <div className="usuarios-container">
@@ -397,73 +423,63 @@ export default function Usuarios() {
       </div>
       {error && !modalOpen && <p className="error">{error}</p>}
 
-      {/* Filtro por rol */}
-      <div
-        className="filter-container"
-        style={{
-          marginBottom: "1rem",
-          background: "white",
-          padding: "1rem",
-          borderRadius: "0.5rem",
-        }}
-      >
-        <label
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: "500",
-            fontSize: "0.875rem",
-            color: "#374151",
-          }}
-        >
-          Filtrar por rol
-        </label>
-        <select
-          value={filtroRol}
-          onChange={(e) => handleFiltroRolChange(e.target.value)}
-          className="input"
-          style={{ width: "100%", maxWidth: "300px" }}
-        >
-          <option value="">Todos los roles</option>
-          <option value="1">Administrador</option>
-          <option value="2">Conductor</option>
-          <option value="3">Pasajero</option>
-          <option value="4">Entidad Externa</option>
-        </select>
-      </div>
+      <div className="table-container">
+        <div className="table-actions" style={{ marginBottom: "1rem" }}>
+          <button
+            onClick={() => {
+              setError("");
+              setEditingUsuario(null);
+              setFormData({
+                nombres: "",
+                apellidos: "",
+                correo: "",
+                contrasena: "",
+                rolId: "",
+                licenciaConducir: "",
+                vehiculoId: "",
+                estadoConductor: "DISPONIBLE",
+                razonSocial: "",
+                nit: "",
+                telefonoContacto: "",
+                telefono: "",
+                direccion: "",
+                tipoDocumento: "",
+                numeroDocumento: "",
+                fechaNacimiento: "",
+              });
+              setModalOpen(true);
+            }}
+            className="button button-primary"
+          >
+            + Nuevo Usuario
+          </button>
+        </div>
 
-      <div className="table-actions" style={{ marginBottom: "1rem" }}>
-        <button
-          onClick={() => {
-            setError("");
-            setEditingUsuario(null);
-            setFormData({
-              nombres: "",
-              apellidos: "",
-              correo: "",
-              contrasena: "",
-              rolId: "",
-              licenciaConducir: "",
-              vehiculoId: "",
-              estadoConductor: "DISPONIBLE",
-              razonSocial: "",
-              nit: "",
-              telefonoContacto: "",
-              telefono: "",
-              direccion: "",
-              tipoDocumento: "",
-              numeroDocumento: "",
-              fechaNacimiento: "",
-            });
-            setModalOpen(true);
-          }}
-          className="button button-primary"
-        >
-          + Nuevo Usuario
-        </button>
-      </div>
+      <TableToolbar
+        searchValue={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Buscar por nombres, apellidos o correo..."
+        filters={[
+          {
+            name: "rolId",
+            label: "Todos los roles",
+            value: filters.rolId,
+            options: [
+              { value: "1", label: "Administrador" },
+              { value: "2", label: "Conductor" },
+              { value: "3", label: "Pasajero" },
+              { value: "4", label: "Entidad Externa" },
+            ],
+          },
+        ]}
+        onFilterChange={handleFilterChange}
+        sortOptions={sortOptions}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
 
-      <div className="usuarios-table-wrapper">
+        <div className="usuarios-table-wrapper">
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">
@@ -564,6 +580,7 @@ export default function Usuarios() {
             setCurrentPage(1);
           }}
         />
+      </div>
       </div>
 
       <Modal

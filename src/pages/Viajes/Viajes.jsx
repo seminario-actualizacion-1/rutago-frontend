@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
+import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { viajesService } from "../../services/viajes.service";
 import "./Viajes.css";
 
@@ -43,6 +44,10 @@ export default function Viajes() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ estado: "" });
+  const [sortBy, setSortBy] = useState("id");
+  const [sortOrder, setSortOrder] = useState("ASC");
 
   useEffect(() => {
     const loadViajes = async () => {
@@ -51,6 +56,10 @@ export default function Viajes() {
         const data = await viajesService.getAll({
           paginaActual: currentPage,
           registrosPorPagina: itemsPerPage,
+          q: searchTerm || undefined,
+          ...(filters.estado && { estado: filters.estado }),
+          sortBy,
+          sortOrder,
         });
         setViajes(data.data || []);
         setPagination(
@@ -71,7 +80,28 @@ export default function Viajes() {
     };
 
     loadViajes();
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder]);
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
+
+  const sortOptions = [
+    { value: "id", label: "ID" },
+    { value: "estado", label: "Estado" },
+  ];
 
   const viajesPaginados = viajes;
 
@@ -102,6 +132,32 @@ export default function Viajes() {
       {error && <p className="error">{error}</p>}
 
       <div className="table-container">
+
+      <TableToolbar
+        searchValue={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Buscar por pasajero, conductor o barrios..."
+        filters={[
+          {
+            name: "estado",
+            label: "Todos los estados",
+            value: filters.estado,
+            options: [
+              { value: "BUSCANDO", label: "Buscando" },
+              { value: "ACEPTADO", label: "Aceptado" },
+              { value: "EN_CURSO", label: "En curso" },
+              { value: "FINALIZADO", label: "Finalizado" },
+              { value: "CANCELADO", label: "Cancelado" },
+            ],
+          },
+        ]}
+        onFilterChange={handleFilterChange}
+        sortOptions={sortOptions}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
+
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">

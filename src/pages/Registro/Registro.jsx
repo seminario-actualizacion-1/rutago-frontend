@@ -32,10 +32,10 @@ function Registro() {
       <Card title="Crear Cuenta">
         {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <Input name="nombres" label="Nombres" placeholder="Tus nombres" value={formData.nombres} onChange={handleChange} />
-          <Input name="apellidos" label="Apellidos" placeholder="Tus apellidos" value={formData.apellidos} onChange={handleChange} />
-          <Input name="correo" label="Correo" type="email" placeholder="Correo electrónico" value={formData.correo} onChange={handleChange} />
-          <Input name="contrasena" label="Contraseña" type="password" placeholder="Contraseña" value={formData.contrasena} onChange={handleChange} />
+          <Input name="nombres" label="Nombres" placeholder="Tus nombres" value={formData.nombres} onChange={handleChange} autoComplete="given-name" />
+          <Input name="apellidos" label="Apellidos" placeholder="Tus apellidos" value={formData.apellidos} onChange={handleChange} autoComplete="family-name" />
+          <Input name="correo" label="Correo" type="email" placeholder="Correo electrónico" value={formData.correo} onChange={handleChange} autoComplete="email" />
+          <Input name="contrasena" label="Contraseña" type="password" placeholder="Contraseña" value={formData.contrasena} onChange={handleChange} autoComplete="new-password" />
           <Button type="submit" variant="primary" fullWidth>Registrarse</Button>
         </form>
         <div className="login-links">

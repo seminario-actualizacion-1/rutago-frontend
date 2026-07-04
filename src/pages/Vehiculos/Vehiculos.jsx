@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
+import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { vehiculosService } from "../../services/vehiculos.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import "./Vehiculos.css";
@@ -33,9 +34,13 @@ export default function Vehiculos() {
     longitud: "",
   });
 
-  // Pagination state
+  // Pagination & search state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ estado: "" });
+  const [sortBy, setSortBy] = useState("id");
+  const [sortOrder, setSortOrder] = useState("ASC");
 
   useEffect(() => {
     const loadData = async () => {
@@ -45,6 +50,10 @@ export default function Vehiculos() {
           vehiculosService.getAll({
             paginaActual: currentPage,
             registrosPorPagina: itemsPerPage,
+            q: searchTerm || undefined,
+            estado: filters.estado || undefined,
+            sortBy,
+            sortOrder,
           }),
           perfilEntidadService.getAll({
             paginaActual: 1,
@@ -72,7 +81,7 @@ export default function Vehiculos() {
     };
 
     loadData();
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder]);
 
   const handleEditar = (vehiculo) => {
     setError("");
@@ -90,6 +99,28 @@ export default function Vehiculos() {
     });
     setModalOpen(true);
   };
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
+
+  const estadoOptions = [
+    { value: "EN_TERMINAL", label: "En Terminal" },
+    { value: "EN_RUTA", label: "En Ruta" },
+    { value: "PROXIMO", label: "Próximo" },
+  ];
 
   const handleGuardar = async () => {
     try {
@@ -188,6 +219,13 @@ export default function Vehiculos() {
     return colors[estado] || "badge-default";
   };
 
+  const sortOptions = [
+    { value: "id", label: "ID" },
+    { value: "placa", label: "Placa" },
+    { value: "marca", label: "Marca" },
+    { value: "modelo", label: "Modelo" },
+  ];
+
   const vehiculosPaginados = vehiculos;
 
   if (loading)
@@ -230,6 +268,25 @@ export default function Vehiculos() {
             + Nuevo Vehículo
           </button>
         </div>
+
+      <TableToolbar
+        searchValue={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Buscar por placa, marca, modelo o color..."
+        filters={[
+          {
+            name: "estado",
+            label: "Todos los estados",
+            value: filters.estado,
+            options: estadoOptions,
+          },
+        ]}
+        onFilterChange={handleFilterChange}
+        sortOptions={sortOptions}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">

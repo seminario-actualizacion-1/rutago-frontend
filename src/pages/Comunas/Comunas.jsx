@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
+import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { comunasService } from "../../services/comunas.service";
 import "./Comunas.css";
 
@@ -26,13 +27,19 @@ export default function Comunas() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("nombre");
+  const [sortOrder, setSortOrder] = useState("ASC");
 
-  const fetchComunas = async (page = currentPage, limit = itemsPerPage) => {
+  const fetchComunas = async (page = currentPage, limit = itemsPerPage, q = searchTerm) => {
     try {
       setLoading(true);
       const data = await comunasService.getAll({
         paginaActual: page,
         registrosPorPagina: limit,
+        q: q || undefined,
+        sortBy,
+        sortOrder,
       });
       setComunas(data.data || []);
       setPagination(
@@ -54,11 +61,27 @@ export default function Comunas() {
 
   useEffect(() => {
     const loadComunas = async () => {
-      await fetchComunas(currentPage, itemsPerPage);
+      await fetchComunas(currentPage, itemsPerPage, searchTerm);
     };
 
     loadComunas();
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, searchTerm, sortBy, sortOrder]);
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const sortOptions = [
+    { value: "id", label: "ID" },
+    { value: "nombre", label: "Nombre" },
+  ];
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
 
   const handleEditar = (comuna) => {
     setError("");
@@ -153,6 +176,16 @@ export default function Comunas() {
             + Nueva Comuna
           </button>
         </div>
+
+      <TableToolbar
+        searchValue={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Buscar por nombre..."
+        sortOptions={sortOptions}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">

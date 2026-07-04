@@ -8,6 +8,7 @@ import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/DashboardLayout/DashboardLayout";
+import { LayoutProvider } from "./context/LayoutContext";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Pasajeros from "./pages/Pasajeros/Pasajeros";
 import Conductores from "./pages/Conductores/Conductores";
@@ -21,6 +22,7 @@ import Perfil from "./pages/Perfil/Perfil";
 import Viajes from "./pages/Viajes/Viajes";
 import Usuarios from "./pages/Usuarios/Usuarios";
 import { usuariosService } from "./services/usuarios.service";
+import { ROLES } from "./config/roles";
 import "./index.css";
 
 function getInitialUser() {
@@ -42,7 +44,6 @@ export default function App() {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  // Verificar token al iniciar la aplicación
   useEffect(() => {
     const verificarSesion = async () => {
       const token = localStorage.getItem("token");
@@ -56,7 +57,6 @@ export default function App() {
       try {
         const response = await usuariosService.verificarToken();
 
-        // Actualizar datos del usuario si es necesario
         if (response.success && response.usuario) {
           const userActualizado = {
             ...user,
@@ -68,7 +68,6 @@ export default function App() {
         }
       } catch (error) {
         console.error("Token inválido o expirado:", error);
-        // Limpiar sesión si el token no es válido
         localStorage.removeItem("token");
         localStorage.removeItem("rutago_user");
         setUser(null);
@@ -82,7 +81,6 @@ export default function App() {
 
   const isLoggedIn = !!localStorage.getItem("token");
 
-  // Mostrar pantalla de carga mientras verifica el token
   if (verificandoToken) {
     return (
       <div className="app">
@@ -105,48 +103,120 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="app">
-        <Navbar />
-        <div className="app-body">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route
-              path="/login"
-              element={
-                isLoggedIn ? <Navigate to="/dashboard" replace /> : <Login />
-              }
-            />
-            <Route
-              path="/registro"
-              element={
-                isLoggedIn ? <Navigate to="/dashboard" replace /> : <Registro />
-              }
-            />
-            <Route path="/recuperar-password" element={<RecuperarPassword />} />
-            <Route
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/usuarios" element={<Usuarios />} />
-              <Route path="/pasajeros" element={<Pasajeros />} />
-              <Route path="/conductores" element={<Conductores />} />
-              <Route path="/vehiculos" element={<Vehiculos />} />
-              <Route path="/barrios" element={<Barrios />} />
-              <Route path="/comunas" element={<Comunas />} />
-              <Route path="/rutas" element={<Rutas />} />
-              <Route path="/horarios" element={<Horarios />} />
-              <Route path="/entidades" element={<Entidades />} />
-              <Route path="/perfil" element={<Perfil />} />
-              <Route path="/viajes" element={<Viajes />} />
-            </Route>
-          </Routes>
+      <LayoutProvider>
+        <div className="app">
+          <Navbar />
+          <div className="app-body">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route
+                path="/login"
+                element={
+                  isLoggedIn ? <Navigate to="/dashboard" replace /> : <Login />
+                }
+              />
+              <Route
+                path="/registro"
+                element={
+                  isLoggedIn ? <Navigate to="/dashboard" replace /> : <Registro />
+                }
+              />
+              <Route path="/recuperar-password" element={<RecuperarPassword />} />
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route
+                  path="/usuarios"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <Usuarios />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/pasajeros"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <Pasajeros />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/conductores"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <Conductores />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/vehiculos"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.ENTIDAD]}>
+                      <Vehiculos />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/barrios"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <Barrios />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/comunas"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <Comunas />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/rutas"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <Rutas />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/horarios"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <Horarios />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/entidades"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <Entidades />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/perfil" element={<Perfil />} />
+                <Route
+                  path="/viajes"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.CONDUCTOR, ROLES.PASAJERO]}>
+                      <Viajes />
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
+            </Routes>
+          </div>
+          {!isLoggedIn && <Footer />}
         </div>
-        {!isLoggedIn && <Footer />}
-      </div>
+      </LayoutProvider>
     </BrowserRouter>
   );
 }

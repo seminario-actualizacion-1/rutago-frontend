@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
+import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { horariosService } from "../../services/horarios.service";
 import { rutasService } from "../../services/rutas.service";
 import { vehiculosService } from "../../services/vehiculos.service";
@@ -58,13 +59,19 @@ export default function Horarios() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("id");
+  const [sortOrder, setSortOrder] = useState("ASC");
 
-  const fetchHorarios = async (page = currentPage, limit = itemsPerPage) => {
+  const fetchHorarios = async (page = currentPage, limit = itemsPerPage, q = searchTerm) => {
     try {
       setLoading(true);
       const data = await horariosService.getAll({
         paginaActual: page,
         registrosPorPagina: limit,
+        q: q || undefined,
+        sortBy,
+        sortOrder,
       });
       setHorarios(data.data || []);
       setPagination(
@@ -110,8 +117,19 @@ export default function Horarios() {
   }, []);
 
   useEffect(() => {
-    fetchHorarios(currentPage, itemsPerPage);
-  }, [currentPage, itemsPerPage]);
+    fetchHorarios(currentPage, itemsPerPage, searchTerm);
+  }, [currentPage, itemsPerPage, searchTerm, sortBy, sortOrder]);
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
 
   const handleNuevo = () => {
     setEditingHorario(null);
@@ -188,6 +206,11 @@ export default function Horarios() {
 
   const horariosPaginados = horarios;
 
+  const sortOptions = [
+    { value: "id", label: "ID" },
+    { value: "horaSalida", label: "Hora de salida" }
+  ];
+
   if (loading) {
     return (
       <div className="rutas-container">
@@ -212,6 +235,16 @@ export default function Horarios() {
             + Nuevo Horario
           </button>
         </div>
+
+      <TableToolbar
+        searchValue={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Buscar por ruta, vehículo u hora..."
+        sortOptions={sortOptions}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
 
         <div className="bg-white rounded-lg shadow-sm">
           <div className="desktop-table">
