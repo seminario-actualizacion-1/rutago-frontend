@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
+import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { conductoresService } from "../../services/conductores.service";
 import { usuariosService } from "../../services/usuarios.service";
 import { vehiculosService } from "../../services/vehiculos.service";
@@ -40,6 +41,10 @@ export default function Conductores() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ estado: "" });
+  const [sortBy, setSortBy] = useState("id");
+  const [sortOrder, setSortOrder] = useState("ASC");
 
   useEffect(() => {
     const loadData = async () => {
@@ -50,6 +55,10 @@ export default function Conductores() {
             conductoresService.getAll({
               paginaActual: currentPage,
               registrosPorPagina: itemsPerPage,
+              q: searchTerm || undefined,
+              ...(filters.estado && { estado: filters.estado }),
+              sortBy,
+              sortOrder,
             }),
             usuariosService.getAll({
               paginaActual: 1,
@@ -82,7 +91,7 @@ export default function Conductores() {
     };
 
     loadData();
-  }, [currentPage, itemsPerPage, refreshKey]);
+  }, [currentPage, itemsPerPage, searchTerm, filters, refreshKey, sortBy, sortOrder]);
 
   const handleNuevo = () => {
     setEditingConductor(null);
@@ -207,6 +216,28 @@ export default function Conductores() {
     }
   };
 
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
+  };
+
+  const sortOptions = [
+    { value: "id", label: "ID" },
+    { value: "licenciaConducir", label: "Licencia" },
+    { value: "estado", label: "Estado" },
+  ];
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
+
   const getUsuarioNombre = (conductor) => {
     if (conductor.usuario) {
       return `${conductor.usuario.nombres} ${conductor.usuario.apellidos || ""}`.trim();
@@ -261,6 +292,29 @@ export default function Conductores() {
             + Nuevo Conductor
           </button>
         </div>
+
+      <TableToolbar
+        searchValue={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Buscar por nombres, apellidos, correo o licencia..."
+        filters={[
+          {
+            name: "estado",
+            label: "Todos los estados",
+            value: filters.estado,
+            options: [
+              { value: "DISPONIBLE", label: "Disponible" },
+              { value: "EN_VIAJE", label: "En viaje" },
+              { value: "INACTIVO", label: "Inactivo" },
+            ],
+          },
+        ]}
+        onFilterChange={handleFilterChange}
+        sortOptions={sortOptions}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">

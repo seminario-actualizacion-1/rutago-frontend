@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
+import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { entidadesService } from "../../services/entidades.service";
 import { usuariosService } from "../../services/usuarios.service";
 import "./Entidades.css";
@@ -39,6 +40,9 @@ export default function Entidades() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("id");
+  const [sortOrder, setSortOrder] = useState("ASC");
 
   useEffect(() => {
     const loadEntidades = async () => {
@@ -47,6 +51,9 @@ export default function Entidades() {
         const data = await entidadesService.getAll({
           paginaActual: currentPage,
           registrosPorPagina: itemsPerPage,
+          q: searchTerm || undefined,
+          sortBy,
+          sortOrder,
         });
         setEntidades(data.data || []);
         setPagination(
@@ -67,7 +74,18 @@ export default function Entidades() {
     };
 
     loadEntidades();
-  }, [currentPage, itemsPerPage, refreshKey]);
+  }, [currentPage, itemsPerPage, searchTerm, refreshKey, sortBy, sortOrder]);
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
 
   const handleNueva = () => {
     setEditingEntidad(null);
@@ -193,6 +211,12 @@ export default function Entidades() {
     style: { width: "100%" },
   });
 
+  const sortOptions = [
+    { value: "id", label: "ID" },
+    { value: "razonSocial", label: "Razón Social" },
+    { value: "nit", label: "NIT" },
+  ];
+
   const entidadesPaginadas = entidades;
 
   if (loading)
@@ -219,6 +243,16 @@ export default function Entidades() {
             + Nueva Entidad
           </button>
         </div>
+
+      <TableToolbar
+        searchValue={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Buscar por razón social, NIT, nombres o correo..."
+        sortOptions={sortOptions}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
 
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}

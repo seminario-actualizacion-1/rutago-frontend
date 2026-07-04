@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import Input from "../../components/Input/Input";
 import Button from "../../components/Button/Button";
 import Card from "../../components/Card/Card";
+import { ROLES } from "../../config/roles";
 import "./Login.css";
 
 function Login() {
@@ -22,7 +23,12 @@ function Login() {
 
     try {
       await login(formData);
-      navigate("/dashboard");
+      const user = JSON.parse(localStorage.getItem("rutago_user") || "{}");
+      const rol = user.rolId;
+      if (rol === ROLES.CONDUCTOR) navigate("/viajes");
+      else if (rol === ROLES.PASAJERO) navigate("/viajes");
+      else if (rol === ROLES.ENTIDAD) navigate("/vehiculos");
+      else navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Credenciales incorrectas");
     }
@@ -43,6 +49,7 @@ function Login() {
             placeholder="Correo electrónico"
             value={formData.correo}
             onChange={handleChange}
+            autoComplete="email"
           />
           <Input
             name="contrasena"
@@ -51,6 +58,7 @@ function Login() {
             placeholder="Contraseña"
             value={formData.contrasena}
             onChange={handleChange}
+            autoComplete="current-password"
           />
           <Button type="submit" variant="primary" fullWidth>
             Ingresar

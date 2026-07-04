@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
+import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { barriosService } from "../../services/barrios.service";
 import { comunasService } from "../../services/comunas.service";
 import "./Barrios.css";
@@ -13,7 +14,6 @@ export default function Barrios() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBarrio, setEditingBarrio] = useState(null);
-  const [filtroComuna, setFiltroComuna] = useState("");
   const [pagination, setPagination] = useState({
     paginaActual: 1,
     registrosPorPagina: 10,
@@ -30,14 +30,21 @@ export default function Barrios() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({ comunaId: "" });
+  const [sortBy, setSortBy] = useState("id");
+  const [sortOrder, setSortOrder] = useState("ASC");
 
-  const fetchBarrios = async (page = currentPage, limit = itemsPerPage, comunaId) => {
+  const fetchBarrios = async (page = currentPage, limit = itemsPerPage, q = searchTerm, comunaId = filters.comunaId) => {
     try {
       setLoading(true);
       const data = await barriosService.getAll({
         paginaActual: page,
         registrosPorPagina: limit,
+        q: q || undefined,
         ...(comunaId && { comunaId }),
+        sortBy,
+        sortOrder,
       });
       setBarrios(data.data || []);
       setPagination(
@@ -71,8 +78,30 @@ export default function Barrios() {
   }, []);
 
   useEffect(() => {
-    fetchBarrios(currentPage, itemsPerPage, filtroComuna || undefined);
-  }, [currentPage, itemsPerPage, filtroComuna]);
+    fetchBarrios(currentPage, itemsPerPage, searchTerm, filters.comunaId || undefined);
+  }, [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder]);
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1);
+  };
+
+  const sortOptions = [
+    { value: "id", label: "ID" },
+    { value: "nombre", label: "Nombre" },
+    { value: "comunaId", label: "Comuna" },
+  ];
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
 
   const handleEditar = (barrio) => {
     setError("");
@@ -92,7 +121,7 @@ export default function Barrios() {
         await barriosService.create(formData);
       }
       setCurrentPage(1);
-      await fetchBarrios(1, itemsPerPage, filtroComuna || undefined);
+      await fetchBarrios(1, itemsPerPage, searchTerm, filters.comunaId || undefined);
       setModalOpen(false);
       setEditingBarrio(null);
       setFormData({
@@ -122,7 +151,7 @@ export default function Barrios() {
     try {
       await barriosService.delete(id);
       setCurrentPage(1);
-      await fetchBarrios(1, itemsPerPage, filtroComuna || undefined);
+      await fetchBarrios(1, itemsPerPage, searchTerm, filters.comunaId || undefined);
     } catch (err) {
       setError(err.message);
     }
@@ -144,11 +173,6 @@ export default function Barrios() {
     setCurrentPage(1);
   };
 
-  const handleFiltroComunaChange = (comunaId) => {
-    setFiltroComuna(comunaId);
-    setCurrentPage(1);
-  };
-
   if (loading)
     return (
       <div className="barrios-container">
@@ -166,41 +190,6 @@ export default function Barrios() {
       </div>
       {error && <p className="error">{error}</p>}
 
-      <div
-        className="filter-container"
-        style={{
-          marginBottom: "1rem",
-          background: "white",
-          padding: "1rem",
-          borderRadius: "0.5rem",
-        }}
-      >
-        <label
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: "500",
-            fontSize: "0.875rem",
-            color: "#374151",
-          }}
-        >
-          Filtrar por Comuna
-        </label>
-        <select
-          value={filtroComuna}
-          onChange={(e) => handleFiltroComunaChange(e.target.value)}
-          className="input"
-          style={{ width: "100%", maxWidth: "300px" }}
-        >
-          <option value="">Todas las comunas</option>
-          {comunas.map((comuna) => (
-            <option key={comuna.id} value={comuna.id}>
-              {comuna.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
-
       <div className="table-container">
         <div className="table-actions" style={{ marginBottom: "1rem" }}>
           <button
@@ -215,6 +204,25 @@ export default function Barrios() {
             + Nuevo Barrio
           </button>
         </div>
+
+      <TableToolbar
+        searchValue={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Buscar por nombre..."
+        filters={[
+          {
+            name: "comunaId",
+            label: "Todas las comunas",
+            value: filters.comunaId,
+            options: comunas.map(c => ({ value: String(c.id), label: c.nombre })),
+          },
+        ]}
+        onFilterChange={handleFilterChange}
+        sortOptions={sortOptions}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
           <div className="desktop-table">
