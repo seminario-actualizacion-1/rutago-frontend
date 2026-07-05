@@ -5,6 +5,7 @@ import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 import { usuariosService } from "../../services/usuarios.service";
+import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import { TIPOS_DOCUMENTO } from "../../config/estados";
 import "./Pasajeros.css";
 
@@ -392,12 +393,10 @@ export default function Pasajeros() {
               <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
                 Contraseña
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={formData.contrasena}
                 onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
-                className="input"
-                style={{ width: "100%" }}
+                placeholder="Contraseña"
                 required
               />
             </div>
