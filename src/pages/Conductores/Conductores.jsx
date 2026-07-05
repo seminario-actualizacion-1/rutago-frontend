@@ -6,6 +6,7 @@ import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { conductoresService } from "../../services/conductores.service";
 import { usuariosService } from "../../services/usuarios.service";
 import { vehiculosService } from "../../services/vehiculos.service";
+import { ESTADOS_CONDUCTOR } from "../../config/estados";
 import "./Conductores.css";
 
 const emptyForm = {
@@ -16,7 +17,7 @@ const emptyForm = {
   usuarioId: "",
   vehiculoId: "",
   licenciaConducir: "",
-  estado: "DISPONIBLE",
+  estadoId: 1,
 };
 
 export default function Conductores() {
@@ -42,7 +43,7 @@ export default function Conductores() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({ estado: "" });
+  const [filters, setFilters] = useState({ estadoId: "" });
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
@@ -56,7 +57,7 @@ export default function Conductores() {
               paginaActual: currentPage,
               registrosPorPagina: itemsPerPage,
               q: searchTerm || undefined,
-              ...(filters.estado && { estado: filters.estado }),
+              ...(filters.estadoId && { estadoId: filters.estadoId }),
               sortBy,
               sortOrder,
             }),
@@ -110,7 +111,7 @@ export default function Conductores() {
       usuarioId: conductor.usuarioId,
       vehiculoId: conductor.vehiculoId || "",
       licenciaConducir: conductor.licenciaConducir || "",
-      estado: conductor.estado || "DISPONIBLE",
+      estadoId: conductor.estadoId || 1,
     });
     setError("");
     setModalOpen(true);
@@ -135,7 +136,7 @@ export default function Conductores() {
         await conductoresService.update(editingConductor.id, {
           vehiculoId: formData.vehiculoId || null,
           licenciaConducir: formData.licenciaConducir,
-          estado: formData.estado,
+          estadoId: formData.estadoId,
         });
       } else {
         const usuarioResponse = await usuariosService.create({
@@ -154,7 +155,7 @@ export default function Conductores() {
           usuarioId,
           vehiculoId: formData.vehiculoId || null,
           licenciaConducir: formData.licenciaConducir,
-          estado: formData.estado,
+          estadoId: formData.estadoId,
         });
       }
       setCurrentPage(1);
@@ -258,13 +259,13 @@ export default function Conductores() {
     return vehiculo ? vehiculo.placa : "Sin vehículo";
   };
 
-  const getEstadoColor = (estado) => {
+  const getEstadoColor = (estadoId) => {
     const colors = {
-      DISPONIBLE: "badge-disponible",
-      EN_VIAJE: "badge-en-viaje",
-      INACTIVO: "badge-inactivo",
+      1: "badge-disponible",
+      2: "badge-en-viaje",
+      3: "badge-inactivo",
     };
-    return colors[estado] || "badge-default";
+    return colors[estadoId] || "badge-default";
   };
 
   const conductoresPaginados = conductores;
@@ -299,13 +300,13 @@ export default function Conductores() {
         placeholder="Buscar por nombres, apellidos, correo o licencia..."
         filters={[
           {
-            name: "estado",
+            name: "estadoId",
             label: "Todos los estados",
-            value: filters.estado,
+            value: filters.estadoId,
             options: [
-              { value: "DISPONIBLE", label: "Disponible" },
-              { value: "EN_VIAJE", label: "En viaje" },
-              { value: "INACTIVO", label: "Inactivo" },
+              { value: 1, label: "Disponible" },
+              { value: 2, label: "En viaje" },
+              { value: 3, label: "Inactivo" },
             ],
           },
         ]}
@@ -343,9 +344,9 @@ export default function Conductores() {
                       <td>{conductor.licenciaConducir || "-"}</td>
                       <td>
                         <span
-                          className={`badge ${getEstadoColor(conductor.estado)}`}
+                          className={`badge ${getEstadoColor(conductor.estadoId)}`}
                         >
-                          {conductor.estado || "DISPONIBLE"}
+                          {ESTADOS_CONDUCTOR[conductor.estadoId] || conductor.estadoId || 1}
                         </span>
                       </td>
                       <td>
@@ -380,9 +381,9 @@ export default function Conductores() {
                         <p>Licencia: {conductor.licenciaConducir || "-"}</p>
                       </div>
                       <span
-                        className={`mobile-badge ${getEstadoColor(conductor.estado)}`}
+                        className={`mobile-badge ${getEstadoColor(conductor.estadoId)}`}
                       >
-                        {(conductor.estado || "DISPONIBLE").toUpperCase()}
+                        {(ESTADOS_CONDUCTOR[conductor.estadoId] || conductor.estadoId || 1).toString().toUpperCase()}
                       </span>
                     </div>
 
@@ -645,17 +646,17 @@ export default function Conductores() {
               Estado
             </label>
             <select
-              value={formData.estado}
+              value={formData.estadoId}
               onChange={(e) =>
-                setFormData({ ...formData, estado: e.target.value })
+                setFormData({ ...formData, estadoId: parseInt(e.target.value) })
               }
               className="input"
               style={{ width: "100%" }}
               required
             >
-              <option value="DISPONIBLE">Disponible</option>
-              <option value="EN_VIAJE">En viaje</option>
-              <option value="INACTIVO">Inactivo</option>
+              <option value="1">Disponible</option>
+              <option value="2">En viaje</option>
+              <option value="3">Inactivo</option>
             </select>
           </div>
           {error && <p className="error">{error}</p>}

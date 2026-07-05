@@ -5,6 +5,7 @@ import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 import { usuariosService } from "../../services/usuarios.service";
+import { TIPOS_DOCUMENTO } from "../../config/estados";
 import "./Pasajeros.css";
 
 const emptyForm = {
@@ -14,7 +15,7 @@ const emptyForm = {
   contrasena: "",
   telefono: "",
   direccion: "",
-  tipoDocumento: "",
+  tipoDocumentoId: "",
   numeroDocumento: "",
   fechaNacimiento: "",
 };
@@ -89,7 +90,7 @@ export default function Pasajeros() {
       correo: u.correo || "",
       telefono: perfil.telefono || "",
       direccion: perfil.direccion || "",
-      tipoDocumento: perfil.tipoDocumento || "",
+      tipoDocumentoId: perfil.tipoDocumentoId || "",
       numeroDocumento: perfil.numeroDocumento || "",
       fechaNacimiento: perfil.fechaNacimiento
         ? perfil.fechaNacimiento.slice(0, 10)
@@ -104,7 +105,7 @@ export default function Pasajeros() {
         await perfilPasajeroService.update(editingPasajero.id, {
           telefono: formData.telefono,
           direccion: formData.direccion,
-          tipoDocumento: formData.tipoDocumento,
+          tipoDocumentoId: formData.tipoDocumentoId,
           numeroDocumento: formData.numeroDocumento,
           fechaNacimiento: formData.fechaNacimiento || null,
         });
@@ -132,7 +133,7 @@ export default function Pasajeros() {
           usuarioId,
           telefono: formData.telefono,
           direccion: formData.direccion,
-          tipoDocumento: formData.tipoDocumento,
+          tipoDocumentoId: formData.tipoDocumentoId,
           numeroDocumento: formData.numeroDocumento,
           fechaNacimiento: formData.fechaNacimiento || null,
         });
@@ -248,18 +249,18 @@ export default function Pasajeros() {
                       <td>{perfil.usuario?.correo || "-"}</td>
                       <td>{perfil.telefono || "-"}</td>
                       <td>
-                        {perfil.tipoDocumento && perfil.numeroDocumento ? (
+                        {perfil.tipoDocumentoId && perfil.numeroDocumento ? (
                           <div style={{ display: "flex", flexDirection: "column" }}>
                             <span className="font-medium">{perfil.numeroDocumento}</span>
                             <span style={{ fontSize: "0.7rem", color: "#6b7280", textTransform: "uppercase" }}>
-                              {perfil.tipoDocumento}
+                              {TIPOS_DOCUMENTO[perfil.tipoDocumentoId] || perfil.tipoDocumentoId}
                             </span>
                           </div>
                         ) : perfil.numeroDocumento ? (
                           perfil.numeroDocumento
-                        ) : perfil.tipoDocumento ? (
+                        ) : perfil.tipoDocumentoId ? (
                           <span style={{ fontSize: "0.7rem", color: "#6b7280", textTransform: "uppercase" }}>
-                            {perfil.tipoDocumento}
+                            {TIPOS_DOCUMENTO[perfil.tipoDocumentoId] || perfil.tipoDocumentoId}
                           </span>
                         ) : (
                           "-"
@@ -303,8 +304,8 @@ export default function Pasajeros() {
                       <div className="mobile-card-row">
                         <span>Documento</span>
                         <span>
-                          {perfil.tipoDocumento
-                            ? `${perfil.tipoDocumento} ${perfil.numeroDocumento || ""}`
+                          {perfil.tipoDocumentoId
+                            ? `${TIPOS_DOCUMENTO[perfil.tipoDocumentoId] || perfil.tipoDocumentoId} ${perfil.numeroDocumento || ""}`
                             : "-"}
                         </span>
                       </div>
@@ -430,16 +431,17 @@ export default function Pasajeros() {
               Tipo Documento
             </label>
             <select
-              value={formData.tipoDocumento}
-              onChange={(e) => setFormData({ ...formData, tipoDocumento: e.target.value })}
+              value={formData.tipoDocumentoId}
+              onChange={(e) => setFormData({ ...formData, tipoDocumentoId: parseInt(e.target.value) || "" })}
               className="input"
               style={{ width: "100%" }}
             >
               <option value="">Seleccionar</option>
-              <option value="CC">CC</option>
-              <option value="CE">CE</option>
-              <option value="TI">TI</option>
-              <option value="NIT">NIT</option>
+              <option value="1">CC</option>
+              <option value="2">TI</option>
+              <option value="3">CE</option>
+              <option value="4">NIT</option>
+              <option value="5">PASAPORTE</option>
             </select>
           </div>
           <div style={{ marginBottom: "1rem" }}>
