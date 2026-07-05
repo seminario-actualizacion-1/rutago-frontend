@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api";
 import Input from "../../components/Input/Input";
+import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import Button from "../../components/Button/Button";
 import Card from "../../components/Card/Card";
 import "./Registro.css";
@@ -35,7 +36,17 @@ function Registro() {
           <Input name="nombres" label="Nombres" placeholder="Tus nombres" value={formData.nombres} onChange={handleChange} autoComplete="given-name" />
           <Input name="apellidos" label="Apellidos" placeholder="Tus apellidos" value={formData.apellidos} onChange={handleChange} autoComplete="family-name" />
           <Input name="correo" label="Correo" type="email" placeholder="Correo electrónico" value={formData.correo} onChange={handleChange} autoComplete="email" />
-          <Input name="contrasena" label="Contraseña" type="password" placeholder="Contraseña" value={formData.contrasena} onChange={handleChange} autoComplete="new-password" />
+          <div>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600", fontSize: "0.9rem", color: "#333" }}>
+              Contraseña
+            </label>
+            <PasswordInput
+              value={formData.contrasena}
+              onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+              placeholder="Contraseña"
+              autoComplete="new-password"
+            />
+          </div>
           <Button type="submit" variant="primary" fullWidth>Registrarse</Button>
         </form>
         <div className="login-links">

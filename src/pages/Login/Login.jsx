@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import Input from "../../components/Input/Input";
+import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import Button from "../../components/Button/Button";
 import Card from "../../components/Card/Card";
 import { ROLES } from "../../config/roles";
@@ -51,15 +52,17 @@ function Login() {
             onChange={handleChange}
             autoComplete="email"
           />
-          <Input
-            name="contrasena"
-            label="Contraseña"
-            type="password"
-            placeholder="Contraseña"
-            value={formData.contrasena}
-            onChange={handleChange}
-            autoComplete="current-password"
-          />
+          <div>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600", fontSize: "0.9rem", color: "#333" }}>
+              Contraseña
+            </label>
+            <PasswordInput
+              value={formData.contrasena}
+              onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+              placeholder="Contraseña"
+              autoComplete="current-password"
+            />
+          </div>
           <Button type="submit" variant="primary" fullWidth>
             Ingresar
           </Button>

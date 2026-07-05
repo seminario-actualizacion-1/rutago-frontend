@@ -3,6 +3,7 @@ import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
+import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import { entidadesService } from "../../services/entidades.service";
 import { usuariosService } from "../../services/usuarios.service";
 import "./Entidades.css";
@@ -437,16 +438,15 @@ export default function Entidades() {
           {/* Contraseña solo al crear */}
           {!editingEntidad && (
             <div style={{ marginBottom: "1.25rem" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "0.5rem",
-                  fontWeight: "500",
-                }}
-              >
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
                 Contraseña *
               </label>
-              <input type="password" {...field("contrasena")} required />
+              <PasswordInput
+                value={formData.contrasena}
+                onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+                placeholder="Contraseña"
+                required
+              />
             </div>
           )}
 

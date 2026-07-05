@@ -8,6 +8,7 @@ import { vehiculosService } from "../../services/vehiculos.service";
 import { perfilConductorService } from "../../services/perfilConductor.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
+import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import { ESTADOS_CONDUCTOR, TIPOS_DOCUMENTO } from "../../config/estados";
 import "./Usuarios.css";
 
@@ -659,23 +660,13 @@ export default function Usuarios() {
           </div>
           {!editingUsuario && (
             <div style={{ marginBottom: "1rem" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "0.5rem",
-                  fontWeight: "500",
-                }}
-              >
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
                 Contraseña
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={formData.contrasena}
-                onChange={(e) =>
-                  setFormData({ ...formData, contrasena: e.target.value })
-                }
-                className="input"
-                style={{ width: "100%" }}
+                onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+                placeholder="Contraseña"
                 required
               />
             </div>

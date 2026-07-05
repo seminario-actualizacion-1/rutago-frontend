@@ -6,6 +6,7 @@ import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { conductoresService } from "../../services/conductores.service";
 import { usuariosService } from "../../services/usuarios.service";
 import { vehiculosService } from "../../services/vehiculos.service";
+import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import { ESTADOS_CONDUCTOR } from "../../config/estados";
 import "./Conductores.css";
 
@@ -499,23 +500,13 @@ export default function Conductores() {
                 />
               </div>
               <div style={{ marginBottom: "1rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontWeight: "500",
-                  }}
-                >
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
                   Contraseña
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={formData.contrasena}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contrasena: e.target.value })
-                  }
-                  className="input"
-                  style={{ width: "100%" }}
+                  onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+                  placeholder="Contraseña"
                   required
                 />
               </div>
