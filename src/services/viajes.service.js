@@ -44,7 +44,7 @@ export const viajesService = {
   getMisViajes: async (params = {}) => {
     const query = buildQueryString(params);
     const response = await fetch(
-      `${API_URL}/viajes/mis-viajes${query ? `?${query}` : ""}`,
+      `${API_URL}/viajes/me/mis-viajes${query ? `?${query}` : ""}`,
       { headers: getAuthHeaders() },
     );
     if (!response.ok) throw new Error("Error al cargar tus viajes");

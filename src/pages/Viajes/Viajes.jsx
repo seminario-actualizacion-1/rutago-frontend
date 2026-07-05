@@ -2,17 +2,18 @@ import { useState, useEffect } from "react";
 import Pagination from "../../components/Pagination/Pagination";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { viajesService } from "../../services/viajes.service";
+import { ESTADOS_VIAJE } from "../../config/estados";
 import "./Viajes.css";
 
-function obtenerEstadoColor(estado) {
+function obtenerEstadoColor(estadoId) {
   const colors = {
-    BUSCANDO: "badge-pendiente",
-    ACEPTADO: "badge-aceptado",
-    EN_CURSO: "badge-en-curso",
-    FINALIZADO: "badge-finalizado",
-    CANCELADO: "badge-cancelado",
+    1: "badge-pendiente",
+    2: "badge-aceptado",
+    3: "badge-en-curso",
+    4: "badge-finalizado",
+    5: "badge-cancelado",
   };
-  return colors[estado] || "badge-default";
+  return colors[estadoId] || "badge-default";
 }
 
 function obtenerNombrePersona(usuario) {
@@ -28,6 +29,15 @@ function obtenerNombreBarrio(barrio) {
   return barrio?.nombre || "No definido";
 }
 
+function getInitialUser() {
+  try {
+    const stored = localStorage.getItem("rutago_user");
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function Viajes() {
   const [viajes, setViajes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,11 +51,14 @@ export default function Viajes() {
     tienePaginaSiguiente: false,
   });
 
+  const user = getInitialUser();
+  const esAdmin = user?.rolId === 1;
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({ estado: "" });
+  const [filters, setFilters] = useState({ estadoId: "" });
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
@@ -53,25 +66,38 @@ export default function Viajes() {
     const loadViajes = async () => {
       try {
         setLoading(true);
-        const data = await viajesService.getAll({
-          paginaActual: currentPage,
-          registrosPorPagina: itemsPerPage,
-          q: searchTerm || undefined,
-          ...(filters.estado && { estado: filters.estado }),
-          sortBy,
-          sortOrder,
-        });
-        setViajes(data.data || []);
-        setPagination(
-          data.paginacion || {
+        if (esAdmin) {
+          const data = await viajesService.getAll({
             paginaActual: currentPage,
             registrosPorPagina: itemsPerPage,
+            q: searchTerm || undefined,
+            ...(filters.estadoId && { estadoId: filters.estadoId }),
+            sortBy,
+            sortOrder,
+          });
+          setViajes(data.data || []);
+          setPagination(
+            data.paginacion || {
+              paginaActual: currentPage,
+              registrosPorPagina: itemsPerPage,
+              totalPaginas: 1,
+              totalRegistros: data.data?.length || 0,
+              tienePaginaAnterior: false,
+              tienePaginaSiguiente: false,
+            },
+          );
+        } else {
+          const data = await viajesService.getMisViajes();
+          setViajes(data.data || []);
+          setPagination({
+            paginaActual: 1,
+            registrosPorPagina: (data.data || []).length,
             totalPaginas: 1,
-            totalRegistros: data.data?.length || 0,
+            totalRegistros: (data.data || []).length,
             tienePaginaAnterior: false,
             tienePaginaSiguiente: false,
-          },
-        );
+          });
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -80,7 +106,7 @@ export default function Viajes() {
     };
 
     loadViajes();
-  }, [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder]);
+  }, [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder, esAdmin]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
@@ -133,30 +159,32 @@ export default function Viajes() {
 
       <div className="table-container">
 
-      <TableToolbar
-        searchValue={searchTerm}
-        onSearchChange={handleSearchChange}
-        placeholder="Buscar por pasajero, conductor o barrios..."
-        filters={[
-          {
-            name: "estado",
-            label: "Todos los estados",
-            value: filters.estado,
-            options: [
-              { value: "BUSCANDO", label: "Buscando" },
-              { value: "ACEPTADO", label: "Aceptado" },
-              { value: "EN_CURSO", label: "En curso" },
-              { value: "FINALIZADO", label: "Finalizado" },
-              { value: "CANCELADO", label: "Cancelado" },
-            ],
-          },
-        ]}
-        onFilterChange={handleFilterChange}
-        sortOptions={sortOptions}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-      />
+      {esAdmin && (
+        <TableToolbar
+          searchValue={searchTerm}
+          onSearchChange={handleSearchChange}
+          placeholder="Buscar por pasajero, conductor o barrios..."
+          filters={[
+            {
+              name: "estadoId",
+              label: "Todos los estados",
+              value: filters.estadoId,
+              options: [
+                { value: 1, label: "Buscando" },
+                { value: 2, label: "Aceptado" },
+                { value: 3, label: "En curso" },
+                { value: 4, label: "Finalizado" },
+                { value: 5, label: "Cancelado" },
+              ],
+            },
+          ]}
+          onFilterChange={handleFilterChange}
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+        />
+      )}
 
         <div className="bg-white rounded-lg shadow-sm">
           {/* Desktop Table */}
@@ -180,9 +208,9 @@ export default function Viajes() {
                       <td>{viaje.id}</td>
                       <td>
                         <span
-                          className={`badge ${obtenerEstadoColor(viaje.estado)}`}
+                          className={`badge ${obtenerEstadoColor(viaje.estadoId)}`}
                         >
-                          {viaje.estado || "-"}
+                          {ESTADOS_VIAJE[viaje.estadoId] || viaje.estadoId || "-"}
                         </span>
                       </td>
                       <td>{obtenerNombreBarrio(viaje.barrioOrigen)}</td>
@@ -194,7 +222,7 @@ export default function Viajes() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center">
+                    <td colSpan="7" className="text-center">
                       No se encontraron recorridos registrados
                     </td>
                   </tr>
@@ -214,9 +242,9 @@ export default function Viajes() {
                         <h3>Recorrido #{viaje.id}</h3>
                       </div>
                       <span
-                        className={`mobile-badge ${obtenerEstadoColor(viaje.estado)}`}
+                        className={`mobile-badge ${obtenerEstadoColor(viaje.estadoId)}`}
                       >
-                        {(viaje.estado || "-").toUpperCase()}
+                        {(ESTADOS_VIAJE[viaje.estadoId] || viaje.estadoId || "-").toString()}
                       </span>
                     </div>
 
@@ -251,14 +279,16 @@ export default function Viajes() {
           </div>
         </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={pagination.totalPaginas || 1}
-          totalItems={pagination.totalRegistros || viajes.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+        {esAdmin && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination.totalPaginas || 1}
+            totalItems={pagination.totalRegistros || viajes.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        )}
       </div>
     </div>
   );

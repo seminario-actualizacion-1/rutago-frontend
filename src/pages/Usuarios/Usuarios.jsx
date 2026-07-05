@@ -8,6 +8,7 @@ import { vehiculosService } from "../../services/vehiculos.service";
 import { perfilConductorService } from "../../services/perfilConductor.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
+import { ESTADOS_CONDUCTOR, TIPOS_DOCUMENTO } from "../../config/estados";
 import "./Usuarios.css";
 
 export default function Usuarios() {
@@ -26,7 +27,7 @@ export default function Usuarios() {
     // Campos de Conductor
     licenciaConducir: "",
     vehiculoId: "",
-    estadoConductor: "DISPONIBLE",
+    estadoConductor: 1,
     // Campos de Entidad
     razonSocial: "",
     nit: "",
@@ -34,7 +35,7 @@ export default function Usuarios() {
     // Campos de Pasajero
     telefono: "",
     direccion: "",
-    tipoDocumento: "",
+    tipoDocumentoId: "",
     numeroDocumento: "",
     fechaNacimiento: "",
   });
@@ -173,13 +174,13 @@ export default function Usuarios() {
             ? Number(usuarioEditando.perfilConductor.vehiculoId)
             : "",
         estadoConductor:
-          usuarioEditando.perfilConductor?.estado || "DISPONIBLE",
+          usuarioEditando.perfilConductor?.estadoId || 1,
         razonSocial: usuarioEditando.perfilEntidad?.razonSocial || "",
         nit: usuarioEditando.perfilEntidad?.nit || "",
         telefonoContacto: usuarioEditando.perfilEntidad?.telefonoContacto || "",
         telefono: usuarioEditando.perfilPasajero?.telefono || "",
         direccion: usuarioEditando.perfilPasajero?.direccion || "",
-        tipoDocumento: usuarioEditando.perfilPasajero?.tipoDocumento || "",
+        tipoDocumentoId: usuarioEditando.perfilPasajero?.tipoDocumentoId || "",
         numeroDocumento: usuarioEditando.perfilPasajero?.numeroDocumento || "",
         fechaNacimiento: usuarioEditando.perfilPasajero?.fechaNacimiento
           ? usuarioEditando.perfilPasajero.fechaNacimiento.split("T")[0]
@@ -246,7 +247,7 @@ export default function Usuarios() {
           usuarioId,
           vehiculoId: formData.vehiculoId || null,
           licenciaConducir: formData.licenciaConducir,
-          estado: formData.estadoConductor,
+          estadoId: formData.estadoConductor,
         };
 
         if (editingUsuario && editingUsuario.perfilConductor) {
@@ -278,7 +279,7 @@ export default function Usuarios() {
           usuarioId,
           telefono: formData.telefono,
           direccion: formData.direccion,
-          tipoDocumento: formData.tipoDocumento,
+          tipoDocumentoId: formData.tipoDocumentoId,
           numeroDocumento: formData.numeroDocumento,
           fechaNacimiento: formData.fechaNacimiento || null,
         };
@@ -305,13 +306,13 @@ export default function Usuarios() {
         rolId: "",
         licenciaConducir: "",
         vehiculoId: "",
-        estadoConductor: "DISPONIBLE",
+        estadoConductor: 1,
         razonSocial: "",
         nit: "",
         telefonoContacto: "",
         telefono: "",
         direccion: "",
-        tipoDocumento: "",
+        tipoDocumentoId: "",
         numeroDocumento: "",
         fechaNacimiento: "",
       });
@@ -332,13 +333,13 @@ export default function Usuarios() {
       rolId: "",
       licenciaConducir: "",
       vehiculoId: "",
-      estadoConductor: "DISPONIBLE",
+      estadoConductor: 1,
       razonSocial: "",
       nit: "",
       telefonoContacto: "",
       telefono: "",
       direccion: "",
-      tipoDocumento: "",
+      tipoDocumentoId: "",
       numeroDocumento: "",
       fechaNacimiento: "",
     });
@@ -437,13 +438,13 @@ export default function Usuarios() {
                 rolId: "",
                 licenciaConducir: "",
                 vehiculoId: "",
-                estadoConductor: "DISPONIBLE",
+    estadoConductor: 1,
                 razonSocial: "",
                 nit: "",
                 telefonoContacto: "",
                 telefono: "",
                 direccion: "",
-                tipoDocumento: "",
+    tipoDocumentoId: "",
                 numeroDocumento: "",
                 fechaNacimiento: "",
               });
@@ -777,15 +778,15 @@ export default function Usuarios() {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      estadoConductor: e.target.value,
+                      estadoConductor: parseInt(e.target.value),
                     })
                   }
                   className="input"
                   style={{ width: "100%" }}
                 >
-                  <option value="DISPONIBLE">Disponible</option>
-                  <option value="EN_VIAJE">En viaje</option>
-                  <option value="INACTIVO">Inactivo</option>
+                  <option value="1">Disponible</option>
+                  <option value="2">En viaje</option>
+                  <option value="3">Inactivo</option>
                 </select>
               </div>
             </>
@@ -888,16 +889,17 @@ export default function Usuarios() {
               <div style={{ marginBottom: "1rem" }}>
                 <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Tipo de Documento</label>
                 <select
-                  value={formData.tipoDocumento}
-                  onChange={(e) => setFormData({ ...formData, tipoDocumento: e.target.value })}
+                  value={formData.tipoDocumentoId}
+                  onChange={(e) => setFormData({ ...formData, tipoDocumentoId: parseInt(e.target.value) || "" })}
                   className="input"
                   style={{ width: "100%" }}
                 >
                   <option value="">Seleccionar</option>
-                  <option value="CC">Cédula de Ciudadanía</option>
-                  <option value="CE">Cédula de Extranjería</option>
-                  <option value="TI">Tarjeta de Identidad</option>
-                  <option value="PA">Pasaporte</option>
+                  <option value="1">Cédula de Ciudadanía</option>
+                  <option value="2">Tarjeta de Identidad</option>
+                  <option value="3">Cédula de Extranjería</option>
+                  <option value="4">NIT</option>
+                  <option value="5">Pasaporte</option>
                 </select>
               </div>
               <div style={{ marginBottom: "1rem" }}>

@@ -5,6 +5,7 @@ import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { vehiculosService } from "../../services/vehiculos.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
+import { ESTADOS_VEHICULO } from "../../config/estados";
 import "./Vehiculos.css";
 
 export default function Vehiculos() {
@@ -29,7 +30,7 @@ export default function Vehiculos() {
     color: "",
     capacidadPasajeros: "",
     entidadId: "",
-    estado: "EN_TERMINAL",
+    estadoId: 1,
     latitud: "",
     longitud: "",
   });
@@ -38,7 +39,7 @@ export default function Vehiculos() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({ estado: "" });
+  const [filters, setFilters] = useState({ estadoId: "" });
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
@@ -51,7 +52,7 @@ export default function Vehiculos() {
             paginaActual: currentPage,
             registrosPorPagina: itemsPerPage,
             q: searchTerm || undefined,
-            estado: filters.estado || undefined,
+            estadoId: filters.estadoId || undefined,
             sortBy,
             sortOrder,
           }),
@@ -93,7 +94,7 @@ export default function Vehiculos() {
       color: vehiculo.color,
       capacidadPasajeros: vehiculo.capacidadPasajeros,
       entidadId: vehiculo.entidadId,
-      estado: vehiculo.estado,
+      estadoId: vehiculo.estadoId,
       latitud: vehiculo.latitud || "",
       longitud: vehiculo.longitud || "",
     });
@@ -117,9 +118,9 @@ export default function Vehiculos() {
   };
 
   const estadoOptions = [
-    { value: "EN_TERMINAL", label: "En Terminal" },
-    { value: "EN_RUTA", label: "En Ruta" },
-    { value: "PROXIMO", label: "Próximo" },
+    { value: 1, label: "En Terminal" },
+    { value: 2, label: "En Ruta" },
+    { value: 3, label: "Próximo" },
   ];
 
   const handleGuardar = async () => {
@@ -154,7 +155,7 @@ export default function Vehiculos() {
         color: "",
         capacidadPasajeros: "",
         entidadId: "",
-        estado: "EN_TERMINAL",
+        estadoId: 1,
         latitud: "",
         longitud: "",
       });
@@ -174,7 +175,7 @@ export default function Vehiculos() {
       color: "",
       capacidadPasajeros: "",
       entidadId: "",
-      estado: "EN_TERMINAL",
+      estadoId: 1,
       latitud: "",
       longitud: "",
     });
@@ -210,13 +211,13 @@ export default function Vehiculos() {
     }
   };
 
-  const getEstadoColor = (estado) => {
+  const getEstadoColor = (estadoId) => {
     const colors = {
-      EN_TERMINAL: "badge-en-terminal",
-      EN_RUTA: "badge-en-ruta",
-      PROXIMO: "badge-proximo",
+      1: "badge-en-terminal",
+      2: "badge-en-ruta",
+      3: "badge-proximo",
     };
-    return colors[estado] || "badge-default";
+    return colors[estadoId] || "badge-default";
   };
 
   const sortOptions = [
@@ -257,7 +258,7 @@ export default function Vehiculos() {
                 color: "",
                 capacidadPasajeros: "",
                 entidadId: "",
-                estado: "EN_TERMINAL",
+    estadoId: 1,
                 latitud: "",
                 longitud: "",
               });
@@ -275,9 +276,9 @@ export default function Vehiculos() {
         placeholder="Buscar por placa, marca, modelo o color..."
         filters={[
           {
-            name: "estado",
+            name: "estadoId",
             label: "Todos los estados",
-            value: filters.estado,
+            value: filters.estadoId,
             options: estadoOptions,
           },
         ]}
@@ -317,9 +318,9 @@ export default function Vehiculos() {
                       <td>{vehiculo.capacidadPasajeros}</td>
                       <td>
                         <span
-                          className={`badge ${getEstadoColor(vehiculo.estado)}`}
+                          className={`badge ${getEstadoColor(vehiculo.estadoId)}`}
                         >
-                          {vehiculo.estado}
+                          {ESTADOS_VEHICULO[vehiculo.estadoId] || vehiculo.estadoId}
                         </span>
                       </td>
                       <td>
@@ -356,9 +357,9 @@ export default function Vehiculos() {
                         <p>Color: {vehiculo.color}</p>
                       </div>
                       <span
-                        className={`mobile-badge ${getEstadoColor(vehiculo.estado)}`}
+                        className={`mobile-badge ${getEstadoColor(vehiculo.estadoId)}`}
                       >
-                        {vehiculo.estado}
+                        {ESTADOS_VEHICULO[vehiculo.estadoId] || vehiculo.estadoId}
                       </span>
                     </div>
 
@@ -559,17 +560,17 @@ export default function Vehiculos() {
               Estado
             </label>
             <select
-              value={formData.estado}
+              value={formData.estadoId}
               onChange={(e) =>
-                setFormData({ ...formData, estado: e.target.value })
+                setFormData({ ...formData, estadoId: parseInt(e.target.value) })
               }
               className="input"
               style={{ width: "100%" }}
               required
             >
-              <option value="EN_TERMINAL">En Terminal</option>
-              <option value="EN_RUTA">En Ruta</option>
-              <option value="PROXIMO">Próximo</option>
+              <option value="1">En Terminal</option>
+              <option value="2">En Ruta</option>
+              <option value="3">Próximo</option>
             </select>
           </div>
           <div style={{ marginBottom: "1rem" }}>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../../api";
 import { perfilConductorService } from "../../services/perfilConductor.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
+import { ESTADOS_CONDUCTOR, ESTADOS_VEHICULO } from "../../config/estados";
 import "./Perfil.css";
 
 function obtenerRol(rolId) {
@@ -42,7 +43,7 @@ export default function Perfil() {
   });
   const [conductorFormData, setConductorFormData] = useState({
     licenciaConducir: "",
-    estado: "DISPONIBLE",
+    estadoId: 1,
   });
 
   const [destino, setDestino] = useState("");
@@ -57,15 +58,13 @@ export default function Perfil() {
     setTimeout(() => setToast(""), 3500);
   };
 
-  const obtenerEstadoTexto = (estado) => {
-    if (estado === "EN_RUTA") return "En ruta";
-    if (estado === "PROXIMO") return "Próximo";
-    return "En terminal";
+  const obtenerEstadoTexto = (estadoId) => {
+    return ESTADOS_VEHICULO[estadoId] || "En terminal";
   };
 
-  const obtenerEstadoClase = (estado) => {
-    if (estado === "EN_RUTA") return "estado-ruta";
-    if (estado === "PROXIMO") return "estado-proximo";
+  const obtenerEstadoClase = (estadoId) => {
+    if (estadoId === 2) return "estado-ruta";
+    if (estadoId === 3) return "estado-proximo";
     return "estado-terminal";
   };
 
@@ -88,14 +87,14 @@ export default function Perfil() {
           setPerfilEspecializado(perfilConductor);
           setConductorFormData({
             licenciaConducir: perfilConductor?.licenciaConducir || "",
-            estado: perfilConductor?.estado || "DISPONIBLE",
+            estadoId: perfilConductor?.estadoId || 1,
           });
         } catch {
           const perfilConductor = usuario.perfilConductor || null;
           setPerfilEspecializado(perfilConductor);
           setConductorFormData({
             licenciaConducir: perfilConductor?.licenciaConducir || "",
-            estado: perfilConductor?.estado || "DISPONIBLE",
+            estadoId: perfilConductor?.estadoId || 1,
           });
         }
       } else if (usuario.rolId === 4) {
@@ -126,7 +125,7 @@ export default function Perfil() {
         });
         setConductorFormData({
           licenciaConducir: "",
-          estado: "DISPONIBLE",
+    estadoId: 1,
         });
       }
     } catch (err) {
@@ -242,7 +241,7 @@ export default function Perfil() {
     setEditingConductor(false);
     setConductorFormData({
       licenciaConducir: perfilEspecializado?.licenciaConducir || "",
-      estado: perfilEspecializado?.estado || "DISPONIBLE",
+      estadoId: perfilEspecializado?.estadoId || 1,
     });
     setMessage("");
     setError("");
@@ -353,7 +352,7 @@ export default function Perfil() {
                   <div className="perfil-row">
                     <span className="perfil-label">Estado:</span>
                     <span className="perfil-value">
-                      {perfilEspecializado.estado || "No definido"}
+                      {ESTADOS_CONDUCTOR[perfilEspecializado.estadoId] || perfilEspecializado.estadoId || "No definido"}
                     </span>
                   </div>
                 </>
@@ -481,14 +480,14 @@ export default function Perfil() {
 
               <label>Estado</label>
               <select
-                name="estado"
-                value={conductorFormData.estado}
+                name="estadoId"
+                value={conductorFormData.estadoId}
                 onChange={handleConductorChange}
                 className="input"
               >
-                <option value="DISPONIBLE">Disponible</option>
-                <option value="EN_VIAJE">En viaje</option>
-                <option value="INACTIVO">Inactivo</option>
+                <option value="1">Disponible</option>
+                <option value="2">En viaje</option>
+                <option value="3">Inactivo</option>
               </select>
 
               <div className="form-actions">
@@ -632,10 +631,10 @@ export default function Perfil() {
                           <strong>Estado:</strong>{" "}
                           <span
                             className={`estado-badge ${obtenerEstadoClase(
-                              horario.vehiculo?.estado,
+                              horario.vehiculo?.estadoId,
                             )}`}
                           >
-                            {obtenerEstadoTexto(horario.vehiculo?.estado)}
+                            {obtenerEstadoTexto(horario.vehiculo?.estadoId)}
                           </span>
                         </p>
 
@@ -736,7 +735,7 @@ export default function Perfil() {
 
               <p>
                 <strong>Estado:</strong>{" "}
-                {obtenerEstadoTexto(busSeleccionado.vehiculo?.estado)}
+                {obtenerEstadoTexto(busSeleccionado.vehiculo?.estadoId)}
               </p>
 
               <p>

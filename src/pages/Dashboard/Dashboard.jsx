@@ -11,6 +11,7 @@ import { barriosService } from "../../services/barrios.service";
 import { comunasService } from "../../services/comunas.service";
 import { rutasService } from "../../services/rutas.service";
 import { horariosService } from "../../services/horarios.service";
+import { ESTADOS_VIAJE } from "../../config/estados";
 import "./Dashboard.css";
 
 function getInitialUser() {
@@ -22,15 +23,15 @@ function getInitialUser() {
   }
 }
 
-function obtenerEstadoColor(estado) {
+function obtenerEstadoColor(estadoId) {
   const colors = {
-    BUSCANDO: "badge-pendiente",
-    ACEPTADO: "badge-aceptado",
-    EN_CURSO: "badge-en-curso",
-    FINALIZADO: "badge-finalizado",
-    CANCELADO: "badge-cancelado",
+    1: "badge-pendiente",
+    2: "badge-aceptado",
+    3: "badge-en-curso",
+    4: "badge-finalizado",
+    5: "badge-cancelado",
   };
-  return colors[estado] || "badge-default";
+  return colors[estadoId] || "badge-default";
 }
 
 function AdminDashboard() {
@@ -132,7 +133,7 @@ function ConductorDashboard() {
         const lista = data.data || [];
         setTotalViajes(data.paginacion?.totalRegistros || lista.length);
         const activo = lista.find(
-          (v) => v.estado === "ACEPTADO" || v.estado === "EN_CURSO",
+          (v) => v.estadoId === 2 || v.estadoId === 3,
         );
         setViajeActivo(activo || null);
       } catch {
@@ -166,8 +167,8 @@ function ConductorDashboard() {
           <p><strong>Destino:</strong> {viajeActivo.barrioDestino?.nombre || "—"}</p>
           <p>
             <strong>Estado:</strong>{" "}
-            <span className={`badge ${obtenerEstadoColor(viajeActivo.estado)}`}>
-              {viajeActivo.estado}
+            <span className={`badge ${obtenerEstadoColor(viajeActivo.estadoId)}`}>
+              {ESTADOS_VIAJE[viajeActivo.estadoId] || viajeActivo.estadoId}
             </span>
           </p>
           <Link to="/viajes" className="button button-primary" style={{ marginTop: "1rem" }}>
@@ -235,7 +236,7 @@ function PasajeroDashboard() {
               <span>
                 {v.barrioOrigen?.nombre || "—"} → {v.barrioDestino?.nombre || "—"}
               </span>
-              <span className={`badge ${obtenerEstadoColor(v.estado)}`}>{v.estado}</span>
+              <span className={`badge ${obtenerEstadoColor(v.estadoId)}`}>{ESTADOS_VIAJE[v.estadoId] || v.estadoId}</span>
             </div>
           ))}
         </div>

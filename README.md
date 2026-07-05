@@ -1,6 +1,8 @@
-# 🚍 RutaGo
+# 🚍 RutaGo - Frontend
 
 ## Sistema Inteligente de Consulta y Monitoreo de Rutas de Transporte en Tiempo Real
+
+---
 
 RutaGo es una plataforma web diseñada para facilitar la movilidad urbana e intermunicipal mediante la consulta de rutas, horarios, ubicación de vehículos y administración del sistema desde una única plataforma.
 
@@ -65,24 +67,110 @@ RutaGo busca solucionar esta problemática mediante una plataforma moderna, senc
 
 ---
 
-# 🛠 Tecnologías Utilizadas
+## ⚙️ Variables de entorno
 
-| Tecnología | Uso |
-|------------|-----|
-| React | Frontend |
-| Vite | Entorno de desarrollo |
-| JavaScript | Lógica del sistema |
-| HTML5 | Estructura |
-| CSS3 | Estilos |
-| Express.js | Backend |
-| MySQL | Base de datos |
-| Axios | Consumo de API |
-| React Router DOM | Navegación |
-| Git | Control de versiones |
-| GitHub | Repositorio |
-| GitHub Actions | CI/CD |
-| Trello | Gestión Scrum |
-| ESLint | Calidad del código |
+Crear archivo `.env` en la raíz:
+
+```env
+VITE_API_URL=http://localhost:8082/api
+```
+
+---
+
+## 📦 Scripts disponibles
+
+```bash
+npm run dev
+npm run build    # construir para produccion
+npm run preview  # vista previa de la build
+```
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+rutago-frontend/
+├── public/
+├── src/
+│   ├── assets/
+│   ├── components/
+│   │   ├── Navbar/
+│   │   ├── Sidebar/
+│   │   ├── TableToolbar/
+│   │   ├── Pagination/
+│   │   ├── Modal/
+│   │   ├── ActionsMenu/
+│   │   ├── ProtectedRoute/
+│   │   ├── DashboardLayout/
+│   │   └── ...
+│   ├── config/           # Config (roles, estados, constantes)
+│   ├── context/          # React Context (LayoutContext)
+│   ├── pages/
+│   │   ├── Login/
+│   │   ├── Dashboard/
+│   │   ├── Vehiculos/
+│   │   ├── Conductores/
+│   │   ├── Viajes/
+│   │   └── ...
+│   ├── services/         # Llamadas a la API
+│   ├── App.jsx           # Router principal
+│   ├── App.css
+│   ├── index.css
+│   └── main.jsx          # Punto de entrada
+├── package.json
+├── vite.config.js
+└── README.md
+```
+
+---
+
+## 👥 Roles y rutas protegidas
+
+| Rol             | Rutas accesibles                     |
+| --------------- | ------------------------------------ |
+| Administrador   | Todos los módulos de gestión         |
+| Conductor       | Dashboard, Viajes, Perfil            |
+| Pasajero        | Dashboard (consulta), Viajes, Perfil |
+| Entidad Externa | Dashboard, Vehículos, Perfil         |
+
+Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `allowedRoles`.
+
+---
+
+## 🧩 Componentes principales
+
+| Componente      | Función                                                |
+| --------------- | ------------------------------------------------------ |
+| Navbar          | Barra superior con hamburger menu, avatar y dropdown   |
+| Sidebar         | Menú lateral colapsable con iconos Lucide              |
+| TableToolbar    | Buscador con debounce, filtros, ordenamiento por campo |
+| Pagination      | Paginación de tablas                                   |
+| Modal           | Ventana modal para formularios                         |
+| ActionsMenu     | Menú contextual (Editar/Eliminar)                      |
+| ProtectedRoute  | Guard de rutas por rol                                 |
+| DashboardLayout | Layout general con Sidebar + Navbar                    |
+
+---
+
+## 🛠 Tecnologías Utilizadas
+
+| Tecnología       | Uso                   |
+| ---------------- | --------------------- |
+| React            | Frontend              |
+| Vite             | Entorno de desarrollo |
+| JavaScript       | Lógica del sistema    |
+| HTML5            | Estructura            |
+| CSS3             | Estilos               |
+| Express.js       | Backend               |
+| MySQL            | Base de datos         |
+| Axios            | Consumo de API        |
+| React Router DOM | Navegación            |
+| Git              | Control de versiones  |
+| GitHub           | Repositorio           |
+| GitHub Actions   | CI/CD                 |
+| Trello           | Gestión Scrum         |
+| ESLint           | Calidad del código    |
 
 ---
 
@@ -114,11 +202,11 @@ RutaGo busca solucionar esta problemática mediante una plataforma moderna, senc
 
 ## Páginas implementadas
 
-- Home
+- Home (público)
 - Login
 - Registro
 - Recuperar contraseña
-- Dashboard
+- Dashboard (vista por rol: Admin, Conductor, Pasajero, Entidad)
 - Perfil
 - Vehículos
 - Rutas
@@ -127,13 +215,20 @@ RutaGo busca solucionar esta problemática mediante una plataforma moderna, senc
 - Comunas
 - Barrios
 - Entidades
+- Horarios
+- Viajes
+- Usuarios
 
 ---
 
 ## Componentes
 
-- Navbar
-- Sidebar
+- Navbar (hamburger menu, avatar con dropdown)
+- Sidebar (colapsable, iconos Lucide)
+- TableToolbar (búsqueda, filtros, ordenamiento)
+- Pagination
+- Modal
+- ActionsMenu
 - Button
 - Card
 - Input
@@ -203,9 +298,14 @@ http://localhost:5173
 ## Backend
 
 ```bash
+cd ../rutago-backend
 npm install
+npx sequelize-cli db:migrate
+npx sequelize-cli db:seed:all
 npm start
 ```
+
+El backend corre en `http://localhost:8082`.
 
 ---
 
@@ -219,13 +319,13 @@ Herramienta utilizada:
 
 # 👨‍💻 Equipo
 
-| Rol | Integrante |
-|------|------------|
-| Scrum Master | Edward Suárez |
-| Backend | Cristian Valderrama |
-| Frontend | Stefany Potosí |
-| Base de Datos | Santiago Estupiñán |
-| QA | Equipo RutaGo |
+| Rol           | Integrante          |
+| ------------- | ------------------- |
+| Scrum Master  | Edward Suárez       |
+| Backend       | Cristian Valderrama |
+| Frontend      | Stefany Potosí      |
+| Base de Datos | Santiago Estupiñán  |
+| QA            | Sebastian Guapi     |
 
 ---
 
@@ -233,32 +333,27 @@ Herramienta utilizada:
 
 ## ✅ Completado
 
-- Configuración del proyecto React + Vite.
-- Backend Express.
-- Base de datos MySQL.
-- Sistema de autenticación.
-- Registro.
-- Login.
-- Recuperación de contraseña.
-- Gestión de perfiles.
-- Dashboard.
-- CRUD de Vehículos.
-- CRUD de Rutas.
-- CRUD de Horarios.
-- Gestión de Comunas.
-- Gestión de Barrios.
-- API REST.
-- Integración Frontend - Backend.
-- GitHub Actions.
+- Sistema de autenticación (registro, login, recuperación de contraseña).
+- Roles: Administrador, Conductor, Pasajero, Entidad Externa.
+- Dashboard con vista por rol.
+- CRUD completo de: Usuarios, Vehículos, Rutas, Horarios, Conductores, Pasajeros, Entidades, Comunas, Barrios, Viajes.
+- Sidebar colapsable con iconos Lucide.
+- TableToolbar con búsqueda, filtros y ordenamiento configurable.
+- Protección de rutas por rol (ProtectedRoute).
+- Redirección post-login según el rol.
+- Navegación responsive (hamburger menu).
+- Catálogos: EstadosVehiculo, EstadosConductor, EstadosViaje, TiposDocumento.
+- Datos reales de Buenaventura (12 comunas, 104 barrios).
+- API REST con paginación, búsqueda y ordenamiento.
+- Migraciones y seeders con Sequelize.
 
 ---
 
 ## 🚧 En desarrollo
 
-- Buscador de buses por destino.
-- Visualización de buses disponibles.
-- Consulta de horarios.
-- Vista detallada de buses.
+- Módulo de consulta de rutas para pasajeros (buscador de destino).
+- Visualización de buses disponibles por ruta.
+- Ubicación GPS en tiempo real.
 
 ---
 
@@ -267,31 +362,6 @@ Herramienta utilizada:
 - Seguimiento GPS en tiempo real.
 - Estado de buses en tiempo real.
 - Notificaciones automáticas.
-
----
-
-# 📂 Estructura del Proyecto
-
-```
-rutago-frontend
-│
-├── public
-├── src
-│   ├── api
-│   ├── assets
-│   ├── components
-│   ├── context
-│   ├── hooks
-│   ├── pages
-│   ├── App.jsx
-│   ├── App.css
-│   ├── main.jsx
-│   └── index.css
-│
-├── package.json
-├── vite.config.js
-└── README.md
-```
 
 ---
 
@@ -309,14 +379,6 @@ Proyecto académico desarrollado con fines educativos para la asignatura Seminar
 
 # 🔗 Repositorios
 
-**Frontend**
+[**Backend**](https://github.com/seminario-actualizacion-1/rutago-backend)
 
-https://github.com/seminario-actualizacion-1/rutago-frontend
-
-**Backend**
-
-https://github.com/seminario-actualizacion-1/rutago-backend
-
-**Trello**
-
-https://trello.com/b/zR4MFcBH
+[**Trello**](https://trello.com/b/zR4MFcBH)
