@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
-import { NavLink } from "react-router-dom";
+import { Outlet, NavLink } from "react-router-dom";
 import Logo from "../components/Logo/Logo";
 import "./App.css";
 
@@ -37,14 +35,14 @@ function obtenerRol(rolId) {
 }
 
 export default function AppLayout() {
-  const [user] = useState(getInitialUser);
+  const user = getInitialUser();
   if (!user) return null;
   const rolId = user.rolId ?? 3;
   const tituloRol = obtenerRol(rolId);
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("rutago_user");
-    window.location.href = "/login";
+    window.location.replace("/login");
   };
 
   return (

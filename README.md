@@ -96,32 +96,58 @@ npm run preview  # vista previa de la build
 ```
 rutago-frontend/
 ├── public/
+│   └── RutaGo.svg        # Favicon
 ├── src/
+│   ├── api/              # Cliente Axios con interceptor
 │   ├── assets/
 │   ├── components/
-│   │   ├── Navbar/
-│   │   ├── Sidebar/
-│   │   ├── TableToolbar/
-│   │   ├── Pagination/
-│   │   ├── Modal/
 │   │   ├── ActionsMenu/
-│   │   ├── ProtectedRoute/
+│   │   ├── Button/
+│   │   ├── Card/
 │   │   ├── DashboardLayout/
-│   │   └── ...
+│   │   ├── Footer/
+│   │   ├── Input/
+│   │   ├── Logo/
+│   │   ├── Modal/
+│   │   ├── Navbar/
+│   │   ├── Pagination/
+│   │   ├── PasswordInput/
+│   │   ├── ProtectedRoute.jsx
+│   │   ├── Sidebar/
+│   │   └── TableToolbar/
 │   ├── config/           # Config (roles, estados, constantes)
 │   ├── context/          # React Context (LayoutContext)
+│   ├── hooks/            # Custom hooks (useAuth)
 │   ├── pages/
-│   │   ├── Login/
-│   │   ├── Dashboard/
-│   │   ├── Vehiculos/
+│   │   ├── AccesoDenegado/
+│   │   ├── Barrios/
+│   │   ├── Comunas/
 │   │   ├── Conductores/
-│   │   ├── Viajes/
-│   │   └── ...
-│   ├── services/         # Llamadas a la API
-│   ├── App.jsx           # Router principal
+│   │   ├── Dashboard/
+│   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── ConductorDashboard.jsx
+│   │   │   ├── PasajeroDashboard.jsx
+│   │   │   ├── EntidadDashboard.jsx
+│   │   │   ├── dashboardUtils.js
+│   │   │   └── Dashboard.css
+│   │   ├── Entidades/
+│   │   ├── Home/
+│   │   ├── Horarios/
+│   │   ├── Login/
+│   │   ├── Pasajeros/
+│   │   ├── Perfil/
+│   │   ├── Registro/
+│   │   ├── Rutas/
+│   │   ├── Usuarios/
+│   │   ├── Vehiculos/
+│   │   └── Viajes/
+│   ├── services/         # Llamadas a la API (un archivo por módulo)
+│   ├── App.jsx           # Router principal con rutas protegidas
 │   ├── App.css
+│   ├── AppLayout.jsx     # Layout con sidebar
 │   ├── index.css
 │   └── main.jsx          # Punto de entrada
+├── index.html
 ├── package.json
 ├── vite.config.js
 └── README.md
@@ -210,7 +236,8 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 - Login
 - Registro
 - Recuperar contraseña
-- Dashboard (vista por rol: Admin, Conductor, Pasajero, Entidad)
+- Dashboard (vista por rol: Admin, Conductor, Pasajero, Entidad) con componentes separados
+- Acceso Denegado (página 403)
 - Perfil
 - Vehículos
 - Rutas
@@ -239,6 +266,7 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 - Footer
 - Logo
 - DashboardLayout
+- AccesoDenegado
 - ProtectedRoute
 
 ---
@@ -257,7 +285,9 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 - CRUD de Comunas
 - CRUD de Barrios
 - CRUD de Conductores
+- CRUD de Pasajeros
 - CRUD de Entidades
+- CRUD de Viajes
 
 ---
 
@@ -277,8 +307,33 @@ Motor:
 - Barrios
 - Comunas
 - Perfil Conductor
+- Perfil Pasajero
 - Perfil Entidad
 - Viajes
+- EstadosVehiculo (catálogo)
+- EstadosConductor (catálogo)
+- EstadosViaje (catálogo)
+- TiposDocumento (catálogo)
+
+---
+
+## 👥 Usuarios de prueba
+
+| Rol             | Correo               | Contraseña |
+| --------------- | -------------------- | ---------- |
+| Administrador   | admin@rutago.com     | admin123456          |
+| Conductor       | conductor@rutago.com | conductor123456      |
+| Pasajero        | pasajero@rutago.com  | pasajero123456       |
+| Entidad Externa | entidad@rutago.com   | entidadExterna123456 |
+
+---
+
+## 🔗 URLs desplegadas
+
+| Servicio | URL                                        |
+| -------- | ------------------------------------------ |
+| Frontend | https://rutago.seminario1.eleueleo.com/    |
+| Backend  | https://rutago.seminario1.eleueleo.com/api |
 
 ---
 
@@ -355,8 +410,6 @@ Herramienta utilizada:
 
 ## 🚧 En desarrollo
 
-- Módulo de consulta de rutas para pasajeros (buscador de destino).
-- Visualización de buses disponibles por ruta.
 - Ubicación GPS en tiempo real.
 
 ---

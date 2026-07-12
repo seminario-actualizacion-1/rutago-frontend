@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import AccesoDenegado from "../pages/AccesoDenegado/AccesoDenegado";
 
 function getInitialUser() {
   try {
@@ -20,7 +21,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   const user = getInitialUser();
 
   if (allowedRoles && user && !allowedRoles.includes(user.rolId)) {
-    return <Navigate to="/dashboard" replace />;
+    return <AccesoDenegado />;
   }
 
   return children;
