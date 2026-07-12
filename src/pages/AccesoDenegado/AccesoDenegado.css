@@ -1,0 +1,26 @@
+.acceso-denegado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: 2rem;
+}
+
+.acceso-denegado h1 {
+  font-size: 6rem;
+  margin: 0;
+  color: #dc3545;
+  line-height: 1;
+}
+
+.acceso-denegado h2 {
+  margin: 0.5rem 0;
+  font-size: 2rem;
+}
+
+.acceso-denegado p {
+  color: #666;
+  margin-bottom: 2rem;
+}

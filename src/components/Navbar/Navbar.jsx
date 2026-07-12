@@ -16,15 +16,9 @@ function getInitialUser() {
 export default function Navbar() {
   const location = useLocation();
   const { toggleCollapse, sidebarCollapsed } = useLayout();
-  const [user, setUser] = useState(getInitialUser);
+  const user = getInitialUser();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleStorage = () => setUser(getInitialUser());
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -39,7 +33,7 @@ export default function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("rutago_user");
-    window.location.href = "/login";
+    window.location.replace("/login");
   };
 
   const isLoggedIn = !!localStorage.getItem("token");

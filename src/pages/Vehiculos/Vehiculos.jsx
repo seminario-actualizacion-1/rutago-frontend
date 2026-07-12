@@ -5,10 +5,22 @@ import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { vehiculosService } from "../../services/vehiculos.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
+import { ROLES } from "../../config/roles";
 import { ESTADOS_VEHICULO } from "../../config/estados";
 import "./Vehiculos.css";
 
+function getInitialUser() {
+  try {
+    const stored = localStorage.getItem("rutago_user");
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function Vehiculos() {
+  const user = getInitialUser();
+  const esAdmin = user?.rolId === ROLES.ADMIN;
   const [vehiculos, setVehiculos] = useState([]);
   const [entidades, setEntidades] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +59,7 @@ export default function Vehiculos() {
     const loadData = async () => {
       try {
         setLoading(true);
-        const [vehiculosData, entidadesData] = await Promise.all([
+        const promises = [
           vehiculosService.getAll({
             paginaActual: currentPage,
             registrosPorPagina: itemsPerPage,
@@ -56,11 +68,16 @@ export default function Vehiculos() {
             sortBy,
             sortOrder,
           }),
-          perfilEntidadService.getAll({
-            paginaActual: 1,
-            registrosPorPagina: 100,
-          }),
-        ]);
+        ];
+        if (esAdmin) {
+          promises.push(
+            perfilEntidadService.getAll({
+              paginaActual: 1,
+              registrosPorPagina: 100,
+            }),
+          );
+        }
+        const [vehiculosData, entidadesData] = await Promise.all(promises);
 
         setVehiculos(vehiculosData.data || []);
         setPagination(
@@ -73,7 +90,9 @@ export default function Vehiculos() {
             tienePaginaSiguiente: false,
           },
         );
-        setEntidades(entidadesData.data || []);
+        if (esAdmin) {
+          setEntidades(entidadesData.data || []);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -83,6 +102,32 @@ export default function Vehiculos() {
 
     loadData();
   }, [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder]);
+
+  const handleNuevoVehiculo = async () => {
+    setEditingVehiculo(null);
+    const baseForm = {
+      placa: "",
+      marca: "",
+      modelo: "",
+      color: "",
+      capacidadPasajeros: "",
+      entidadId: "",
+      estadoId: 1,
+      latitud: "",
+      longitud: "",
+    };
+    if (!esAdmin) {
+      try {
+        const resp = await perfilEntidadService.getMiPerfil();
+        const perfil = resp.data || resp;
+        baseForm.entidadId = perfil.id;
+      } catch {
+        // si no tiene perfil de entidad, entidadId queda vacío
+      }
+    }
+    setFormData(baseForm);
+    setModalOpen(true);
+  };
 
   const handleEditar = (vehiculo) => {
     setError("");
@@ -249,21 +294,7 @@ export default function Vehiculos() {
       <div className="table-container">
         <div className="table-actions" style={{ marginBottom: "1rem" }}>
           <button
-            onClick={() => {
-              setEditingVehiculo(null);
-              setFormData({
-                placa: "",
-                marca: "",
-                modelo: "",
-                color: "",
-                capacidadPasajeros: "",
-                entidadId: "",
-    estadoId: 1,
-                latitud: "",
-                longitud: "",
-              });
-              setModalOpen(true);
-            }}
+            onClick={handleNuevoVehiculo}
             className="button button-primary"
           >
             + Nuevo Vehículo
@@ -518,37 +549,39 @@ export default function Vehiculos() {
               required
             />
           </div>
-          <div style={{ marginBottom: "1rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "0.5rem",
-                fontWeight: "500",
-              }}
-            >
-              Entidad
-            </label>
-            <select
-              value={formData.entidadId}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData({
-                  ...formData,
-                  entidadId: value === "" ? "" : parseInt(value, 10),
-                });
-              }}
-              className="input"
-              style={{ width: "100%" }}
-              required
-            >
-              <option value="">Seleccionar entidad</option>
-              {entidades.map((entidad) => (
-                <option key={entidad.id} value={entidad.id}>
-                  {entidad.razonSocial}
-                </option>
-              ))}
-            </select>
-          </div>
+          {esAdmin && (
+            <div style={{ marginBottom: "1rem" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
+                Entidad
+              </label>
+              <select
+                value={formData.entidadId}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({
+                    ...formData,
+                    entidadId: value === "" ? "" : parseInt(value, 10),
+                  });
+                }}
+                className="input"
+                style={{ width: "100%" }}
+                required
+              >
+                <option value="">Seleccionar entidad</option>
+                {entidades.map((entidad) => (
+                  <option key={entidad.id} value={entidad.id}>
+                    {entidad.razonSocial}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div style={{ marginBottom: "1rem" }}>
             <label
               style={{
