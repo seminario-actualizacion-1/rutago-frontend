@@ -108,7 +108,7 @@ export default function Barrios() {
     setEditingBarrio(barrio);
     setFormData({
       nombre: barrio.nombre,
-      comunaId: barrio.comunaId,
+      comunaId: barrio.comuna?.id,
     });
     setModalOpen(true);
   };
@@ -243,7 +243,7 @@ export default function Barrios() {
                       <td>
                         <span className="font-medium">{barrio.nombre}</span>
                       </td>
-                      <td>{getComunaNombre(barrio.comunaId)}</td>
+                      <td>{getComunaNombre(barrio.comuna?.id)}</td>
                       <td>
                         <ActionsMenu
                           onEdit={() => handleEditar(barrio)}
@@ -272,7 +272,7 @@ export default function Barrios() {
                     <div className="mobile-card-header">
                       <div className="mobile-card-info">
                         <h3>{barrio.nombre}</h3>
-                        <p>Comuna: {getComunaNombre(barrio.comunaId)}</p>
+                        <p>Comuna: {getComunaNombre(barrio.comuna?.id)}</p>
                         <p>ID: {barrio.id}</p>
                       </div>
                     </div>

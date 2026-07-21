@@ -80,7 +80,7 @@ export default function Perfil() {
         correo: usuario.correo,
       });
 
-      if (usuario.rolId === 2) {
+      if (usuario.rol?.id === 2) {
         try {
           const perfilResponse = await perfilConductorService.getMiPerfil();
           const perfilConductor = perfilResponse.data || null;
@@ -97,7 +97,7 @@ export default function Perfil() {
             estadoId: perfilConductor?.estadoId || 1,
           });
         }
-      } else if (usuario.rolId === 4) {
+      } else if (usuario.rol?.id === 4) {
         try {
           const perfilResponse = await perfilEntidadService.getMiPerfil();
           const perfilEntidad = perfilResponse.data || null;
@@ -328,10 +328,10 @@ export default function Perfil() {
 
               <div className="perfil-row">
                 <span className="perfil-label">Rol:</span>
-                <span className="perfil-value">{obtenerRol(user.rolId)}</span>
+                <span className="perfil-value">{obtenerRol(user.rol?.id)}</span>
               </div>
 
-              {user.rolId === 2 && perfilEspecializado && (
+              {user.rol?.id === 2 && perfilEspecializado && (
                 <>
                   <div className="perfil-row">
                     <span className="perfil-label">Licencia:</span>
@@ -358,7 +358,7 @@ export default function Perfil() {
                 </>
               )}
 
-              {user.rolId === 4 && perfilEspecializado && (
+              {user.rol?.id === 4 && perfilEspecializado && (
                 <>
                   <div className="perfil-row">
                     <span className="perfil-label">Razón social:</span>
@@ -390,7 +390,7 @@ export default function Perfil() {
                 >
                   Editar Perfil
                 </button>
-                {user.rolId === 2 && perfilEspecializado && (
+                {user.rol?.id === 2 && perfilEspecializado && (
                   <button
                     onClick={() => setEditingConductor(true)}
                     className="button button-outline"
@@ -399,7 +399,7 @@ export default function Perfil() {
                     Editar Perfil de Conductor
                   </button>
                 )}
-                {user.rolId === 4 && perfilEspecializado && (
+                {user.rol?.id === 4 && perfilEspecializado && (
                   <button
                     onClick={() => setEditingEntidad(true)}
                     className="button button-outline"
@@ -464,7 +464,7 @@ export default function Perfil() {
         </div>
       </div>
 
-      {user.rolId === 2 && perfilEspecializado && editingConductor && (
+      {user.rol?.id === 2 && perfilEspecializado && editingConductor && (
         <div className="perfil-content">
           <div className="bg-white rounded-lg shadow-sm">
             <h2>Editar perfil de conductor</h2>
@@ -512,7 +512,7 @@ export default function Perfil() {
         </div>
       )}
 
-      {user.rolId === 4 && perfilEspecializado && editingEntidad && (
+      {user.rol?.id === 4 && perfilEspecializado && editingEntidad && (
         <div className="perfil-content">
           <div className="bg-white rounded-lg shadow-sm">
             <h2>Editar perfil de entidad</h2>

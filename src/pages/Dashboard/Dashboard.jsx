@@ -25,7 +25,7 @@ export default function Dashboard() {
     );
   }
 
-  const rol = user.rolId;
+  const rol = user.rol?.id;
 
   return (
     <div className="dashboard-container">

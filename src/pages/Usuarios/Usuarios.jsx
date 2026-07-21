@@ -9,7 +9,7 @@ import { perfilConductorService } from "../../services/perfilConductor.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
-import { ESTADOS_CONDUCTOR, TIPOS_DOCUMENTO } from "../../config/estados";
+import { ESTADOS_CONDUCTOR } from "../../config/estados";
 import "./Usuarios.css";
 
 export default function Usuarios() {
@@ -142,14 +142,14 @@ export default function Usuarios() {
       let perfilConductor = usuarioCompleto.perfilConductor || null;
       let perfilEntidad = usuarioCompleto.perfilEntidad || null;
 
-      if (usuarioCompleto.rolId === 2 && perfilConductor?.id) {
+      if (usuarioCompleto.rol?.id === 2 && perfilConductor?.id) {
         const perfilConductorResponse = await perfilConductorService.getById(
           perfilConductor.id,
         );
         perfilConductor = perfilConductorResponse.data || perfilConductor;
       }
 
-      if (usuarioCompleto.rolId === 4 && perfilEntidad?.id) {
+      if (usuarioCompleto.rol?.id === 4 && perfilEntidad?.id) {
         const perfilEntidadResponse = await perfilEntidadService.getById(
           perfilEntidad.id,
         );
@@ -167,7 +167,7 @@ export default function Usuarios() {
         apellidos: usuarioEditando.apellidos || "",
         correo: usuarioEditando.correo,
         contrasena: "",
-        rolId: Number(usuarioEditando.rolId),
+        rolId: Number(usuarioEditando.rol?.id),
         licenciaConducir:
           usuarioEditando.perfilConductor?.licenciaConducir || "",
         vehiculoId:
@@ -181,7 +181,7 @@ export default function Usuarios() {
         telefonoContacto: usuarioEditando.perfilEntidad?.telefonoContacto || "",
         telefono: usuarioEditando.perfilPasajero?.telefono || "",
         direccion: usuarioEditando.perfilPasajero?.direccion || "",
-        tipoDocumentoId: usuarioEditando.perfilPasajero?.tipoDocumentoId || "",
+        tipoDocumentoId: usuarioEditando.perfilPasajero?.tipoDocumento?.id?.toString() || "",
         numeroDocumento: usuarioEditando.perfilPasajero?.numeroDocumento || "",
         fechaNacimiento: usuarioEditando.perfilPasajero?.fechaNacimiento
           ? usuarioEditando.perfilPasajero.fechaNacimiento.split("T")[0]
@@ -212,7 +212,7 @@ export default function Usuarios() {
         await usuariosService.update(editingUsuario.id, usuarioData);
         usuarioId = editingUsuario.id;
 
-        if (editingUsuario.rolId !== rolId) {
+        if (editingUsuario.rol?.id !== rolId) {
           await usuariosService.changeRole(usuarioId, rolId);
         }
       } else {
@@ -507,8 +507,8 @@ export default function Usuarios() {
                       <td>{usuario.apellidos || "-"}</td>
                       <td>{usuario.correo}</td>
                       <td>
-                        <span className={`badge ${getRolColor(usuario.rolId)}`}>
-                          {getRolNombre(usuario.rolId)}
+                        <span className={`badge ${getRolColor(usuario.rol?.id)}`}>
+                          {getRolNombre(usuario.rol?.id)}
                         </span>
                       </td>
                       <td>
@@ -543,9 +543,9 @@ export default function Usuarios() {
                         <p>{usuario.correo}</p>
                       </div>
                       <span
-                        className={`mobile-badge ${getRolColor(usuario.rolId)}`}
+                        className={`mobile-badge ${getRolColor(usuario.rol?.id)}`}
                       >
-                        {getRolNombre(usuario.rolId).toUpperCase()}
+                        {getRolNombre(usuario.rol?.id).toUpperCase()}
                       </span>
                     </div>
 

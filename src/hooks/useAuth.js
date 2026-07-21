@@ -20,7 +20,7 @@ export function useAuth() {
       JSON.stringify({
         id: data.usuario?.id,
         nombres: data.usuario?.nombres,
-        rolId: data.usuario?.rolId,
+        rolId: data.usuario?.rol?.id,
         rol: data.usuario?.rol,
       })
     );

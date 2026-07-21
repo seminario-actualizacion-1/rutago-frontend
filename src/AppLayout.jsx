@@ -37,7 +37,7 @@ function obtenerRol(rolId) {
 export default function AppLayout() {
   const user = getInitialUser();
   if (!user) return null;
-  const rolId = user.rolId ?? 3;
+  const rolId = user.rol?.id ?? 3;
   const tituloRol = obtenerRol(rolId);
   const handleLogout = () => {
     localStorage.removeItem("token");

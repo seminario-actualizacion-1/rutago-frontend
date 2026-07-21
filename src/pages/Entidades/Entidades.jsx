@@ -116,9 +116,7 @@ export default function Entidades() {
     try {
       if (editingEntidad) {
         // ── EDITAR ──────────────────────────────────────────────────
-        // Resolver el id del usuario: puede venir como propiedad plana o anidada
-        const usuarioIdEdicion =
-          editingEntidad.usuarioId ?? editingEntidad.usuario?.id ?? null;
+        const usuarioIdEdicion = editingEntidad.usuario?.id ?? null;
 
         // 1. Actualizar datos del usuario solo si existe la asociación
         if (usuarioIdEdicion) {

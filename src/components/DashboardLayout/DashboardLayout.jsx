@@ -13,7 +13,7 @@ function getInitialUser() {
 
 export default function DashboardLayout() {
   const user = getInitialUser();
-  const rol = user?.rolId ?? 3;
+  const rol = user?.rol?.id ?? 3;
   const { sidebarCollapsed } = useLayout();
 
   return (
