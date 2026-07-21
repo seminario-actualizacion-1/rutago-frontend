@@ -256,13 +256,13 @@ export default function Vehiculos() {
     }
   };
 
-  const getEstadoColor = (estadoId) => {
+  const getEstadoColor = (estado) => {
     const colors = {
       1: "badge-en-terminal",
       2: "badge-en-ruta",
       3: "badge-proximo",
     };
-    return colors[estadoId] || "badge-default";
+    return colors[estado?.id] || "badge-default";
   };
 
   const sortOptions = [
@@ -349,9 +349,9 @@ export default function Vehiculos() {
                       <td>{vehiculo.capacidadPasajeros}</td>
                       <td>
                         <span
-                          className={`badge ${getEstadoColor(vehiculo.estadoId)}`}
+                          className={`badge ${getEstadoColor(vehiculo.estado)}`}
                         >
-                          {ESTADOS_VEHICULO[vehiculo.estadoId] || vehiculo.estadoId}
+                          {vehiculo.estado?.nombre || ESTADOS_VEHICULO[vehiculo.estado?.id] || vehiculo.estado?.id}
                         </span>
                       </td>
                       <td>
@@ -388,9 +388,9 @@ export default function Vehiculos() {
                         <p>Color: {vehiculo.color}</p>
                       </div>
                       <span
-                        className={`mobile-badge ${getEstadoColor(vehiculo.estadoId)}`}
+                        className={`mobile-badge ${getEstadoColor(vehiculo.estado)}`}
                       >
-                        {ESTADOS_VEHICULO[vehiculo.estadoId] || vehiculo.estadoId}
+                        {vehiculo.estado?.nombre || ESTADOS_VEHICULO[vehiculo.estado?.id] || vehiculo.estado?.id}
                       </span>
                     </div>
 
