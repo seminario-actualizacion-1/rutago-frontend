@@ -52,7 +52,7 @@ export default function Viajes() {
   });
 
   const user = getInitialUser();
-  const esAdmin = user?.rolId === 1;
+  const esAdmin = user?.rol?.id === 1;
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);

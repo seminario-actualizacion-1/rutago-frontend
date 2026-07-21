@@ -20,7 +20,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   const user = getInitialUser();
 
-  if (allowedRoles && user && !allowedRoles.includes(user.rolId)) {
+  if (allowedRoles && user && !allowedRoles.includes(user.rol?.id)) {
     return <AccesoDenegado />;
   }
 

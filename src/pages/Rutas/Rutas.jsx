@@ -122,8 +122,8 @@ export default function Rutas() {
     setEditingRuta(ruta);
     setFormData({
       nombre: ruta.nombre,
-      origenId: ruta.origenId,
-      destinoId: ruta.destinoId,
+      origenId: ruta.origen?.id,
+      destinoId: ruta.destino?.id,
       descripcion: ruta.descripcion || "",
       distanciaKm: ruta.distanciaKm || "",
       tiempoEstimadoMinutos: ruta.tiempoEstimadoMinutos || "",
@@ -265,8 +265,8 @@ export default function Rutas() {
                       <td>
                         <span className="font-medium">{ruta.nombre}</span>
                       </td>
-                      <td>{getComunaNombre(ruta.origenId)}</td>
-                      <td>{getComunaNombre(ruta.destinoId)}</td>
+                      <td>{getComunaNombre(ruta.origen?.id)}</td>
+                      <td>{getComunaNombre(ruta.destino?.id)}</td>
                       <td>{ruta.distanciaKm || "-"}</td>
                       <td>{ruta.tiempoEstimadoMinutos || "-"}</td>
                       <td>
@@ -297,8 +297,8 @@ export default function Rutas() {
                     <div className="mobile-card-header">
                       <div className="mobile-card-info">
                         <h3>{ruta.nombre}</h3>
-                        <p>Origen: {getComunaNombre(ruta.origenId)}</p>
-                        <p>Destino: {getComunaNombre(ruta.destinoId)}</p>
+                        <p>Origen: {getComunaNombre(ruta.origen?.id)}</p>
+                        <p>Destino: {getComunaNombre(ruta.destino?.id)}</p>
                         <p>Distancia: {ruta.distanciaKm || "-"} km</p>
                       </div>
                     </div>

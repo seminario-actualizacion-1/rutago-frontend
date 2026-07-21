@@ -18,10 +18,3 @@ export const ESTADOS_VIAJE = {
   5: "Cancelado",
 };
 
-export const TIPOS_DOCUMENTO = {
-  1: "CC",
-  2: "TI",
-  3: "CE",
-  4: "NIT",
-  5: "PASAPORTE",
-};

@@ -25,7 +25,7 @@ function Login() {
     try {
       await login(formData);
       const user = JSON.parse(localStorage.getItem("rutago_user") || "{}");
-      const rol = user.rolId;
+      const rol = user.rol?.id;
       if (rol === ROLES.CONDUCTOR) navigate("/viajes");
       else if (rol === ROLES.PASAJERO) navigate("/viajes");
       else if (rol === ROLES.ENTIDAD) navigate("/vehiculos");

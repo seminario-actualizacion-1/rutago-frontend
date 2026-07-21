@@ -109,8 +109,8 @@ export default function Conductores() {
       apellidos: conductor.usuario?.apellidos || "",
       correo: conductor.usuario?.correo || "",
       contrasena: "",
-      usuarioId: conductor.usuarioId,
-      vehiculoId: conductor.vehiculoId || "",
+      usuarioId: conductor.usuario?.id,
+      vehiculoId: conductor.vehiculo?.id || "",
       licenciaConducir: conductor.licenciaConducir || "",
       estadoId: conductor.estadoId || 1,
     });
@@ -121,9 +121,7 @@ export default function Conductores() {
   const handleGuardar = async () => {
     try {
       if (editingConductor) {
-        // Resolver usuarioId: puede venir como propiedad plana o anidada
-        const usuarioIdEdicion =
-          editingConductor.usuarioId ?? editingConductor.usuario?.id ?? null;
+        const usuarioIdEdicion = editingConductor.usuario?.id ?? null;
 
         // Solo actualizar el usuario si existe la asociación
         if (usuarioIdEdicion) {
@@ -245,7 +243,7 @@ export default function Conductores() {
       return `${conductor.usuario.nombres} ${conductor.usuario.apellidos || ""}`.trim();
     }
 
-    const usuario = usuarios.find((u) => u.id === conductor.usuarioId);
+    const usuario = usuarios.find((u) => u.id === conductor.usuario?.id);
     return usuario
       ? `${usuario.nombres} ${usuario.apellidos || ""}`.trim()
       : "Sin usuario";
@@ -256,7 +254,7 @@ export default function Conductores() {
       return conductor.vehiculo.placa;
     }
 
-    const vehiculo = vehiculos.find((v) => v.id === conductor.vehiculoId);
+    const vehiculo = vehiculos.find((v) => v.id === conductor.vehiculo?.id);
     return vehiculo ? vehiculo.placa : "Sin vehículo";
   };
 

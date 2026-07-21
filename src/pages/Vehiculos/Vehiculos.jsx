@@ -20,7 +20,7 @@ function getInitialUser() {
 
 export default function Vehiculos() {
   const user = getInitialUser();
-  const esAdmin = user?.rolId === ROLES.ADMIN;
+  const esAdmin = user?.rol?.id === ROLES.ADMIN;
   const [vehiculos, setVehiculos] = useState([]);
   const [entidades, setEntidades] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -138,8 +138,8 @@ export default function Vehiculos() {
       modelo: vehiculo.modelo,
       color: vehiculo.color,
       capacidadPasajeros: vehiculo.capacidadPasajeros,
-      entidadId: vehiculo.entidadId,
-      estadoId: vehiculo.estadoId,
+      entidadId: vehiculo.entidad?.id,
+      estadoId: vehiculo.estado?.id,
       latitud: vehiculo.latitud || "",
       longitud: vehiculo.longitud || "",
     });

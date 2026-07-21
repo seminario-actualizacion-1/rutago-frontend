@@ -6,7 +6,6 @@ import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 import { usuariosService } from "../../services/usuarios.service";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
-import { TIPOS_DOCUMENTO } from "../../config/estados";
 import "./Pasajeros.css";
 
 const emptyForm = {
@@ -91,7 +90,7 @@ export default function Pasajeros() {
       correo: u.correo || "",
       telefono: perfil.telefono || "",
       direccion: perfil.direccion || "",
-      tipoDocumentoId: perfil.tipoDocumentoId || "",
+      tipoDocumentoId: perfil.tipoDocumento?.id?.toString() || "",
       numeroDocumento: perfil.numeroDocumento || "",
       fechaNacimiento: perfil.fechaNacimiento
         ? perfil.fechaNacimiento.slice(0, 10)
@@ -250,18 +249,18 @@ export default function Pasajeros() {
                       <td>{perfil.usuario?.correo || "-"}</td>
                       <td>{perfil.telefono || "-"}</td>
                       <td>
-                        {perfil.tipoDocumentoId && perfil.numeroDocumento ? (
+                        {perfil.tipoDocumento?.id && perfil.numeroDocumento ? (
                           <div style={{ display: "flex", flexDirection: "column" }}>
                             <span className="font-medium">{perfil.numeroDocumento}</span>
                             <span style={{ fontSize: "0.7rem", color: "#6b7280", textTransform: "uppercase" }}>
-                              {TIPOS_DOCUMENTO[perfil.tipoDocumentoId] || perfil.tipoDocumentoId}
+                              {perfil.tipoDocumento?.nombre || perfil.tipoDocumento?.id}
                             </span>
                           </div>
                         ) : perfil.numeroDocumento ? (
                           perfil.numeroDocumento
-                        ) : perfil.tipoDocumentoId ? (
+                        ) : perfil.tipoDocumento?.id ? (
                           <span style={{ fontSize: "0.7rem", color: "#6b7280", textTransform: "uppercase" }}>
-                            {TIPOS_DOCUMENTO[perfil.tipoDocumentoId] || perfil.tipoDocumentoId}
+                            {perfil.tipoDocumento?.nombre || perfil.tipoDocumento?.id}
                           </span>
                         ) : (
                           "-"
@@ -305,8 +304,8 @@ export default function Pasajeros() {
                       <div className="mobile-card-row">
                         <span>Documento</span>
                         <span>
-                          {perfil.tipoDocumentoId
-                            ? `${TIPOS_DOCUMENTO[perfil.tipoDocumentoId] || perfil.tipoDocumentoId} ${perfil.numeroDocumento || ""}`
+                          {perfil.tipoDocumento?.id
+                            ? `${perfil.tipoDocumento?.nombre || perfil.tipoDocumento?.id} ${perfil.numeroDocumento || ""}`
                             : "-"}
                         </span>
                       </div>

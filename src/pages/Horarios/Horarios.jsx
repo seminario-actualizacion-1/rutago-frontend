@@ -141,8 +141,8 @@ export default function Horarios() {
   const handleEditar = (horario) => {
     setEditingHorario(horario);
     setFormData({
-      vehiculoId: horario.vehiculoId || "",
-      rutaId: horario.rutaId || "",
+      vehiculoId: horario.vehiculo?.id || "",
+      rutaId: horario.ruta?.id || "",
       horaSalida: horario.horaSalida
         ? String(horario.horaSalida).slice(0, 5)
         : "",
@@ -265,8 +265,8 @@ export default function Horarios() {
                   horariosPaginados.map((horario) => (
                     <tr key={horario.id}>
                       <td>{horario.id}</td>
-                      <td>{getRutaLabel(horario.rutaId)}</td>
-                      <td>{getVehiculoLabel(horario.vehiculoId)}</td>
+                      <td>{getRutaLabel(horario.ruta?.id)}</td>
+                      <td>{getVehiculoLabel(horario.vehiculo?.id)}</td>
                       <td>{horario.horaSalida || "-"}</td>
                       <td>
                         {horario.frecuenciaMinutos
@@ -300,8 +300,8 @@ export default function Horarios() {
                   <div key={horario.id} className="mobile-card">
                     <div className="mobile-card-header">
                       <div className="mobile-card-info">
-                        <h3>{getRutaLabel(horario.rutaId)}</h3>
-                        <p>{getVehiculoLabel(horario.vehiculoId)}</p>
+                        <h3>{getRutaLabel(horario.ruta?.id)}</h3>
+                        <p>{getVehiculoLabel(horario.vehiculo?.id)}</p>
                         <p>Salida: {horario.horaSalida || "-"}</p>
                       </div>
                     </div>
