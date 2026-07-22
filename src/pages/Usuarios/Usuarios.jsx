@@ -171,8 +171,8 @@ export default function Usuarios() {
         licenciaConducir:
           usuarioEditando.perfilConductor?.licenciaConducir || "",
         vehiculoId:
-          usuarioEditando.perfilConductor?.vehiculoId != null
-            ? Number(usuarioEditando.perfilConductor.vehiculoId)
+          usuarioEditando.perfilConductor?.vehiculo?.id != null
+            ? Number(usuarioEditando.perfilConductor.vehiculo.id)
             : "",
         estadoConductor:
           usuarioEditando.perfilConductor?.estadoId || 1,
