@@ -6,6 +6,7 @@ import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 import { usuariosService } from "../../services/usuarios.service";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
+import { usePaginacion } from "../../hooks/usePaginacion";
 import "./Pasajeros.css";
 
 const emptyForm = {
@@ -26,16 +27,17 @@ export default function Pasajeros() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPasajero, setEditingPasajero] = useState(null);
-  const [pagination, setPagination] = useState({
-    paginaActual: 1,
-    registrosPorPagina: 10,
-    totalPaginas: 1,
-    totalRegistros: 0,
-    tienePaginaAnterior: false,
-    tienePaginaSiguiente: false,
-  });
   const [formData, setFormData] = useState(emptyForm);
-  const [currentPage, setCurrentPage] = useState(1);
+
+  const {
+    currentPage,
+    itemsPerPage,
+    pagination,
+    handlePageChange,
+    handleItemsPerPageChange,
+    actualizarPaginacion,
+    queryParams,
+  } = usePaginacion();
 
   const handleNuevo = () => {
     setEditingPasajero(null);
@@ -43,32 +45,21 @@ export default function Pasajeros() {
     setError("");
     setModalOpen(true);
   };
-  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
-  const fetchPasajeros = async (page = currentPage, limit = itemsPerPage, q = searchTerm) => {
+  const fetchPasajeros = async () => {
     try {
       setLoading(true);
       const data = await perfilPasajeroService.getAll({
-        paginaActual: page,
-        registrosPorPagina: limit,
-        q: q || undefined,
+        ...queryParams,
+        q: searchTerm || undefined,
         sortBy,
         sortOrder,
       });
       setPasajeros(data.data || []);
-      setPagination(
-        data.paginacion || {
-          paginaActual: page,
-          registrosPorPagina: limit,
-          totalPaginas: 1,
-          totalRegistros: data.data?.length || 0,
-          tienePaginaAnterior: false,
-          tienePaginaSiguiente: false,
-        },
-      );
+      actualizarPaginacion(data.paginacion);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -77,8 +68,8 @@ export default function Pasajeros() {
   };
 
   useEffect(() => {
-    fetchPasajeros(currentPage, itemsPerPage, searchTerm);
-  }, [currentPage, itemsPerPage, searchTerm, sortBy, sortOrder]);
+    fetchPasajeros();
+  }, [queryParams, searchTerm, sortBy, sortOrder]);
 
   const handleEditar = (perfil) => {
     setError("");
@@ -117,20 +108,11 @@ export default function Pasajeros() {
           });
         }
       } else {
-        const usuarioResponse = await usuariosService.create({
+        await perfilPasajeroService.crearConUsuario({
           nombres: formData.nombres,
           apellidos: formData.apellidos,
           correo: formData.correo,
           contrasena: formData.contrasena,
-          rolId: 3,
-        });
-
-        const usuarioId = usuarioResponse.usuario?.id;
-        if (!usuarioId)
-          throw new Error("No se pudo obtener el ID del usuario creado.");
-
-        await perfilPasajeroService.create({
-          usuarioId,
           telefono: formData.telefono,
           direccion: formData.direccion,
           tipoDocumentoId: formData.tipoDocumentoId,
@@ -139,8 +121,7 @@ export default function Pasajeros() {
         });
       }
       setError("");
-      setCurrentPage(1);
-      await fetchPasajeros(1, itemsPerPage, searchTerm);
+      await fetchPasajeros();
       setModalOpen(false);
       setEditingPasajero(null);
       setFormData(emptyForm);
@@ -151,7 +132,6 @@ export default function Pasajeros() {
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setCurrentPage(1);
   };
 
   const sortOptions = [
@@ -163,7 +143,6 @@ export default function Pasajeros() {
   const handleSortChange = (field, order) => {
     setSortBy(field);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
   const handleCerrarModal = () => {
@@ -182,22 +161,11 @@ export default function Pasajeros() {
 
     try {
       await perfilPasajeroService.delete(id);
-      setCurrentPage(1);
-      await fetchPasajeros(1, itemsPerPage, searchTerm);
+      await fetchPasajeros();
     } catch (err) {
       setError(err.message);
     }
   };
-
-  if (loading)
-    return (
-      <div className="pasajeros-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando pasajeros...</p>
-        </div>
-      </div>
-    );
 
   return (
     <div className="pasajeros-container">
@@ -224,17 +192,24 @@ export default function Pasajeros() {
       />
 
         <div className="bg-white rounded-lg shadow-sm">
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando pasajeros...</p>
+            </div>
+          ) : (
+            <>
           <div className="desktop-table">
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Nombres</th>
-                  <th>Apellidos</th>
-                  <th>Correo</th>
-                  <th>Teléfono</th>
-                  <th>Documento</th>
-                  <th>Acciones</th>
+                  <th title="Identificador único del pasajero">ID</th>
+                  <th title="Nombres del pasajero">Nombres</th>
+                  <th title="Apellidos del pasajero">Apellidos</th>
+                  <th title="Correo electrónico del pasajero">Correo</th>
+                  <th title="Teléfono de contacto del pasajero">Teléfono</th>
+                  <th title="Tipo y número de documento de identidad">Documento</th>
+                  <th title="Opciones disponibles para este registro">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -323,19 +298,20 @@ export default function Pasajeros() {
               <div className="mobile-empty">No hay pasajeros disponibles</div>
             )}
           </div>
+            </>
+          )}
         </div>
 
+        {!loading && (
         <Pagination
           currentPage={currentPage}
-          totalPages={pagination.totalPaginas || 1}
-          totalItems={pagination.totalRegistros || pasajeros.length}
+          totalPages={pagination?.totalPaginas || 1}
+          totalItems={pagination?.totalRegistros || pasajeros.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(n) => {
-            setItemsPerPage(n);
-            setCurrentPage(1);
-          }}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
+        )}
       </div>
 
       <Modal
@@ -435,11 +411,11 @@ export default function Pasajeros() {
               style={{ width: "100%" }}
             >
               <option value="">Seleccionar</option>
-              <option value="1">CC</option>
-              <option value="2">TI</option>
-              <option value="3">CE</option>
-              <option value="4">NIT</option>
-              <option value="5">PASAPORTE</option>
+              <option value="1">CC — Cédula de Ciudadanía</option>
+              <option value="2">TI — Tarjeta de Identidad</option>
+              <option value="3">CE — Cédula de Extranjería</option>
+              <option value="4">NIT — Número de Identificación Tributaria</option>
+              <option value="5">PASAPORTE — Pasaporte</option>
             </select>
           </div>
           <div style={{ marginBottom: "1rem" }}>

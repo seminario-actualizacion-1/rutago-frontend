@@ -1,111 +1,83 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+import * as api from "../api/perfilEntidad";
 
-const buildQueryString = (params = {}) => {
-  const searchParams = new URLSearchParams();
+const extractError = (err, fallback) =>
+  new Error(err.response?.data?.message || err.message || fallback);
 
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      searchParams.append(key, value);
-    }
-  });
-
-  return searchParams.toString();
-};
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
+const normalizePayload = (perfil, isUpdate = false) => {
+  const p = { ...perfil };
+  if (isUpdate) delete p.usuarioId;
+  if (
+    p.usuarioId !== undefined &&
+    (p.usuarioId === "" || p.usuarioId == null || Number.isNaN(p.usuarioId))
+  )
+    p.usuarioId = null;
+  else if (p.usuarioId !== undefined) p.usuarioId = Number(p.usuarioId);
+  return p;
 };
 
 export const perfilEntidadService = {
   getAll: async (params = {}) => {
-    const query = buildQueryString(params);
-    const response = await fetch(
-      `${API_URL}/perfiles-entidad${query ? `?${query}` : ""}`,
-      {
-        headers: getAuthHeaders(),
-      },
-    );
-    if (!response.ok) throw new Error("Error al cargar perfiles de entidad");
-    return response.json();
+    try {
+      const res = await api.getEntidades(params);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar entidades");
+    }
   },
-
   getById: async (id) => {
-    const response = await fetch(`${API_URL}/perfiles-entidad/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al cargar perfil de entidad");
-    return response.json();
+    try {
+      const res = await api.getEntidadById(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar entidad");
+    }
   },
-
-  getByUsuarioId: async (usuarioId) => {
-    const response = await fetch(
-      `${API_URL}/perfiles-entidad/usuario/${usuarioId}`,
-      {
-        headers: getAuthHeaders(),
-      },
-    );
-    if (!response.ok) throw new Error("Error al cargar perfil de entidad");
-    return response.json();
-  },
-
   getMiPerfil: async () => {
-    const response = await fetch(`${API_URL}/perfiles-entidad/me/perfil`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || "Error al cargar perfil de entidad",
-      );
+    try {
+      const res = await api.getMiPerfilEntidad();
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar perfil de entidad");
     }
-    return response.json();
   },
-
   create: async (perfil) => {
-    const response = await fetch(`${API_URL}/perfiles-entidad`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(perfil),
-    });
-    if (!response.ok) throw new Error("Error al crear perfil de entidad");
-    return response.json();
-  },
-
-  update: async (id, perfil) => {
-    const response = await fetch(`${API_URL}/perfiles-entidad/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(perfil),
-    });
-    if (!response.ok) throw new Error("Error al actualizar perfil de entidad");
-    return response.json();
-  },
-
-  updateMiPerfil: async (perfil) => {
-    const response = await fetch(`${API_URL}/perfiles-entidad/me/perfil`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(perfil),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || "Error al actualizar perfil de entidad",
-      );
+    try {
+      const res = await api.createEntidad(normalizePayload(perfil));
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al crear entidad");
     }
-    return response.json();
   },
-
+  update: async (id, perfil) => {
+    try {
+      const res = await api.updateEntidad(id, normalizePayload(perfil, true));
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al actualizar entidad");
+    }
+  },
+  updateMiPerfil: async (perfil) => {
+    try {
+      const res = await api.updateMiPerfilEntidad(normalizePayload(perfil));
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al actualizar perfil de entidad");
+    }
+  },
   delete: async (id) => {
-    const response = await fetch(`${API_URL}/perfiles-entidad/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al eliminar perfil de entidad");
-    return response.json();
+    try {
+      const res = await api.deleteEntidad(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al eliminar entidad");
+    }
+  },
+  crearConUsuario: async (data) => {
+    try {
+      const res = await api.crearEntidadConUsuario(data);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al crear entidad");
+    }
   },
 };

@@ -9,20 +9,20 @@ export default function PasajeroDashboard() {
   const [totalViajes, setTotalViajes] = useState(0);
 
   useEffect(() => {
-    const fetchData = async () => {
+    let mounted = true;
+    (async () => {
       try {
-        const data = await viajesService.getMisViajes({
-          paginaActual: 1,
-          registrosPorPagina: 5,
-        });
+        const data = await viajesService.getMisViajes({ paginaActual: 1, registrosPorPagina: 5 });
+        if (!mounted) return;
         const lista = data.data || [];
         setUltimosViajes(lista);
         setTotalViajes(data.paginacion?.totalRegistros || lista.length);
       } catch (error) {
+        if (!mounted) return;
         console.error("Error al cargar datos del pasajero:", error);
       }
-    };
-    fetchData();
+    })();
+    return () => { mounted = false; };
   }, []);
 
   return (
@@ -39,7 +39,7 @@ export default function PasajeroDashboard() {
       </div>
 
       <div className="dashboard-section">
-        <Link to="/viajes" className="button button-primary" style={{ marginBottom: "1rem" }}>
+        <Link to="/viajes/solicitar" className="button button-primary" style={{ marginBottom: "1rem" }}>
           Solicitar nuevo viaje
         </Link>
       </div>
@@ -50,9 +50,9 @@ export default function PasajeroDashboard() {
           {ultimosViajes.map((v) => (
             <div key={v.id} className="viaje-row">
               <span>
-                {v.barrioOrigen?.nombre || "—"} → {v.barrioDestino?.nombre || "—"}
+                {v.ruta?.origen?.nombre || v.ruta?.nombre || "—"} → {v.ruta?.destino?.nombre || v.ruta?.nombre || "—"}
               </span>
-              <span className={`badge ${obtenerEstadoColor(v.estadoId)}`}>{ESTADOS_VIAJE[v.estadoId] || v.estadoId}</span>
+              <span className={`badge ${obtenerEstadoColor(v.estado?.id)}`}>{v.estado?.nombre || ESTADOS_VIAJE[v.estado?.id] || v.estado?.id}</span>
             </div>
           ))}
         </div>

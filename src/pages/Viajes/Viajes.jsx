@@ -1,295 +1,469 @@
-import { useState, useEffect } from "react";
-import Pagination from "../../components/Pagination/Pagination";
-import TableToolbar from "../../components/TableToolbar/TableToolbar";
-import { viajesService } from "../../services/viajes.service";
+﻿import { useState } from "react";
+import Modal from "../../components/Modal/Modal";
+import MapaRutas from "../../components/MapaRutas/MapaRutas";
 import { ESTADOS_VIAJE } from "../../config/estados";
+import { viajesService } from "../../services/viajes.service";
+import {
+  obtenerEstadoId,
+  obtenerNombrePersona,
+  textoCupos,
+  getInitialUser,
+} from "./viajesHelpers";
+import ViajesPasajero from "./ViajesPasajero";
+import ViajesConductor from "./ViajesConductor";
+import ViajesAdmin from "./ViajesAdmin";
 import "./Viajes.css";
 
-function obtenerEstadoColor(estadoId) {
-  const colors = {
-    1: "badge-pendiente",
-    2: "badge-aceptado",
-    3: "badge-en-curso",
-    4: "badge-finalizado",
-    5: "badge-cancelado",
-  };
-  return colors[estadoId] || "badge-default";
-}
-
-function obtenerNombrePersona(usuario) {
-  if (!usuario) return "No asignado";
-  return (
-    `${usuario.nombres || ""} ${usuario.apellidos || ""}`.trim() ||
-    usuario.correo ||
-    "No asignado"
-  );
-}
-
-function obtenerNombreBarrio(barrio) {
-  return barrio?.nombre || "No definido";
-}
-
-function getInitialUser() {
-  try {
-    const stored = localStorage.getItem("rutago_user");
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
-}
-
 export default function Viajes() {
-  const [viajes, setViajes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [detalleViaje, setDetalleViaje] = useState(null);
+  const [mapaExpandido, setMapaExpandido] = useState(false);
+  const [editandoViaje, setEditandoViaje] = useState(null);
   const [error, setError] = useState("");
-  const [pagination, setPagination] = useState({
-    paginaActual: 1,
-    registrosPorPagina: 10,
-    totalPaginas: 1,
-    totalRegistros: 0,
-    tienePaginaAnterior: false,
-    tienePaginaSiguiente: false,
+  const [formEdit, setFormEdit] = useState({
+    rutaId: "",
+    horarioId: "",
+    conductorId: "",
+    estadoId: "",
+    precioEstimado: "",
   });
+  const [rutas, setRutas] = useState([]);
+  const [horarios, setHorarios] = useState([]);
+  const [conductores, setConductores] = useState([]);
 
   const user = getInitialUser();
   const esAdmin = user?.rol?.id === 1;
+  const esPasajero = user?.rol?.id === 3;
+  const esConductor = user?.rol?.id === 2;
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({ estadoId: "" });
-  const [sortBy, setSortBy] = useState("id");
-  const [sortOrder, setSortOrder] = useState("ASC");
-
-  useEffect(() => {
-    const loadViajes = async () => {
-      try {
-        setLoading(true);
-        if (esAdmin) {
-          const data = await viajesService.getAll({
-            paginaActual: currentPage,
-            registrosPorPagina: itemsPerPage,
-            q: searchTerm || undefined,
-            ...(filters.estadoId && { estadoId: filters.estadoId }),
-            sortBy,
-            sortOrder,
-          });
-          setViajes(data.data || []);
-          setPagination(
-            data.paginacion || {
-              paginaActual: currentPage,
-              registrosPorPagina: itemsPerPage,
-              totalPaginas: 1,
-              totalRegistros: data.data?.length || 0,
-              tienePaginaAnterior: false,
-              tienePaginaSiguiente: false,
-            },
-          );
-        } else {
-          const data = await viajesService.getMisViajes();
-          setViajes(data.data || []);
-          setPagination({
-            paginaActual: 1,
-            registrosPorPagina: (data.data || []).length,
-            totalPaginas: 1,
-            totalRegistros: (data.data || []).length,
-            tienePaginaAnterior: false,
-            tienePaginaSiguiente: false,
-          });
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadViajes();
-  }, [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder, esAdmin]);
-
-  const handleSearchChange = (value) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
+  const handleVerDetalle = async (viaje) => {
+    try {
+      const res = await viajesService.getById(viaje.id);
+      setDetalleViaje(res.data || viaje);
+    } catch {
+      setDetalleViaje(viaje);
+    }
   };
 
-  const handleFilterChange = (name, value) => {
-    setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
+  const abrirEditar = async (viaje) => {
+    setError("");
+    setEditandoViaje(viaje);
+    setFormEdit({
+      rutaId: viaje.ruta?.id || "",
+      horarioId: viaje.horario?.id || "",
+      conductorId: viaje.conductor?.id || "",
+      estadoId: viaje.estado?.id || "",
+      precioEstimado: viaje.precioEstimado || "",
+    });
+    const [rRes, cRes] = await Promise.all([
+      import("../../services/rutas.service").then((m) =>
+        m.rutasService.getAll(),
+      ),
+      import("../../services/perfilConductor.service").then((m) =>
+        m.perfilConductorService.getAll(),
+      ),
+    ]);
+    setRutas(rRes.data || []);
+    setConductores(cRes.data || []);
+    if (viaje.ruta?.id) {
+      const hRes = await import("../../services/horarios.service").then((m) =>
+        m.horariosService.getByRuta(viaje.ruta.id),
+      );
+      setHorarios(hRes.data || []);
+    }
   };
 
-  const handleSortChange = (field, order) => {
-    setSortBy(field);
-    setSortOrder(order);
-    setCurrentPage(1);
+  const handleRutaChange = async (rutaId) => {
+    setFormEdit((prev) => ({ ...prev, rutaId, horarioId: "" }));
+    if (rutaId) {
+      const hRes = await import("../../services/horarios.service").then((m) =>
+        m.horariosService.getByRuta(rutaId),
+      );
+      setHorarios(hRes.data || []);
+    } else {
+      setHorarios([]);
+    }
   };
 
-  const sortOptions = [
-    { value: "id", label: "ID" },
-    { value: "estado", label: "Estado" },
-  ];
-
-  const viajesPaginados = viajes;
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
-
-  if (loading)
+  if (esPasajero) {
     return (
       <div className="viajes-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando viajes...</p>
-        </div>
+        <ViajesPasajero onVerDetalle={handleVerDetalle} />
+        {renderModales()}
       </div>
     );
+  }
+
+  if (esConductor) {
+    return (
+      <div className="viajes-container">
+        <ViajesConductor onVerDetalle={handleVerDetalle} />
+        {renderModales()}
+      </div>
+    );
+  }
 
   return (
     <div className="viajes-container">
-      <div className="page-header">
-        <h1>Seguimiento de Recorridos</h1>
-      </div>
-      {error && <p className="error">{error}</p>}
-
-      <div className="table-container">
-
-      {esAdmin && (
-        <TableToolbar
-          searchValue={searchTerm}
-          onSearchChange={handleSearchChange}
-          placeholder="Buscar por pasajero, conductor o barrios..."
-          filters={[
-            {
-              name: "estadoId",
-              label: "Todos los estados",
-              value: filters.estadoId,
-              options: [
-                { value: 1, label: "Buscando" },
-                { value: 2, label: "Aceptado" },
-                { value: 3, label: "En curso" },
-                { value: 4, label: "Finalizado" },
-                { value: 5, label: "Cancelado" },
-              ],
-            },
-          ]}
-          onFilterChange={handleFilterChange}
-          sortOptions={sortOptions}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSortChange={handleSortChange}
-        />
-      )}
-
-        <div className="bg-white rounded-lg shadow-sm">
-          {/* Desktop Table */}
-          <div className="desktop-table">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Estado</th>
-                  <th>Origen</th>
-                  <th>Destino</th>
-                  <th>Pasajero</th>
-                  <th>Conductor</th>
-                  <th>Precio</th>
-                </tr>
-              </thead>
-              <tbody>
-                {viajesPaginados.length > 0 ? (
-                  viajesPaginados.map((viaje) => (
-                    <tr key={viaje.id}>
-                      <td>{viaje.id}</td>
-                      <td>
-                        <span
-                          className={`badge ${obtenerEstadoColor(viaje.estadoId)}`}
-                        >
-                          {ESTADOS_VIAJE[viaje.estadoId] || viaje.estadoId || "-"}
-                        </span>
-                      </td>
-                      <td>{obtenerNombreBarrio(viaje.barrioOrigen)}</td>
-                      <td>{obtenerNombreBarrio(viaje.barrioDestino)}</td>
-                      <td>{obtenerNombrePersona(viaje.pasajero)}</td>
-                      <td>{obtenerNombrePersona(viaje.conductor)}</td>
-                      <td>${viaje.precioEstimado || "-"}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center">
-                      No se encontraron recorridos registrados
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="mobile-cards">
-            {viajesPaginados.length > 0 ? (
-              <div className="mobile-cards-list">
-                {viajesPaginados.map((viaje) => (
-                  <div key={viaje.id} className="mobile-card">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-info">
-                        <h3>Recorrido #{viaje.id}</h3>
-                      </div>
-                      <span
-                        className={`mobile-badge ${obtenerEstadoColor(viaje.estadoId)}`}
-                      >
-                        {(ESTADOS_VIAJE[viaje.estadoId] || viaje.estadoId || "-").toString()}
-                      </span>
-                    </div>
-
-                    <div className="mobile-card-body">
-                      <div className="mobile-card-row">
-                        <span>Origen</span>
-                        <span>{obtenerNombreBarrio(viaje.barrioOrigen)}</span>
-                      </div>
-                      <div className="mobile-card-row">
-                        <span>Destino</span>
-                        <span>{obtenerNombreBarrio(viaje.barrioDestino)}</span>
-                      </div>
-                      <div className="mobile-card-row">
-                        <span>Pasajero</span>
-                        <span>{obtenerNombrePersona(viaje.pasajero)}</span>
-                      </div>
-                      <div className="mobile-card-row">
-                        <span>Conductor</span>
-                        <span>{obtenerNombrePersona(viaje.conductor)}</span>
-                      </div>
-                      <div className="mobile-card-row">
-                        <span>Precio</span>
-                        <span>${viaje.precioEstimado || "-"}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mobile-empty">No hay recorridos disponibles</div>
-            )}
-          </div>
-        </div>
-
-        {esAdmin && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={pagination.totalPaginas || 1}
-            totalItems={pagination.totalRegistros || viajes.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={handlePageChange}
-            onItemsPerPageChange={handleItemsPerPageChange}
-          />
-        )}
-      </div>
+      <ViajesAdmin onVerDetalle={handleVerDetalle} onEditar={abrirEditar} />
+      {renderModales()}
     </div>
   );
+
+  function renderModales() {
+    return (
+      <>
+        {detalleViaje && (
+          <div className="modal-overlay" onClick={() => setDetalleViaje(null)}>
+            <div
+              className="modal-content"
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxWidth: "600px" }}
+            >
+              <div className="modal-header">
+                <h2 className="modal-title">
+                  Detalle del Viaje #{detalleViaje.id}
+                </h2>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.4rem",
+                    alignItems: "center",
+                  }}
+                >
+                  {detalleViaje.ruta && (
+                    <button
+                      type="button"
+                      onClick={() => setMapaExpandido(true)}
+                      style={{
+                        background: "none",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        padding: "2px 8px",
+                        fontSize: "0.8rem",
+                        cursor: "pointer",
+                        color: "#555",
+                      }}
+                    >
+                      Expandir mapa
+                    </button>
+                  )}
+                  <button
+                    className="modal-close"
+                    onClick={() => setDetalleViaje(null)}
+                  >
+                    &times;
+                  </button>
+                </div>
+              </div>
+              <div className="modal-body">
+                <div className="detalle-grid">
+                  <div className="detalle-field">
+                    <label>ID</label>
+                    <span>{detalleViaje.id}</span>
+                  </div>
+                  <div className="detalle-field">
+                    <label>Estado</label>
+                    <span>
+                      {detalleViaje.estado?.nombre ||
+                        ESTADOS_VIAJE[obtenerEstadoId(detalleViaje)] ||
+                        obtenerEstadoId(detalleViaje) ||
+                        "-"}
+                    </span>
+                  </div>
+                  <div className="detalle-field">
+                    <label>Ruta</label>
+                    <span>{detalleViaje.ruta?.nombre || "No definida"}</span>
+                  </div>
+                  <div className="detalle-field">
+                    <label>Horario</label>
+                    <span>
+                      {detalleViaje.horario?.horaSalida?.slice(0, 5) || "-"}
+                    </span>
+                  </div>
+                  <div className="detalle-field">
+                    <label>Conductor</label>
+                    <span>{obtenerNombrePersona(detalleViaje.conductor)}</span>
+                  </div>
+                  <div className="detalle-field">
+                    <label>Cupos</label>
+                    <span>{textoCupos(detalleViaje)}</span>
+                  </div>
+                  <div className="detalle-field">
+                    <label>Precio</label>
+                    <span>${detalleViaje.precioEstimado || "-"}</span>
+                  </div>
+                  <div
+                    className="detalle-field"
+                    style={{ gridColumn: "span 2" }}
+                  >
+                    <label>Pasajeros</label>
+                    {esAdmin &&
+                    detalleViaje.pasajeros &&
+                    detalleViaje.pasajeros.length > 0 ? (
+                      <span>
+                        {detalleViaje.pasajeros
+                          .map((p) => obtenerNombrePersona(p))
+                          .join(", ")}
+                      </span>
+                    ) : (
+                      <span>
+                        {detalleViaje.pasajeros?.length || 0} pasajero(s)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {mapaExpandido && detalleViaje?.ruta && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 9999,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onClick={() => setMapaExpandido(false)}
+          >
+            <div
+              style={{
+                width: "95vw",
+                height: "90vh",
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "8px 12px",
+                  borderBottom: "1px solid #e5e7eb",
+                }}
+              >
+                <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>
+                  {detalleViaje.ruta.nombre}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMapaExpandido(false)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    fontSize: "1.3rem",
+                    cursor: "pointer",
+                    color: "#666",
+                    lineHeight: 1,
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
+              <div style={{ flex: 1 }}>
+                <MapaRutas rutas={[detalleViaje.ruta]} showSearch />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <Modal
+          isOpen={!!editandoViaje}
+          onClose={() => setEditandoViaje(null)}
+          title={editandoViaje ? `Editar Viaje #${editandoViaje.id}` : ""}
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleGuardarEditar();
+            }}
+          >
+            <div style={{ marginBottom: "1rem" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
+                Ruta
+              </label>
+              <select
+                value={formEdit.rutaId}
+                onChange={(e) => handleRutaChange(e.target.value)}
+                className="input"
+                style={{ width: "100%" }}
+              >
+                <option value="">Seleccione una ruta</option>
+                {rutas.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginBottom: "1rem" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
+                Horario
+              </label>
+              <select
+                value={formEdit.horarioId}
+                onChange={(e) =>
+                  setFormEdit((prev) => ({
+                    ...prev,
+                    horarioId: e.target.value,
+                  }))
+                }
+                className="input"
+                style={{ width: "100%" }}
+              >
+                <option value="">Seleccione un horario</option>
+                {horarios.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.horaSalida?.slice(0, 5)} - {h.diasSemana || ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {esAdmin && (
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.5rem",
+                    fontWeight: "500",
+                  }}
+                >
+                  Conductor
+                </label>
+                <select
+                  value={formEdit.conductorId}
+                  onChange={(e) =>
+                    setFormEdit((prev) => ({
+                      ...prev,
+                      conductorId: e.target.value,
+                    }))
+                  }
+                  className="input"
+                  style={{ width: "100%" }}
+                >
+                  <option value="">Seleccione un conductor</option>
+                  {conductores.map((c) => (
+                    <option
+                      key={c.usuario?.id || c.id}
+                      value={c.usuario?.id || ""}
+                    >
+                      {obtenerNombrePersona(c.usuario)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div style={{ marginBottom: "1rem" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
+                Estado
+              </label>
+              <select
+                value={formEdit.estadoId}
+                onChange={(e) =>
+                  setFormEdit((prev) => ({ ...prev, estadoId: e.target.value }))
+                }
+                className="input"
+                style={{ width: "100%" }}
+              >
+                <option value="">Seleccione un estado</option>
+                {Object.entries(ESTADOS_VIAJE).map(([id, label]) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
+                Precio
+              </label>
+              <input
+                type="number"
+                value={formEdit.precioEstimado}
+                onChange={(e) =>
+                  setFormEdit((prev) => ({
+                    ...prev,
+                    precioEstimado: e.target.value,
+                  }))
+                }
+                className="input"
+                style={{ width: "100%" }}
+              />
+            </div>
+            {error && <p className="error">{error}</p>}
+            <div
+              style={{
+                display: "flex",
+                gap: "0.5rem",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setEditandoViaje(null)}
+                className="button button-outline"
+              >
+                Cancelar
+              </button>
+              <button type="submit" className="button button-primary">
+                Guardar
+              </button>
+            </div>
+          </form>
+        </Modal>
+      </>
+    );
+  }
+
+  async function handleGuardarEditar() {
+    try {
+      await viajesService.update(editandoViaje.id, formEdit);
+      setEditandoViaje(null);
+      setFormEdit({
+        rutaId: "",
+        horarioId: "",
+        conductorId: "",
+        estadoId: "",
+        precioEstimado: "",
+      });
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 }

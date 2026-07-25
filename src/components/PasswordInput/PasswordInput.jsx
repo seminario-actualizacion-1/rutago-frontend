@@ -1,20 +1,22 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
-export default function PasswordInput({ value, onChange, placeholder, required, autoComplete }) {
+export default function PasswordInput({ name, id, value, onChange, placeholder, required, autoComplete }) {
   const [show, setShow] = useState(false);
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="input-group" style={{ position: "relative" }}>
+      {id && <label htmlFor={id} style={{ display: "none" }}>{placeholder}</label>}
       <input
+        id={id}
+        name={name}
         type={show ? "text" : "password"}
         value={value}
         onChange={onChange}
-        className="input"
-        style={{ width: "100%", paddingRight: "40px", boxSizing: "border-box" }}
         placeholder={placeholder}
         required={required}
         autoComplete={autoComplete}
+        style={{ width: "100%", paddingRight: "40px", boxSizing: "border-box" }}
       />
       <button
         type="button"
@@ -33,6 +35,7 @@ export default function PasswordInput({ value, onChange, placeholder, required, 
           alignItems: "center",
           justifyContent: "center",
           padding: "4px",
+          zIndex: 1,
         }}
       >
         {show ? <EyeOff size={18} /> : <Eye size={18} />}

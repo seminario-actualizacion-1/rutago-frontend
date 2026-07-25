@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import api from "../../api";
+import { Link, useNavigate } from "react-router-dom";
+import { usuariosService } from "../../services/usuarios.service";
 import Input from "../../components/Input/Input";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import Button from "../../components/Button/Button";
@@ -10,6 +10,7 @@ import "./Registro.css";
 function Registro() {
   const [formData, setFormData] = useState({ nombres: "", apellidos: "", correo: "", contrasena: "" });
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,11 +21,11 @@ function Registro() {
     setError("");
 
     try {
-      await api.post("/usuarios/registro", formData);
+      await usuariosService.create(formData);
       alert("Registro exitoso. Ahora puedes iniciar sesión.");
-      window.location.href = "/login";
+      navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.message || "Error al registrarse.");
+      setError(err.message || "Error al registrarse.");
     }
   };
 
@@ -37,23 +38,16 @@ function Registro() {
           <Input name="apellidos" label="Apellidos" placeholder="Tus apellidos" value={formData.apellidos} onChange={handleChange} autoComplete="family-name" />
           <Input name="correo" label="Correo" type="email" placeholder="Correo electrónico" value={formData.correo} onChange={handleChange} autoComplete="email" />
           <div>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600", fontSize: "0.9rem", color: "#333" }}>
+            <label htmlFor="contrasena" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600", fontSize: "0.9rem", color: "#333" }}>
               Contraseña
             </label>
-            <PasswordInput
-              value={formData.contrasena}
-              onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
-              placeholder="Contraseña"
-              autoComplete="new-password"
-            />
+            <PasswordInput name="contrasena" id="contrasena" placeholder="Tu contraseña" value={formData.contrasena} onChange={handleChange} autoComplete="new-password" />
           </div>
-          <Button type="submit" variant="primary" fullWidth>Registrarse</Button>
+          <Button type="submit">Crear Cuenta</Button>
         </form>
-        <div className="login-links">
-          <p>
-            ¿Ya tienes cuenta? <Link to="/login">Inicia sesión aquí</Link>
-          </p>
-        </div>
+        <p style={{ textAlign: "center", marginTop: "1rem" }}>
+          ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>
+        </p>
       </Card>
     </div>
   );

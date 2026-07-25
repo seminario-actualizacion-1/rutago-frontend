@@ -1,22 +1,18 @@
 import "./ActionsMenu.css";
 
 export default function ActionsMenu({
+  onView,
   onEdit,
   onDelete,
   deleteLabel = "Eliminar",
 }) {
   const handleChange = (event) => {
     const value = event.target.value;
-
-    if (value === "editar") {
-      onEdit?.();
-    }
-
-    if (value === "eliminar") {
-      onDelete?.();
-    }
-
     event.target.value = "";
+
+    if (value === "ver") { onView?.(); return; }
+    if (value === "editar") { onEdit?.(); return; }
+    if (value === "eliminar") { onDelete?.(); return; }
   };
 
   return (
@@ -28,7 +24,8 @@ export default function ActionsMenu({
       <option value="" disabled>
         Acciones
       </option>
-      <option value="editar">Editar</option>
+      {onView && <option value="ver">Ver detalle</option>}
+      {onEdit && <option value="editar">Editar</option>}
       {onDelete && <option value="eliminar">{deleteLabel}</option>}
     </select>
   );

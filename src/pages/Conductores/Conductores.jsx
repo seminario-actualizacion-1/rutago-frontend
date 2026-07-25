@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import { usePaginacion } from "../../hooks/usePaginacion";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
-import { conductoresService } from "../../services/conductores.service";
+import { perfilConductorService } from "../../services/perfilConductor.service";
 import { usuariosService } from "../../services/usuarios.service";
 import { vehiculosService } from "../../services/vehiculos.service";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
@@ -28,72 +29,58 @@ export default function Conductores() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [pagination, setPagination] = useState({
-    paginaActual: 1,
-    registrosPorPagina: 10,
-    totalPaginas: 1,
-    totalRegistros: 0,
-    tienePaginaAnterior: false,
-    tienePaginaSiguiente: false,
-  });
   const [editingConductor, setEditingConductor] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const {
+    currentPage,
+    itemsPerPage,
+    pagination,
+    handlePageChange,
+    handleItemsPerPageChange,
+    actualizarPaginacion,
+    queryParams,
+  } = usePaginacion();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ estadoId: "" });
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [conductoresData, usuariosData, vehiculosData] =
-          await Promise.all([
-            conductoresService.getAll({
-              paginaActual: currentPage,
-              registrosPorPagina: itemsPerPage,
-              q: searchTerm || undefined,
-              ...(filters.estadoId && { estadoId: filters.estadoId }),
-              sortBy,
-              sortOrder,
-            }),
-            usuariosService.getAll({
-              paginaActual: 1,
-              registrosPorPagina: 100,
-            }),
-            vehiculosService.getAll({
-              paginaActual: 1,
-              registrosPorPagina: 100,
-            }),
-          ]);
+  const fetchDatos = async () => {
+    try {
+      setLoading(true);
+      const [conductoresData, usuariosData, vehiculosData] =
+        await Promise.all([
+          perfilConductorService.getAll({
+            ...queryParams,
+            q: searchTerm || undefined,
+            ...(filters.estadoId && { estadoId: filters.estadoId }),
+            sortBy,
+            sortOrder,
+          }),
+          usuariosService.getAll({
+            paginaActual: 1,
+            registrosPorPagina: 100,
+          }),
+          vehiculosService.getAll({
+            paginaActual: 1,
+            registrosPorPagina: 100,
+          }),
+        ]);
 
-        setConductores(conductoresData.data || []);
-        setPagination(
-          conductoresData.paginacion || {
-            paginaActual: currentPage,
-            registrosPorPagina: itemsPerPage,
-            totalPaginas: 1,
-            totalRegistros: conductoresData.data?.length || 0,
-            tienePaginaAnterior: false,
-            tienePaginaSiguiente: false,
-          },
-        );
-        setUsuarios(usuariosData.data || []);
-        setVehiculos(vehiculosData.data || []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setConductores(conductoresData.data || []);
+      actualizarPaginacion(conductoresData.paginacion);
+      setUsuarios(usuariosData.data || []);
+      setVehiculos(vehiculosData.data || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadData();
-  }, [currentPage, itemsPerPage, searchTerm, filters, refreshKey, sortBy, sortOrder]);
+  useEffect(() => { fetchDatos(); }, [queryParams, searchTerm, filters, sortBy, sortOrder]);
 
   const handleNuevo = () => {
     setEditingConductor(null);
@@ -108,11 +95,10 @@ export default function Conductores() {
       nombres: conductor.usuario?.nombres || "",
       apellidos: conductor.usuario?.apellidos || "",
       correo: conductor.usuario?.correo || "",
-      contrasena: "",
       usuarioId: conductor.usuario?.id,
       vehiculoId: conductor.vehiculo?.id || "",
       licenciaConducir: conductor.licenciaConducir || "",
-      estadoId: conductor.estadoId || 1,
+      estadoId: conductor.estado?.id || 1,
     });
     setError("");
     setModalOpen(true);
@@ -132,59 +118,23 @@ export default function Conductores() {
           });
         }
 
-        await conductoresService.update(editingConductor.id, {
+        await perfilConductorService.update(editingConductor.id, {
           vehiculoId: formData.vehiculoId || null,
           licenciaConducir: formData.licenciaConducir,
           estadoId: formData.estadoId,
         });
       } else {
-        const usuarioResponse = await usuariosService.create({
+        await perfilConductorService.crearConUsuario({
           nombres: formData.nombres,
           apellidos: formData.apellidos,
           correo: formData.correo,
           contrasena: formData.contrasena,
-          rolId: 2,
-        });
-
-        const usuarioId = usuarioResponse.usuario?.id;
-        if (!usuarioId)
-          throw new Error("No se pudo obtener el ID del usuario creado.");
-
-        await conductoresService.create({
-          usuarioId,
           vehiculoId: formData.vehiculoId || null,
           licenciaConducir: formData.licenciaConducir,
           estadoId: formData.estadoId,
         });
       }
-      setCurrentPage(1);
-      const [conductoresData, usuariosData, vehiculosData] = await Promise.all([
-        conductoresService.getAll({
-          paginaActual: 1,
-          registrosPorPagina: itemsPerPage,
-        }),
-        usuariosService.getAll({
-          paginaActual: 1,
-          registrosPorPagina: 100,
-        }),
-        vehiculosService.getAll({
-          paginaActual: 1,
-          registrosPorPagina: 100,
-        }),
-      ]);
-      setConductores(conductoresData.data || []);
-      setPagination(
-        conductoresData.paginacion || {
-          paginaActual: currentPage,
-          registrosPorPagina: itemsPerPage,
-          totalPaginas: 1,
-          totalRegistros: conductoresData.data?.length || 0,
-          tienePaginaAnterior: false,
-          tienePaginaSiguiente: false,
-        },
-      );
-      setUsuarios(usuariosData.data || []);
-      setVehiculos(vehiculosData.data || []);
+      await fetchDatos();
       setModalOpen(false);
       setEditingConductor(null);
       setFormData(emptyForm);
@@ -208,9 +158,8 @@ export default function Conductores() {
     }
 
     try {
-      await conductoresService.delete(id);
-      setCurrentPage(1);
-      setRefreshKey(k => k + 1);
+      await perfilConductorService.delete(id);
+      await fetchDatos();
     } catch (err) {
       setError(err.message);
     }
@@ -218,12 +167,10 @@ export default function Conductores() {
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setCurrentPage(1);
   };
 
   const handleFilterChange = (name, value) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
   };
 
   const sortOptions = [
@@ -235,7 +182,6 @@ export default function Conductores() {
   const handleSortChange = (field, order) => {
     setSortBy(field);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
   const getUsuarioNombre = (conductor) => {
@@ -268,16 +214,6 @@ export default function Conductores() {
   };
 
   const conductoresPaginados = conductores;
-
-  if (loading)
-    return (
-      <div className="conductores-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando conductores...</p>
-        </div>
-      </div>
-    );
 
   return (
     <div className="conductores-container">
@@ -316,17 +252,24 @@ export default function Conductores() {
         onSortChange={handleSortChange}
       />
         <div className="bg-white rounded-lg shadow-sm">
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando conductores...</p>
+            </div>
+          ) : (
+            <>
           {/* Desktop Table */}
           <div className="desktop-table">
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Usuario</th>
-                  <th>Vehículo</th>
-                  <th>Licencia</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
+                  <th title="Identificador único del conductor">ID</th>
+                  <th title="Nombre completo del usuario asociado">Usuario</th>
+                  <th title="Placa del vehículo asignado al conductor">Vehículo</th>
+                  <th title="Número de licencia de conducir">Licencia</th>
+                  <th title="Estado actual del conductor">Estado</th>
+                  <th title="Opciones disponibles para este registro">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -343,9 +286,9 @@ export default function Conductores() {
                       <td>{conductor.licenciaConducir || "-"}</td>
                       <td>
                         <span
-                          className={`badge ${getEstadoColor(conductor.estadoId)}`}
+                          className={`badge ${getEstadoColor(conductor.estado?.id)}`}
                         >
-                          {ESTADOS_CONDUCTOR[conductor.estadoId] || conductor.estadoId || 1}
+                          {ESTADOS_CONDUCTOR[conductor.estado?.id] || conductor.estado?.nombre || conductor.estado?.id}
                         </span>
                       </td>
                       <td>
@@ -380,9 +323,9 @@ export default function Conductores() {
                         <p>Licencia: {conductor.licenciaConducir || "-"}</p>
                       </div>
                       <span
-                        className={`mobile-badge ${getEstadoColor(conductor.estadoId)}`}
-                      >
-                        {(ESTADOS_CONDUCTOR[conductor.estadoId] || conductor.estadoId || 1).toString().toUpperCase()}
+                        className={`mobile-badge ${getEstadoColor(conductor.estado?.id)}`}
+                        >
+                        {(ESTADOS_CONDUCTOR[conductor.estado?.id] || conductor.estado?.nombre || conductor.estado?.id || "").toString().toUpperCase()}
                       </span>
                     </div>
 
@@ -406,19 +349,20 @@ export default function Conductores() {
               <div className="mobile-empty">No hay conductores disponibles</div>
             )}
           </div>
+            </>
+          )}
         </div>
 
+        {!loading && (
         <Pagination
           currentPage={currentPage}
-          totalPages={pagination.totalPaginas || 1}
-          totalItems={pagination.totalRegistros || conductores.length}
+          totalPages={pagination?.totalPaginas || 1}
+          totalItems={pagination?.totalRegistros || conductores.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(n) => {
-            setItemsPerPage(n);
-            setCurrentPage(1);
-          }}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
+        )}
       </div>
 
       <Modal

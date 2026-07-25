@@ -1,103 +1,47 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+import * as api from "../api/vehiculos";
 
-const buildQueryString = (params = {}) => {
-  const searchParams = new URLSearchParams();
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      searchParams.append(key, value);
-    }
-  });
-
-  return searchParams.toString();
-};
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
-
-const normalizeVehiculoPayload = (vehiculo) => ({
-  ...vehiculo,
-  capacidadPasajeros:
-    vehiculo.capacidadPasajeros === "" ||
-    Number.isNaN(vehiculo.capacidadPasajeros)
-      ? null
-      : Number(vehiculo.capacidadPasajeros),
-  entidadId:
-    vehiculo.entidadId === "" || Number.isNaN(vehiculo.entidadId)
-      ? null
-      : Number(vehiculo.entidadId),
-  latitud:
-    vehiculo.latitud === "" ||
-    vehiculo.latitud == null ||
-    Number.isNaN(vehiculo.latitud)
-      ? null
-      : Number(vehiculo.latitud),
-  longitud:
-    vehiculo.longitud === "" ||
-    vehiculo.longitud == null ||
-    Number.isNaN(vehiculo.longitud)
-      ? null
-      : Number(vehiculo.longitud),
-});
+const extractError = (err, fallback) =>
+  new Error(err.response?.data?.message || err.message || fallback);
 
 export const vehiculosService = {
   getAll: async (params = {}) => {
-    const query = buildQueryString(params);
-    const response = await fetch(
-      `${API_URL}/vehiculos${query ? `?${query}` : ""}`,
-      {
-        headers: getAuthHeaders(),
-      },
-    );
-    if (!response.ok) throw new Error("Error al cargar vehículos");
-    return response.json();
+    try {
+      const res = await api.getVehiculos(params);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar vehículos");
+    }
   },
-
   getById: async (id) => {
-    const response = await fetch(`${API_URL}/vehiculos/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al cargar vehículo");
-    return response.json();
+    try {
+      const res = await api.getVehiculoById(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar vehículo");
+    }
   },
-
   create: async (vehiculo) => {
-    const response = await fetch(`${API_URL}/vehiculos`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(normalizeVehiculoPayload(vehiculo)),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || "Error al crear vehículo");
+    try {
+      const res = await api.createVehiculo(vehiculo);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al crear vehículo");
     }
-    return response.json();
   },
-
   update: async (id, vehiculo) => {
-    const response = await fetch(`${API_URL}/vehiculos/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(normalizeVehiculoPayload(vehiculo)),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || "Error al actualizar vehículo");
+    try {
+      const res = await api.updateVehiculo(id, vehiculo);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al actualizar vehículo");
     }
-    return response.json();
   },
-
   delete: async (id) => {
-    const response = await fetch(`${API_URL}/vehiculos/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al eliminar vehículo");
-    return response.json();
+    try {
+      const res = await api.deleteVehiculo(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al eliminar vehículo");
+    }
   },
 };

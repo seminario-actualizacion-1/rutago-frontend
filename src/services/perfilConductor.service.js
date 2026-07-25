@@ -1,131 +1,86 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+import * as api from "../api/perfilConductor";
 
-const buildQueryString = (params = {}) => {
-  const searchParams = new URLSearchParams();
+const extractError = (err, fallback) =>
+  new Error(err.response?.data?.message || err.message || fallback);
 
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      searchParams.append(key, value);
-    }
-  });
-
-  return searchParams.toString();
+const normalizePayload = (perfil, isUpdate = false) => {
+  const p = { ...perfil };
+  if (isUpdate) delete p.usuarioId;
+  if (p.vehiculoId === "" || p.vehiculoId == null || Number.isNaN(p.vehiculoId))
+    p.vehiculoId = null;
+  else p.vehiculoId = Number(p.vehiculoId);
+  if (
+    p.usuarioId !== undefined &&
+    (p.usuarioId === "" || p.usuarioId == null || Number.isNaN(p.usuarioId))
+  )
+    p.usuarioId = null;
+  else if (p.usuarioId !== undefined) p.usuarioId = Number(p.usuarioId);
+  return p;
 };
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
-
-const normalizePerfilConductorPayload = (perfil) => ({
-  ...perfil,
-  usuarioId:
-    perfil.usuarioId === "" ||
-    perfil.usuarioId == null ||
-    Number.isNaN(perfil.usuarioId)
-      ? null
-      : Number(perfil.usuarioId),
-  vehiculoId:
-    perfil.vehiculoId === "" ||
-    perfil.vehiculoId == null ||
-    Number.isNaN(perfil.vehiculoId)
-      ? null
-      : Number(perfil.vehiculoId),
-});
 
 export const perfilConductorService = {
   getAll: async (params = {}) => {
-    const query = buildQueryString(params);
-    const response = await fetch(
-      `${API_URL}/perfiles-conductor${query ? `?${query}` : ""}`,
-      {
-        headers: getAuthHeaders(),
-      },
-    );
-    if (!response.ok) throw new Error("Error al cargar perfiles de conductor");
-    return response.json();
+    try {
+      const res = await api.getConductores(params);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar conductores");
+    }
   },
-
   getById: async (id) => {
-    const response = await fetch(`${API_URL}/perfiles-conductor/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al cargar perfil de conductor");
-    return response.json();
+    try {
+      const res = await api.getConductorById(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar conductor");
+    }
   },
-
   getMiPerfil: async () => {
-    const response = await fetch(`${API_URL}/perfiles-conductor/me/perfil`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || "Error al cargar perfil de conductor",
-      );
+    try {
+      const res = await api.getMiPerfilConductor();
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar perfil de conductor");
     }
-    return response.json();
   },
-
   create: async (perfil) => {
-    const response = await fetch(`${API_URL}/perfiles-conductor`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(normalizePerfilConductorPayload(perfil)),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || "Error al crear perfil de conductor",
-      );
+    try {
+      const res = await api.createConductor(normalizePayload(perfil));
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al crear conductor");
     }
-    return response.json();
   },
-
   update: async (id, perfil) => {
-    const response = await fetch(`${API_URL}/perfiles-conductor/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(normalizePerfilConductorPayload(perfil)),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || "Error al actualizar perfil de conductor",
-      );
+    try {
+      const res = await api.updateConductor(id, normalizePayload(perfil, true));
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al actualizar conductor");
     }
-    return response.json();
   },
-
   updateMiPerfil: async (perfil) => {
-    const response = await fetch(`${API_URL}/perfiles-conductor/me/perfil`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(normalizePerfilConductorPayload(perfil)),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || "Error al actualizar perfil de conductor",
-      );
+    try {
+      const res = await api.updateMiPerfilConductor(normalizePayload(perfil));
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al actualizar perfil de conductor");
     }
-    return response.json();
   },
-
   delete: async (id) => {
-    const response = await fetch(`${API_URL}/perfiles-conductor/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || "Error al eliminar perfil de conductor",
-      );
+    try {
+      const res = await api.deleteConductor(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al eliminar conductor");
     }
-    return response.json();
+  },
+  crearConUsuario: async (data) => {
+    try {
+      const res = await api.crearConductorConUsuario(data);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al crear conductor");
+    }
   },
 };

@@ -3,10 +3,12 @@ import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
+import MapaSelector from "../../components/MapaSelector/MapaSelector";
 import { vehiculosService } from "../../services/vehiculos.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import { ROLES } from "../../config/roles";
 import { ESTADOS_VEHICULO } from "../../config/estados";
+import { usePaginacion } from "../../hooks/usePaginacion";
 import "./Vehiculos.css";
 
 function getInitialUser() {
@@ -26,14 +28,6 @@ export default function Vehiculos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [pagination, setPagination] = useState({
-    paginaActual: 1,
-    registrosPorPagina: 10,
-    totalPaginas: 1,
-    totalRegistros: 0,
-    tienePaginaAnterior: false,
-    tienePaginaSiguiente: false,
-  });
   const [editingVehiculo, setEditingVehiculo] = useState(null);
   const [formData, setFormData] = useState({
     placa: "",
@@ -47,61 +41,56 @@ export default function Vehiculos() {
     longitud: "",
   });
 
-  // Pagination & search state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const {
+    currentPage,
+    itemsPerPage,
+    pagination,
+    handlePageChange,
+    handleItemsPerPageChange,
+    actualizarPaginacion,
+    queryParams,
+  } = usePaginacion();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ estadoId: "" });
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const promises = [
-          vehiculosService.getAll({
-            paginaActual: currentPage,
-            registrosPorPagina: itemsPerPage,
-            q: searchTerm || undefined,
-            estadoId: filters.estadoId || undefined,
-            sortBy,
-            sortOrder,
+  const fetchVehiculos = async () => {
+    try {
+      setLoading(true);
+      const promises = [
+        vehiculosService.getAll({
+          ...queryParams,
+          q: searchTerm || undefined,
+          estadoId: filters.estadoId || undefined,
+          sortBy,
+          sortOrder,
+        }),
+      ];
+      if (esAdmin) {
+        promises.push(
+          perfilEntidadService.getAll({
+            paginaActual: 1,
+            registrosPorPagina: 100,
           }),
-        ];
-        if (esAdmin) {
-          promises.push(
-            perfilEntidadService.getAll({
-              paginaActual: 1,
-              registrosPorPagina: 100,
-            }),
-          );
-        }
-        const [vehiculosData, entidadesData] = await Promise.all(promises);
-
-        setVehiculos(vehiculosData.data || []);
-        setPagination(
-          vehiculosData.paginacion || {
-            paginaActual: currentPage,
-            registrosPorPagina: itemsPerPage,
-            totalPaginas: 1,
-            totalRegistros: vehiculosData.data?.length || 0,
-            tienePaginaAnterior: false,
-            tienePaginaSiguiente: false,
-          },
         );
-        if (esAdmin) {
-          setEntidades(entidadesData.data || []);
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
       }
-    };
+      const [vehiculosData, entidadesData] = await Promise.all(promises);
 
-    loadData();
-  }, [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder]);
+      setVehiculos(vehiculosData.data || []);
+      actualizarPaginacion(vehiculosData.paginacion);
+      if (esAdmin) {
+        setEntidades(entidadesData.data || []);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchVehiculos(); }, [queryParams, searchTerm, filters, sortBy, sortOrder]);
 
   const handleNuevoVehiculo = async () => {
     setEditingVehiculo(null);
@@ -148,18 +137,15 @@ export default function Vehiculos() {
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setCurrentPage(1);
   };
 
   const handleFilterChange = (name, value) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
   };
 
   const handleSortChange = (field, order) => {
     setSortBy(field);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
   const estadoOptions = [
@@ -175,22 +161,7 @@ export default function Vehiculos() {
       } else {
         await vehiculosService.create(formData);
       }
-      setCurrentPage(1);
-      const data = await vehiculosService.getAll({
-        paginaActual: 1,
-        registrosPorPagina: itemsPerPage,
-      });
-      setVehiculos(data.data || []);
-      setPagination(
-        data.paginacion || {
-          paginaActual: 1,
-          registrosPorPagina: itemsPerPage,
-          totalPaginas: 1,
-          totalRegistros: data.data?.length || 0,
-          tienePaginaAnterior: false,
-          tienePaginaSiguiente: false,
-        },
-      );
+      await fetchVehiculos();
       setModalOpen(false);
       setEditingVehiculo(null);
       setFormData({
@@ -235,22 +206,7 @@ export default function Vehiculos() {
 
     try {
       await vehiculosService.delete(id);
-      setCurrentPage(1);
-      const data = await vehiculosService.getAll({
-        paginaActual: 1,
-        registrosPorPagina: itemsPerPage,
-      });
-      setVehiculos(data.data || []);
-      setPagination(
-        data.paginacion || {
-          paginaActual: 1,
-          registrosPorPagina: itemsPerPage,
-          totalPaginas: 1,
-          totalRegistros: data.data?.length || 0,
-          tienePaginaAnterior: false,
-          tienePaginaSiguiente: false,
-        },
-      );
+      await fetchVehiculos();
     } catch (err) {
       setError(err.message);
     }
@@ -273,16 +229,6 @@ export default function Vehiculos() {
   ];
 
   const vehiculosPaginados = vehiculos;
-
-  if (loading)
-    return (
-      <div className="vehiculos-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando vehículos...</p>
-        </div>
-      </div>
-    );
 
   return (
     <div className="vehiculos-container">
@@ -320,19 +266,26 @@ export default function Vehiculos() {
         onSortChange={handleSortChange}
       />
         <div className="bg-white rounded-lg shadow-sm">
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando vehículos...</p>
+            </div>
+          ) : (
+            <>
           {/* Desktop Table */}
           <div className="desktop-table">
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Placa</th>
-                  <th>Marca</th>
-                  <th>Modelo</th>
-                  <th>Color</th>
-                  <th>Capacidad</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
+                  <th title="Identificador único del vehículo">ID</th>
+                  <th title="Placa del vehículo">Placa</th>
+                  <th title="Marca del vehículo">Marca</th>
+                  <th title="Modelo del vehículo">Modelo</th>
+                  <th title="Color del vehículo">Color</th>
+                  <th title="Número máximo de pasajeros">Capacidad</th>
+                  <th title="Estado actual del vehículo">Estado</th>
+                  <th title="Opciones disponibles para este registro">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -414,19 +367,20 @@ export default function Vehiculos() {
               <div className="mobile-empty">No hay vehículos disponibles</div>
             )}
           </div>
+            </>
+          )}
         </div>
 
+        {!loading && (
         <Pagination
           currentPage={currentPage}
-          totalPages={pagination.totalPaginas || 1}
-          totalItems={pagination.totalRegistros || vehiculos.length}
+          totalPages={pagination?.totalPaginas || 1}
+          totalItems={pagination?.totalRegistros || vehiculos.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(n) => {
-            setItemsPerPage(n);
-            setCurrentPage(1);
-          }}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
+        )}
       </div>
 
       <Modal
@@ -607,54 +561,50 @@ export default function Vehiculos() {
             </select>
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "0.5rem",
-                fontWeight: "500",
-              }}
-            >
-              Latitud (opcional)
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+              Ubicación — haz clic en el mapa
             </label>
-            <input
-              type="number"
-              step="any"
-              value={formData.latitud}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData({
-                  ...formData,
-                  latitud: value === "" ? "" : parseFloat(value),
-                });
-              }}
-              className="input"
-              style={{ width: "100%" }}
+            <MapaSelector
+              latitud={formData.latitud || null}
+              longitud={formData.longitud || null}
+              onCoordenadasChange={(lat, lng) =>
+                setFormData({ ...formData, latitud: lat, longitud: lng })
+              }
             />
           </div>
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "0.5rem",
-                fontWeight: "500",
-              }}
-            >
-              Longitud (opcional)
-            </label>
-            <input
-              type="number"
-              step="any"
-              value={formData.longitud}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData({
-                  ...formData,
-                  longitud: value === "" ? "" : parseFloat(value),
-                });
-              }}
-              className="input"
-              style={{ width: "100%" }}
-            />
+          <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem" }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+                Latitud
+              </label>
+              <input
+                type="number"
+                step="any"
+                value={formData.latitud}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({ ...formData, latitud: isNaN(parseFloat(value)) ? "" : parseFloat(value) });
+                }}
+                className="input"
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+                Longitud
+              </label>
+              <input
+                type="number"
+                step="any"
+                value={formData.longitud}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({ ...formData, longitud: isNaN(parseFloat(value)) ? "" : parseFloat(value) });
+                }}
+                className="input"
+                style={{ width: "100%" }}
+              />
+            </div>
           </div>
           {error && <p className="error">{error}</p>}
           <div

@@ -6,6 +6,7 @@ import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { horariosService } from "../../services/horarios.service";
 import { rutasService } from "../../services/rutas.service";
 import { vehiculosService } from "../../services/vehiculos.service";
+import { usePaginacion } from "../../hooks/usePaginacion";
 
 const frecuenciaOptions = [
   { value: "", label: "Sin frecuencia definida" },
@@ -47,43 +48,33 @@ export default function Horarios() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingHorario, setEditingHorario] = useState(null);
-  const [pagination, setPagination] = useState({
-    paginaActual: 1,
-    registrosPorPagina: 10,
-    totalPaginas: 1,
-    totalRegistros: 0,
-    tienePaginaAnterior: false,
-    tienePaginaSiguiente: false,
-  });
   const [formData, setFormData] = useState(emptyForm);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const {
+    currentPage,
+    itemsPerPage,
+    pagination,
+    handlePageChange,
+    handleItemsPerPageChange,
+    actualizarPaginacion,
+    queryParams,
+  } = usePaginacion();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
-  const fetchHorarios = async (page = currentPage, limit = itemsPerPage, q = searchTerm) => {
+  const fetchHorarios = async () => {
     try {
       setLoading(true);
       const data = await horariosService.getAll({
-        paginaActual: page,
-        registrosPorPagina: limit,
-        q: q || undefined,
+        ...queryParams,
+        q: searchTerm || undefined,
         sortBy,
         sortOrder,
       });
       setHorarios(data.data || []);
-      setPagination(
-        data.paginacion || {
-          paginaActual: page,
-          registrosPorPagina: limit,
-          totalPaginas: 1,
-          totalRegistros: data.data?.length || 0,
-          tienePaginaAnterior: false,
-          tienePaginaSiguiente: false,
-        },
-      );
+      actualizarPaginacion(data.paginacion);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -117,18 +108,16 @@ export default function Horarios() {
   }, []);
 
   useEffect(() => {
-    fetchHorarios(currentPage, itemsPerPage, searchTerm);
-  }, [currentPage, itemsPerPage, searchTerm, sortBy, sortOrder]);
+    fetchHorarios();
+  }, [queryParams, searchTerm, sortBy, sortOrder]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setCurrentPage(1);
   };
 
   const handleSortChange = (field, order) => {
     setSortBy(field);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
   const handleNuevo = () => {
@@ -161,8 +150,7 @@ export default function Horarios() {
         await horariosService.create(formData);
       }
       setError("");
-      setCurrentPage(1);
-      await fetchHorarios(1, itemsPerPage);
+      await fetchHorarios();
       setModalOpen(false);
       setEditingHorario(null);
       setFormData(emptyForm);
@@ -185,8 +173,7 @@ export default function Horarios() {
 
     try {
       await horariosService.delete(id);
-      setCurrentPage(1);
-      await fetchHorarios(1, itemsPerPage);
+      await fetchHorarios();
     } catch (err) {
       setError(err.message);
     }
@@ -210,17 +197,6 @@ export default function Horarios() {
     { value: "id", label: "ID" },
     { value: "horaSalida", label: "Hora de salida" }
   ];
-
-  if (loading) {
-    return (
-      <div className="rutas-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando horarios...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="rutas-container">
@@ -247,17 +223,24 @@ export default function Horarios() {
       />
 
         <div className="bg-white rounded-lg shadow-sm">
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando horarios...</p>
+            </div>
+          ) : (
+            <>
           <div className="desktop-table">
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Ruta</th>
-                  <th>Vehículo</th>
-                  <th>Hora de salida</th>
-                  <th>Frecuencia</th>
-                  <th>Días</th>
-                  <th>Acciones</th>
+                  <th title="Identificador único del horario">ID</th>
+                  <th title="Nombre de la ruta asociada">Ruta</th>
+                  <th title="Vehículo asignado a este horario">Vehículo</th>
+                  <th title="Hora de salida programada">Hora de salida</th>
+                  <th title="Intervalo de tiempo entre cada salida">Frecuencia</th>
+                  <th title="Días de la semana en que aplica el horario">Días</th>
+                  <th title="Opciones disponibles para este registro">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -332,19 +315,20 @@ export default function Horarios() {
               <div className="mobile-empty">No hay horarios disponibles</div>
             )}
           </div>
+            </>
+          )}
         </div>
 
+        {!loading && (
         <Pagination
           currentPage={currentPage}
-          totalPages={pagination.totalPaginas || 1}
-          totalItems={pagination.totalRegistros || horarios.length}
+          totalPages={pagination?.totalPaginas || 1}
+          totalItems={pagination?.totalRegistros || horarios.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(value) => {
-            setItemsPerPage(value);
-            setCurrentPage(1);
-          }}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
+        )}
       </div>
 
       <Modal
