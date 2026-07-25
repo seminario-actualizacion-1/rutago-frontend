@@ -109,7 +109,7 @@ export default function PerfilPasajero({ perfil, onRefresh, tipoDocumentoOptions
         >
           {(tipoDocumentoOptions || []).map((td) => (
             <option key={td.id} value={td.id}>
-              {td.abreviatura} — {td.descripcion}
+               {td.nombre} — {td.descripcion}
             </option>
           ))}
         </select>

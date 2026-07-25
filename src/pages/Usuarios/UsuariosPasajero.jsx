@@ -1,4 +1,15 @@
+import { useState, useEffect } from "react";
+import api from "../../api/axios";
+
 export default function UsuariosPasajero({ formData, onChange }) {
+  const [tiposDocumento, setTiposDocumento] = useState([]);
+
+  useEffect(() => {
+    api.get("/tipos-documento").then((res) => {
+      if (res.data?.success) setTiposDocumento(res.data.data);
+    }).catch(() => {});
+  }, []);
+
   return (
     <>
       <div style={{ marginBottom: "1rem" }}>
@@ -30,11 +41,11 @@ export default function UsuariosPasajero({ formData, onChange }) {
           style={{ width: "100%" }}
         >
           <option value="">Seleccionar</option>
-          <option value="1">CC — Cédula de Ciudadanía</option>
-          <option value="2">TI — Tarjeta de Identidad</option>
-          <option value="3">CE — Cédula de Extranjería</option>
-          <option value="4">NIT — Número de Identificación Tributaria</option>
-          <option value="5">PASAPORTE — Pasaporte</option>
+          {tiposDocumento.map((td) => (
+            <option key={td.id} value={td.id}>
+              {td.nombre}
+            </option>
+          ))}
         </select>
       </div>
       <div style={{ marginBottom: "1rem" }}>
