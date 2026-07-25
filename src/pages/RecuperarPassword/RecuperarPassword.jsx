@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import api from "../../api";
+import { Link, useNavigate } from "react-router-dom";
+import { usuariosService } from "../../services/usuarios.service";
 import Input from "../../components/Input/Input";
 import Button from "../../components/Button/Button";
 import Card from "../../components/Card/Card";
@@ -10,6 +10,7 @@ function RecuperarPassword() {
   const [correo, setCorreo] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,9 +18,9 @@ function RecuperarPassword() {
     setMensaje("");
 
     try {
-      await api.post("/usuarios/recuperar-password", { correo });
+      await usuariosService.solicitarRecuperacion(correo);
       setMensaje("Si el correo está registrado, recibirás instrucciones.");
-      setTimeout(() => (window.location.href = "/"), 3000);
+      setTimeout(() => navigate("/"), 3000);
     } catch {
       setMensaje("Si el correo está registrado, recibirás instrucciones.");
     } finally {

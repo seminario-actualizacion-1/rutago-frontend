@@ -32,6 +32,7 @@
 
 .desktop-table {
     display: block;
+    overflow-x: auto;
 }
 
 @media (max-width: 767px) {
@@ -115,6 +116,15 @@
     font-size: 0.75rem;
     font-weight: 700;
     color: #1f2937;
+}
+
+.mobile-card-actions {
+    padding-top: 0.75rem;
+    border-top: 1px solid #f3f4f6;
+}
+
+.mobile-card-actions .actions-menu-select {
+    width: 100%;
 }
 
 .mobile-empty {
@@ -305,4 +315,67 @@
 
 .font-medium {
     font-weight: 500;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.viaje-detalle-modal {
+    max-width: 600px;
+}
+
+.detalle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 767px) {
+    .detalle-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.detalle-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detalle-field label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.detalle-field span {
+    font-size: 0.875rem;
+    color: #1f2937;
+}
+
+.detalle-sub {
+    font-size: 0.75rem !important;
+    color: #6b7280 !important;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.375rem;
+}
+
+.form-group .input {
+    width: 100%;
 }

@@ -20,7 +20,7 @@ const menus = {
   1: {
     titulo: "Administrador",
     modulos: [
-      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard },
+      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
       { to: "/perfil", label: "Mi perfil", icon: User },
       { to: "/usuarios", label: "Usuarios", icon: Users },
       { to: "/pasajeros", label: "Pasajeros", icon: UserCheck },
@@ -37,7 +37,7 @@ const menus = {
   2: {
     titulo: "Conductor",
     modulos: [
-      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard },
+      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
       { to: "/perfil", label: "Mi perfil", icon: User },
       { to: "/viajes", label: "Mis viajes", icon: Navigation },
     ],
@@ -45,15 +45,15 @@ const menus = {
   3: {
     titulo: "Pasajero",
     modulos: [
-      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard },
+      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
       { to: "/perfil", label: "Mi perfil", icon: User },
-      { to: "/viajes", label: "Solicitar viaje", icon: Navigation },
+      { to: "/viajes", label: "Mis viajes", icon: Navigation, end: true },
     ],
   },
   4: {
     titulo: "Entidad Externa",
     modulos: [
-      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard },
+      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
       { to: "/perfil", label: "Mi perfil", icon: User },
       { to: "/vehiculos", label: "Vehículos", icon: Truck },
     ],
@@ -87,7 +87,7 @@ export default function Sidebar({ rol }) {
               className={({ isActive }) =>
                 isActive ? styles.linkActive : styles.link
               }
-              end={item.to === "/dashboard"}
+              end={item.end}
               title={sidebarCollapsed ? item.label : undefined}
             >
               <item.icon size={20} className={styles.icon} />

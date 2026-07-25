@@ -5,6 +5,7 @@ import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { barriosService } from "../../services/barrios.service";
 import { comunasService } from "../../services/comunas.service";
+import { usePaginacion } from "../../hooks/usePaginacion";
 import "./Barrios.css";
 
 export default function Barrios() {
@@ -14,49 +15,38 @@ export default function Barrios() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBarrio, setEditingBarrio] = useState(null);
-  const [pagination, setPagination] = useState({
-    paginaActual: 1,
-    registrosPorPagina: 10,
-    totalPaginas: 1,
-    totalRegistros: 0,
-    tienePaginaAnterior: false,
-    tienePaginaSiguiente: false,
-  });
   const [formData, setFormData] = useState({
     nombre: "",
     comunaId: "",
   });
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const {
+    currentPage,
+    itemsPerPage,
+    pagination,
+    handlePageChange,
+    handleItemsPerPageChange,
+    actualizarPaginacion,
+    queryParams,
+  } = usePaginacion();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ comunaId: "" });
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
-  const fetchBarrios = async (page = currentPage, limit = itemsPerPage, q = searchTerm, comunaId = filters.comunaId) => {
+  const fetchBarrios = async () => {
     try {
       setLoading(true);
       const data = await barriosService.getAll({
-        paginaActual: page,
-        registrosPorPagina: limit,
-        q: q || undefined,
-        ...(comunaId && { comunaId }),
+        ...queryParams,
+        q: searchTerm || undefined,
+        ...(filters.comunaId && { comunaId: filters.comunaId }),
         sortBy,
         sortOrder,
       });
       setBarrios(data.data || []);
-      setPagination(
-        data.paginacion || {
-          paginaActual: page,
-          registrosPorPagina: limit,
-          totalPaginas: 1,
-          totalRegistros: data.data?.length || 0,
-          tienePaginaAnterior: false,
-          tienePaginaSiguiente: false,
-        },
-      );
+      actualizarPaginacion(data.paginacion);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -73,22 +63,16 @@ export default function Barrios() {
     }
   };
 
-  useEffect(() => {
-    fetchComunas();
-  }, []);
+  useEffect(() => { fetchComunas(); }, []);
 
-  useEffect(() => {
-    fetchBarrios(currentPage, itemsPerPage, searchTerm, filters.comunaId || undefined);
-  }, [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder]);
+  useEffect(() => { fetchBarrios(); }, [queryParams, searchTerm, filters, sortBy, sortOrder]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setCurrentPage(1);
   };
 
   const handleFilterChange = (name, value) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
   };
 
   const sortOptions = [
@@ -100,7 +84,6 @@ export default function Barrios() {
   const handleSortChange = (field, order) => {
     setSortBy(field);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
   const handleEditar = (barrio) => {
@@ -120,14 +103,10 @@ export default function Barrios() {
       } else {
         await barriosService.create(formData);
       }
-      setCurrentPage(1);
-      await fetchBarrios(1, itemsPerPage, searchTerm, filters.comunaId || undefined);
+      await fetchBarrios();
       setModalOpen(false);
       setEditingBarrio(null);
-      setFormData({
-        nombre: "",
-        comunaId: "",
-      });
+      setFormData({ nombre: "", comunaId: "" });
     } catch (err) {
       setError(err.message);
     }
@@ -137,21 +116,14 @@ export default function Barrios() {
     setError("");
     setModalOpen(false);
     setEditingBarrio(null);
-    setFormData({
-      nombre: "",
-      comunaId: "",
-    });
+    setFormData({ nombre: "", comunaId: "" });
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este barrio?")) {
-      return;
-    }
-
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este barrio?")) return;
     try {
       await barriosService.delete(id);
-      setCurrentPage(1);
-      await fetchBarrios(1, itemsPerPage, searchTerm, filters.comunaId || undefined);
+      await fetchBarrios();
     } catch (err) {
       setError(err.message);
     }
@@ -161,27 +133,6 @@ export default function Barrios() {
     const comuna = comunas.find((c) => c.id === comunaId);
     return comuna ? comuna.nombre : "Sin comuna";
   };
-
-  const barriosPaginados = barrios;
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
-
-  if (loading)
-    return (
-      <div className="barrios-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando barrios...</p>
-        </div>
-      </div>
-    );
 
   return (
     <div className="barrios-container">
@@ -224,20 +175,27 @@ export default function Barrios() {
         onSortChange={handleSortChange}
       />
         <div className="bg-white rounded-lg shadow-sm">
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando barrios...</p>
+            </div>
+          ) : (
+            <>
           {/* Desktop Table */}
           <div className="desktop-table">
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Comuna</th>
-                  <th>Acciones</th>
+                  <th title="Identificador único del barrio">ID</th>
+                  <th title="Nombre del barrio">Nombre</th>
+                  <th title="Comuna a la que pertenece el barrio">Comuna</th>
+                  <th title="Opciones disponibles para este registro">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {barriosPaginados.length > 0 ? (
-                  barriosPaginados.map((barrio) => (
+                {barrios.length > 0 ? (
+                  barrios.map((barrio) => (
                     <tr key={barrio.id}>
                       <td>{barrio.id}</td>
                       <td>
@@ -265,9 +223,9 @@ export default function Barrios() {
 
           {/* Mobile Cards */}
           <div className="mobile-cards">
-            {barriosPaginados.length > 0 ? (
+            {barrios.length > 0 ? (
               <div className="mobile-cards-list">
-                {barriosPaginados.map((barrio) => (
+                {barrios.map((barrio) => (
                   <div key={barrio.id} className="mobile-card">
                     <div className="mobile-card-header">
                       <div className="mobile-card-info">
@@ -290,16 +248,20 @@ export default function Barrios() {
               <div className="mobile-empty">No hay barrios disponibles</div>
             )}
           </div>
+            </>
+          )}
         </div>
 
+        {!loading && (
         <Pagination
           currentPage={currentPage}
-          totalPages={pagination.totalPaginas || 1}
-          totalItems={pagination.totalRegistros || barrios.length}
+          totalPages={pagination?.totalPaginas || 1}
+          totalItems={pagination?.totalRegistros || barrios.length}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
           onItemsPerPageChange={handleItemsPerPageChange}
         />
+        )}
       </div>
 
       <Modal
@@ -314,71 +276,20 @@ export default function Barrios() {
           }}
         >
           <div style={{ marginBottom: "1rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "0.5rem",
-                fontWeight: "500",
-              }}
-            >
-              Nombre
-            </label>
-            <input
-              type="text"
-              value={formData.nombre}
-              onChange={(e) =>
-                setFormData({ ...formData, nombre: e.target.value })
-              }
-              className="input"
-              style={{ width: "100%" }}
-              required
-            />
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Nombre</label>
+            <input type="text" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className="input" style={{ width: "100%" }} required />
           </div>
           <div style={{ marginBottom: "1.5rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "0.5rem",
-                fontWeight: "500",
-              }}
-            >
-              Comuna
-            </label>
-            <select
-              value={formData.comunaId}
-              onChange={(e) =>
-                setFormData({ ...formData, comunaId: parseInt(e.target.value) })
-              }
-              className="input"
-              style={{ width: "100%" }}
-              required
-            >
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Comuna</label>
+            <select value={formData.comunaId} onChange={(e) => setFormData({ ...formData, comunaId: parseInt(e.target.value) })} className="input" style={{ width: "100%" }} required>
               <option value="">Seleccionar comuna</option>
-              {comunas.map((comuna) => (
-                <option key={comuna.id} value={comuna.id}>
-                  {comuna.nombre}
-                </option>
-              ))}
+              {comunas.map((comuna) => (<option key={comuna.id} value={comuna.id}>{comuna.nombre}</option>))}
             </select>
           </div>
-      {error && <p className="error">{error}</p>}
-          <div
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              justifyContent: "flex-end",
-            }}
-          >
-            <button
-              type="button"
-              onClick={handleCerrarModal}
-              className="button button-outline"
-            >
-              Cancelar
-            </button>
-            <button type="submit" className="button button-primary">
-              Guardar
-            </button>
+          {error && <p className="error">{error}</p>}
+          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+            <button type="button" onClick={handleCerrarModal} className="button button-outline">Cancelar</button>
+            <button type="submit" className="button button-primary">Guardar</button>
           </div>
         </form>
       </Modal>

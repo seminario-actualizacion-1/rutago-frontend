@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { usuariosService } from "../../services/usuarios.service";
-import { conductoresService } from "../../services/conductores.service";
+import { perfilConductorService } from "../../services/perfilConductor.service";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 import { vehiculosService } from "../../services/vehiculos.service";
 import { viajesService } from "../../services/viajes.service";
-import { entidadesService } from "../../services/entidades.service";
+import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import { barriosService } from "../../services/barrios.service";
 import { comunasService } from "../../services/comunas.service";
 import { rutasService } from "../../services/rutas.service";
@@ -13,23 +13,27 @@ import { horariosService } from "../../services/horarios.service";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    let mounted = true;
+    (async () => {
       try {
+        setLoading(true);
         const [users, conductores, pasajeros, vehiculos, viajes, entidades, barrios, comunas, rutas, horarios] =
           await Promise.all([
             usuariosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            conductoresService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
+            perfilConductorService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
             perfilPasajeroService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
             vehiculosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
             viajesService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            entidadesService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
+            perfilEntidadService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
             barriosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
             comunasService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
             rutasService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
             horariosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
           ]);
+        if (!mounted) return;
         setStats({
           usuarios: users.paginacion?.totalRegistros || users.data?.length || 0,
           conductores: conductores.paginacion?.totalRegistros || conductores.data?.length || 0,
@@ -43,10 +47,13 @@ export default function AdminDashboard() {
           horarios: horarios.paginacion?.totalRegistros || horarios.data?.length || 0,
         });
       } catch (error) {
+        if (!mounted) return;
         console.error("Error al cargar estadísticas del dashboard:", error);
+      } finally {
+        if (mounted) setLoading(false);
       }
-    };
-    fetchStats();
+    })();
+    return () => { mounted = false; };
   }, []);
 
   const modulos = [
@@ -61,6 +68,18 @@ export default function AdminDashboard() {
     { nombre: "Viajes", ruta: "/viajes", cantidad: stats?.viajes },
     { nombre: "Entidades", ruta: "/entidades", cantidad: stats?.entidades },
   ];
+
+  if (loading) {
+    return (
+      <>
+        <div className="page-header"><h1>Panel de Administración</h1></div>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando estadísticas...</p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

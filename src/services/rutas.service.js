@@ -1,24 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+import * as api from "../api/rutas";
 
-const buildQueryString = (params = {}) => {
-  const searchParams = new URLSearchParams();
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      searchParams.append(key, value);
-    }
-  });
-
-  return searchParams.toString();
-};
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+const extractError = (err, fallback) =>
+  new Error(err.response?.data?.message || err.message || fallback);
 
 const normalizeRutaPayload = (ruta) => ({
   ...ruta,
@@ -48,60 +31,43 @@ const normalizeRutaPayload = (ruta) => ({
 
 export const rutasService = {
   getAll: async (params = {}) => {
-    const query = buildQueryString(params);
-    const response = await fetch(
-      `${API_URL}/rutas${query ? `?${query}` : ""}`,
-      {
-        headers: getAuthHeaders(),
-      },
-    );
-    if (!response.ok) throw new Error("Error al cargar rutas");
-    return response.json();
+    try {
+      const res = await api.getRutas(params);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar rutas");
+    }
   },
-
   getById: async (id) => {
-    const response = await fetch(`${API_URL}/rutas/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al cargar ruta");
-    return response.json();
+    try {
+      const res = await api.getRutaById(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar ruta");
+    }
   },
-
   create: async (ruta) => {
-    const response = await fetch(`${API_URL}/rutas`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(normalizeRutaPayload(ruta)),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || "Error al crear ruta");
+    try {
+      const res = await api.createRuta(normalizeRutaPayload(ruta));
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al crear ruta");
     }
-    return response.json();
   },
-
   update: async (id, ruta) => {
-    const response = await fetch(`${API_URL}/rutas/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(normalizeRutaPayload(ruta)),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || "Error al actualizar ruta");
+    try {
+      const res = await api.updateRuta(id, normalizeRutaPayload(ruta));
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al actualizar ruta");
     }
-    return response.json();
   },
-
   delete: async (id) => {
-    const response = await fetch(`${API_URL}/rutas/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || "Error al eliminar ruta");
+    try {
+      const res = await api.deleteRuta(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al eliminar ruta");
     }
-    return response.json();
   },
 };

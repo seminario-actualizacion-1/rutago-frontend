@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePaginacion } from "../../hooks/usePaginacion";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
@@ -9,7 +10,9 @@ import { perfilConductorService } from "../../services/perfilConductor.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
-import { ESTADOS_CONDUCTOR } from "../../config/estados";
+import UsuariosConductor from "./UsuariosConductor";
+import UsuariosPasajero from "./UsuariosPasajero";
+import UsuariosEntidad from "./UsuariosEntidad";
 import "./Usuarios.css";
 
 export default function Usuarios() {
@@ -41,50 +44,33 @@ export default function Usuarios() {
     fechaNacimiento: "",
   });
 
-  const [pagination, setPagination] = useState({
-    paginaActual: 1,
-    registrosPorPagina: 10,
-    totalPaginas: 1,
-    totalRegistros: 0,
-    tienePaginaAnterior: false,
-    tienePaginaSiguiente: false,
-  });
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const {
+    currentPage, itemsPerPage, pagination,
+    handlePageChange, handleItemsPerPageChange,
+    actualizarPaginacion, queryParams, setCurrentPage,
+  } = usePaginacion();
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ rolId: "" });
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
-  const fetchUsuarios = async (page = currentPage, limit = itemsPerPage, q = searchTerm, flt = filters) => {
+  const fetchUsuarios = async () => {
     try {
       setLoading(true);
       const params = {
-        paginaActual: page,
-        registrosPorPagina: limit,
-        q: q || undefined,
+        ...queryParams,
+        q: searchTerm || undefined,
         sortBy,
         sortOrder,
       };
       
-      if (flt.rolId) {
-        params.rolId = flt.rolId;
+      if (filters.rolId) {
+        params.rolId = filters.rolId;
       }
       
       const data = await usuariosService.getAll(params);
       setUsuarios(data.data || []);
-      setPagination(
-        data.paginacion || {
-          paginaActual: page,
-          registrosPorPagina: limit,
-          totalPaginas: 1,
-          totalRegistros: data.data?.length || 0,
-          tienePaginaAnterior: false,
-          tienePaginaSiguiente: false,
-        },
-      );
+      actualizarPaginacion(data.paginacion);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -108,7 +94,7 @@ export default function Usuarios() {
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([
-        fetchUsuarios(currentPage, itemsPerPage, searchTerm, filters),
+        fetchUsuarios(),
         fetchVehiculos(),
       ]);
     };
@@ -118,18 +104,15 @@ export default function Usuarios() {
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setCurrentPage(1);
   };
 
   const handleFilterChange = (name, value) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
   };
 
   const handleSortChange = (field, order) => {
     setSortBy(field);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
   const handleEditar = async (usuario) => {
@@ -166,7 +149,6 @@ export default function Usuarios() {
         nombres: usuarioEditando.nombres,
         apellidos: usuarioEditando.apellidos || "",
         correo: usuarioEditando.correo,
-        contrasena: "",
         rolId: Number(usuarioEditando.rol?.id),
         licenciaConducir:
           usuarioEditando.perfilConductor?.licenciaConducir || "",
@@ -215,6 +197,41 @@ export default function Usuarios() {
         if (editingUsuario.rol?.id !== rolId) {
           await usuariosService.changeRole(usuarioId, rolId);
         }
+      } else if (rolId === 2) {
+        const res = await perfilConductorService.crearConUsuario({
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          correo: formData.correo,
+          contrasena: formData.contrasena,
+          vehiculoId: formData.vehiculoId || null,
+          licenciaConducir: formData.licenciaConducir,
+          estadoId: formData.estadoConductor,
+        });
+        usuarioId = res.data?.usuario?.id;
+      } else if (rolId === 4) {
+        const res = await perfilEntidadService.crearConUsuario({
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          correo: formData.correo,
+          contrasena: formData.contrasena,
+          razonSocial: formData.razonSocial,
+          nit: formData.nit,
+          telefonoContacto: formData.telefonoContacto,
+        });
+        usuarioId = res.data?.usuario?.id;
+      } else if (rolId === 3) {
+        const res = await perfilPasajeroService.crearConUsuario({
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          correo: formData.correo,
+          contrasena: formData.contrasena,
+          telefono: formData.telefono,
+          direccion: formData.direccion,
+          tipoDocumentoId: formData.tipoDocumentoId,
+          numeroDocumento: formData.numeroDocumento,
+          fechaNacimiento: formData.fechaNacimiento || null,
+        });
+        usuarioId = res.data?.usuario?.id;
       } else {
         const usuarioData = {
           nombres: formData.nombres,
@@ -225,78 +242,53 @@ export default function Usuarios() {
         };
         const response = await usuariosService.create(usuarioData);
         usuarioId = response.usuario?.id || response.data?.id || response.id;
-        if (!usuarioId) {
-          throw new Error("No se pudo obtener el ID del usuario creado.");
+      }
+
+      if (!usuarioId && !editingUsuario) {
+        throw new Error("No se pudo obtener el ID del usuario creado.");
+      }
+
+      // En edición, limpiar perfiles que ya no corresponden
+      if (editingUsuario) {
+        if (rolId !== 2 && editingUsuario.perfilConductor) {
+          await perfilConductorService.delete(editingUsuario.perfilConductor.id);
         }
-      }
-
-      if (rolId !== 2 && editingUsuario?.perfilConductor) {
-        await perfilConductorService.delete(editingUsuario.perfilConductor.id);
-      }
-
-      if (rolId !== 4 && editingUsuario?.perfilEntidad) {
-        await perfilEntidadService.delete(editingUsuario.perfilEntidad.id);
-      }
-
-      if (rolId !== 3 && editingUsuario?.perfilPasajero) {
-        await perfilPasajeroService.delete(editingUsuario.perfilPasajero.id);
-      }
-
-      // Guardar perfil adicional según rol
-      if (rolId === 2) {
-        const perfilConductorData = {
-          usuarioId,
-          vehiculoId: formData.vehiculoId || null,
-          licenciaConducir: formData.licenciaConducir,
-          estadoId: formData.estadoConductor,
-        };
-
-        if (editingUsuario && editingUsuario.perfilConductor) {
-          await perfilConductorService.update(
-            editingUsuario.perfilConductor.id,
-            perfilConductorData,
-          );
-        } else {
-          await perfilConductorService.create(perfilConductorData);
+        if (rolId !== 4 && editingUsuario.perfilEntidad) {
+          await perfilEntidadService.delete(editingUsuario.perfilEntidad.id);
         }
-      } else if (rolId === 4) {
-        const perfilEntidadData = {
-          usuarioId,
-          razonSocial: formData.razonSocial,
-          nit: formData.nit,
-          telefonoContacto: formData.telefonoContacto,
-        };
-
-        if (editingUsuario && editingUsuario.perfilEntidad) {
-          await perfilEntidadService.update(
-            editingUsuario.perfilEntidad.id,
-            perfilEntidadData,
-          );
-        } else {
-          await perfilEntidadService.create(perfilEntidadData);
+        if (rolId !== 3 && editingUsuario.perfilPasajero) {
+          await perfilPasajeroService.delete(editingUsuario.perfilPasajero.id);
         }
-      } else if (rolId === 3) {
-        const perfilPasajeroData = {
-          usuarioId,
-          telefono: formData.telefono,
-          direccion: formData.direccion,
-          tipoDocumentoId: formData.tipoDocumentoId,
-          numeroDocumento: formData.numeroDocumento,
-          fechaNacimiento: formData.fechaNacimiento || null,
-        };
 
-        if (editingUsuario && editingUsuario.perfilPasajero) {
-          await perfilPasajeroService.update(
-            editingUsuario.perfilPasajero.id,
-            perfilPasajeroData,
-          );
-        } else {
-          await perfilPasajeroService.create(perfilPasajeroData);
+        // Guardar perfil adicional según rol (solo edición)
+        if (rolId === 2 && editingUsuario.perfilConductor) {
+          await perfilConductorService.update(editingUsuario.perfilConductor.id, {
+            usuarioId,
+            vehiculoId: formData.vehiculoId || null,
+            licenciaConducir: formData.licenciaConducir,
+            estadoId: formData.estadoConductor,
+          });
+        } else if (rolId === 4 && editingUsuario.perfilEntidad) {
+          await perfilEntidadService.update(editingUsuario.perfilEntidad.id, {
+            usuarioId,
+            razonSocial: formData.razonSocial,
+            nit: formData.nit,
+            telefonoContacto: formData.telefonoContacto,
+          });
+        } else if (rolId === 3 && editingUsuario.perfilPasajero) {
+          await perfilPasajeroService.update(editingUsuario.perfilPasajero.id, {
+            usuarioId,
+            telefono: formData.telefono,
+            direccion: formData.direccion,
+            tipoDocumentoId: formData.tipoDocumentoId,
+            numeroDocumento: formData.numeroDocumento,
+            fechaNacimiento: formData.fechaNacimiento || null,
+          });
         }
       }
 
       setCurrentPage(1);
-      await fetchUsuarios(1, itemsPerPage, searchTerm, filters);
+      await fetchUsuarios();
       setModalOpen(false);
       setEditingUsuario(null);
       setFormData({
@@ -370,10 +362,14 @@ export default function Usuarios() {
 
       await usuariosService.delete(usuario.id);
       setCurrentPage(1);
-      await fetchUsuarios(1, itemsPerPage, searchTerm, filters);
+      await fetchUsuarios();
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const handleFieldChange = (name, value) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const rolSeleccionado = Number(formData.rolId);
@@ -407,16 +403,6 @@ export default function Usuarios() {
     { value: "correo", label: "Correo" },
     { value: "rolId", label: "Rol" }
   ];
-
-  if (loading)
-    return (
-      <div className="usuarios-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando usuarios...</p>
-        </div>
-      </div>
-    );
 
   return (
     <div className="usuarios-container">
@@ -483,17 +469,24 @@ export default function Usuarios() {
 
         <div className="usuarios-table-wrapper">
         <div className="bg-white rounded-lg shadow-sm">
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando usuarios...</p>
+            </div>
+          ) : (
+            <>
           {/* Desktop Table */}
           <div className="desktop-table">
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Nombres</th>
-                  <th>Apellidos</th>
-                  <th>Correo</th>
-                  <th>Rol</th>
-                  <th>Acciones</th>
+                  <th title="Identificador único del usuario">ID</th>
+                  <th title="Nombres del usuario">Nombres</th>
+                  <th title="Apellidos del usuario">Apellidos</th>
+                  <th title="Correo electrónico del usuario">Correo</th>
+                  <th title="Rol asignado al usuario en el sistema">Rol</th>
+                  <th title="Opciones disponibles para este registro">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -569,19 +562,20 @@ export default function Usuarios() {
               <div className="mobile-empty">No hay usuarios disponibles</div>
             )}
           </div>
+            </>
+          )}
         </div>
 
+        {!loading && (
         <Pagination
           currentPage={currentPage}
-          totalPages={pagination.totalPaginas || 1}
-          totalItems={pagination.totalRegistros || usuarios.length}
+          totalPages={pagination?.totalPaginas || 1}
+          totalItems={pagination?.totalRegistros || usuarios.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(n) => {
-            setItemsPerPage(n);
-            setCurrentPage(1);
-          }}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
+        )}
       </div>
       </div>
 
@@ -698,222 +692,26 @@ export default function Usuarios() {
             </select>
           </div>
 
-          {/* Campos específicos para Conductor */}
           {rolSeleccionado === 2 && (
-            <>
-              <div style={{ marginBottom: "1rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontWeight: "500",
-                  }}
-                >
-                  Licencia de Conducir
-                </label>
-                <input
-                  type="text"
-                  value={formData.licenciaConducir}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      licenciaConducir: e.target.value,
-                    })
-                  }
-                  className="input"
-                  style={{ width: "100%" }}
-                  required
-                />
-              </div>
-              <div style={{ marginBottom: "1rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontWeight: "500",
-                  }}
-                >
-                  Vehículo
-                </label>
-                <select
-                  value={formData.vehiculoId}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      vehiculoId: parseInt(e.target.value),
-                    })
-                  }
-                  className="input"
-                  style={{ width: "100%" }}
-                >
-                  <option value="">Sin vehículo asignado</option>
-                  {vehiculos.map((vehiculo) => (
-                    <option key={vehiculo.id} value={vehiculo.id}>
-                      {vehiculo.placa} - {vehiculo.marca} {vehiculo.modelo}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontWeight: "500",
-                  }}
-                >
-                  Estado
-                </label>
-                <select
-                  value={formData.estadoConductor}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      estadoConductor: parseInt(e.target.value),
-                    })
-                  }
-                  className="input"
-                  style={{ width: "100%" }}
-                >
-                  <option value="1">Disponible</option>
-                  <option value="2">En viaje</option>
-                  <option value="3">Inactivo</option>
-                </select>
-              </div>
-            </>
+            <UsuariosConductor
+              formData={formData}
+              onChange={handleFieldChange}
+              vehiculos={vehiculos}
+            />
           )}
 
-          {/* Campos específicos para Entidad Externa */}
           {rolSeleccionado === 4 && (
-            <>
-              <div style={{ marginBottom: "1rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontWeight: "500",
-                  }}
-                >
-                  Razón Social
-                </label>
-                <input
-                  type="text"
-                  value={formData.razonSocial}
-                  onChange={(e) =>
-                    setFormData({ ...formData, razonSocial: e.target.value })
-                  }
-                  className="input"
-                  style={{ width: "100%" }}
-                  required
-                />
-              </div>
-              <div style={{ marginBottom: "1rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontWeight: "500",
-                  }}
-                >
-                  NIT
-                </label>
-                <input
-                  type="text"
-                  value={formData.nit}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nit: e.target.value })
-                  }
-                  className="input"
-                  style={{ width: "100%" }}
-                  required
-                />
-              </div>
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    fontWeight: "500",
-                  }}
-                >
-                  Teléfono de Contacto
-                </label>
-                <input
-                  type="text"
-                  value={formData.telefonoContacto}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      telefonoContacto: e.target.value,
-                    })
-                  }
-                  className="input"
-                  style={{ width: "100%" }}
-                  required
-                />
-              </div>
-            </>
+            <UsuariosEntidad
+              formData={formData}
+              onChange={handleFieldChange}
+            />
           )}
 
           {rolSeleccionado === 3 && (
-            <>
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Teléfono</label>
-                <input
-                  type="text"
-                  value={formData.telefono}
-                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                  className="input"
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Dirección</label>
-                <input
-                  type="text"
-                  value={formData.direccion}
-                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                  className="input"
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Tipo de Documento</label>
-                <select
-                  value={formData.tipoDocumentoId}
-                  onChange={(e) => setFormData({ ...formData, tipoDocumentoId: parseInt(e.target.value) || "" })}
-                  className="input"
-                  style={{ width: "100%" }}
-                >
-                  <option value="">Seleccionar</option>
-                  <option value="1">Cédula de Ciudadanía</option>
-                  <option value="2">Tarjeta de Identidad</option>
-                  <option value="3">Cédula de Extranjería</option>
-                  <option value="4">NIT</option>
-                  <option value="5">Pasaporte</option>
-                </select>
-              </div>
-              <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Número de Documento</label>
-                <input
-                  type="text"
-                  value={formData.numeroDocumento}
-                  onChange={(e) => setFormData({ ...formData, numeroDocumento: e.target.value })}
-                  className="input"
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Fecha de Nacimiento</label>
-                <input
-                  type="date"
-                  value={formData.fechaNacimiento}
-                  onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })}
-                  className="input"
-                  style={{ width: "100%" }}
-                />
-              </div>
-            </>
+            <UsuariosPasajero
+              formData={formData}
+              onChange={handleFieldChange}
+            />
           )}
 
           {error && <p className="error">{error}</p>}

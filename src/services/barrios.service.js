@@ -1,80 +1,55 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+import * as api from "../api/barrios";
 
-const buildQueryString = (params = {}) => {
-  const searchParams = new URLSearchParams();
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      searchParams.append(key, value);
-    }
-  });
-
-  return searchParams.toString();
-};
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+const extractError = (err, fallback) =>
+  new Error(err.response?.data?.message || err.message || fallback);
 
 export const barriosService = {
   getAll: async (params = {}) => {
-    const query = buildQueryString(params);
-    const response = await fetch(
-      `${API_URL}/barrios${query ? `?${query}` : ""}`,
-      {
-        headers: getAuthHeaders(),
-      },
-    );
-    if (!response.ok) throw new Error("Error al cargar barrios");
-    return response.json();
+    try {
+      const res = await api.getBarrios(params);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar barrios");
+    }
   },
-
-  getByComuna: async (comunaId) => {
-    const response = await fetch(`${API_URL}/barrios/comuna/${comunaId}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al cargar barrios por comuna");
-    return response.json();
-  },
-
   getById: async (id) => {
-    const response = await fetch(`${API_URL}/barrios/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al cargar barrio");
-    return response.json();
+    try {
+      const res = await api.getBarrioById(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar barrio");
+    }
   },
-
+  getByComuna: async (comunaId) => {
+    try {
+      const res = await api.getBarriosByComuna(comunaId);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar barrios por comuna");
+    }
+  },
   create: async (barrio) => {
-    const response = await fetch(`${API_URL}/barrios`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(barrio),
-    });
-    if (!response.ok) throw new Error("Error al crear barrio");
-    return response.json();
+    try {
+      const res = await api.createBarrio(barrio);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al crear barrio");
+    }
   },
-
   update: async (id, barrio) => {
-    const response = await fetch(`${API_URL}/barrios/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(barrio),
-    });
-    if (!response.ok) throw new Error("Error al actualizar barrio");
-    return response.json();
+    try {
+      const res = await api.updateBarrio(id, barrio);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al actualizar barrio");
+    }
   },
-
   delete: async (id) => {
-    const response = await fetch(`${API_URL}/barrios/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al eliminar barrio");
-    return response.json();
+    try {
+      const res = await api.deleteBarrio(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al eliminar barrio");
+    }
   },
 };

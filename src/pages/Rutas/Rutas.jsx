@@ -3,8 +3,11 @@ import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
+import MapaRutas from "../../components/MapaRutas/MapaRutas";
+import MapaCrearRuta from "../../components/MapaCrearRuta/MapaCrearRuta";
 import { rutasService } from "../../services/rutas.service";
 import { comunasService } from "../../services/comunas.service";
+import { usePaginacion } from "../../hooks/usePaginacion";
 import "./Rutas.css";
 
 export default function Rutas() {
@@ -14,14 +17,15 @@ export default function Rutas() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRuta, setEditingRuta] = useState(null);
-  const [pagination, setPagination] = useState({
-    paginaActual: 1,
-    registrosPorPagina: 10,
-    totalPaginas: 1,
-    totalRegistros: 0,
-    tienePaginaAnterior: false,
-    tienePaginaSiguiente: false,
-  });
+  const {
+    currentPage,
+    itemsPerPage,
+    pagination,
+    handlePageChange,
+    handleItemsPerPageChange,
+    actualizarPaginacion,
+    queryParams,
+  } = usePaginacion();
   const [formData, setFormData] = useState({
     nombre: "",
     origenId: "",
@@ -31,34 +35,22 @@ export default function Rutas() {
     tiempoEstimadoMinutos: "",
   });
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
+  const [vistaMapa, setVistaMapa] = useState(false);
 
-  const fetchRutas = async (page = currentPage, limit = itemsPerPage, q = searchTerm) => {
+  const fetchRutas = async () => {
     try {
       setLoading(true);
       const data = await rutasService.getAll({
-        paginaActual: page,
-        registrosPorPagina: limit,
-        q: q || undefined,
+        ...queryParams,
+        q: searchTerm || undefined,
         sortBy,
         sortOrder,
       });
       setRutas(data.data || []);
-      setPagination(
-        data.paginacion || {
-          paginaActual: page,
-          registrosPorPagina: limit,
-          totalPaginas: 1,
-          totalRegistros: data.data?.length || 0,
-          tienePaginaAnterior: false,
-          tienePaginaSiguiente: false,
-        },
-      );
+      actualizarPaginacion(data.paginacion);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -72,8 +64,7 @@ export default function Rutas() {
         setLoading(true);
         const [rutasData, comunasData] = await Promise.all([
           rutasService.getAll({
-            paginaActual: currentPage,
-            registrosPorPagina: itemsPerPage,
+            ...queryParams,
             q: searchTerm || undefined,
             sortBy,
             sortOrder,
@@ -85,16 +76,7 @@ export default function Rutas() {
         ]);
 
         setRutas(rutasData.data || []);
-        setPagination(
-          rutasData.paginacion || {
-            paginaActual: currentPage,
-            registrosPorPagina: itemsPerPage,
-            totalPaginas: 1,
-            totalRegistros: rutasData.data?.length || 0,
-            tienePaginaAnterior: false,
-            tienePaginaSiguiente: false,
-          },
-        );
+        actualizarPaginacion(rutasData.paginacion);
         setComunas(comunasData.data || []);
       } catch (err) {
         setError(err.message);
@@ -108,13 +90,11 @@ export default function Rutas() {
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setCurrentPage(1);
   };
 
   const handleSortChange = (field, order) => {
     setSortBy(field);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
   const handleEditar = (ruta) => {
@@ -138,8 +118,7 @@ export default function Rutas() {
       } else {
         await rutasService.create(formData);
       }
-      setCurrentPage(1);
-      await fetchRutas(1, itemsPerPage);
+      await fetchRutas();
       setModalOpen(false);
       setEditingRuta(null);
       setFormData({
@@ -176,8 +155,7 @@ export default function Rutas() {
 
     try {
       await rutasService.delete(id);
-      setCurrentPage(1);
-      await fetchRutas(1, itemsPerPage);
+      await fetchRutas();
     } catch (err) {
       setError(err.message);
     }
@@ -195,16 +173,6 @@ export default function Rutas() {
     { value: "nombre", label: "Nombre" }
   ];
 
-  if (loading)
-    return (
-      <div className="rutas-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando rutas...</p>
-        </div>
-      </div>
-    );
-
   return (
     <div className="rutas-container">
       <div className="page-header">
@@ -212,26 +180,39 @@ export default function Rutas() {
       </div>
       {error && !modalOpen && <p className="error">{error}</p>}
 
-      <div className="table-container">
-        <div className="table-actions" style={{ marginBottom: "1rem" }}>
-          <button
-            onClick={() => {
-              setEditingRuta(null);
-              setFormData({
-                nombre: "",
-                origenId: "",
-                destinoId: "",
-                descripcion: "",
-                distanciaKm: "",
-                tiempoEstimadoMinutos: "",
-              });
-              setModalOpen(true);
-            }}
-            className="button button-primary"
-          >
-            + Nueva Ruta
-          </button>
+      <div className="table-actions" style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}>
+        <button
+          onClick={() => {
+            setEditingRuta(null);
+            setFormData({
+              nombre: "",
+              origenId: "",
+              destinoId: "",
+              descripcion: "",
+              distanciaKm: "",
+              tiempoEstimadoMinutos: "",
+            });
+            setModalOpen(true);
+          }}
+          className="button button-primary"
+        >
+          + Nueva Ruta
+        </button>
+        <button
+          onClick={() => setVistaMapa(!vistaMapa)}
+          className="button button-outline"
+        >
+          {vistaMapa ? "Ver Tabla" : "Ver Mapa"}
+        </button>
+      </div>
+
+      {vistaMapa ? (
+        <div className="bg-white rounded-lg shadow-sm" style={{ padding: "1rem" }}>
+          <h3 style={{ marginBottom: "0.75rem" }}>Mapa de Rutas — Buenaventura</h3>
+          <MapaRutas rutas={rutas} />
         </div>
+      ) : (
+      <div className="table-container">
 
       <TableToolbar
         searchValue={searchTerm}
@@ -243,18 +224,25 @@ export default function Rutas() {
         onSortChange={handleSortChange}
       />
         <div className="bg-white rounded-lg shadow-sm">
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando rutas...</p>
+            </div>
+          ) : (
+            <>
           {/* Desktop Table */}
           <div className="desktop-table">
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Origen</th>
-                  <th>Destino</th>
-                  <th>Distancia (km)</th>
-                  <th>Tiempo (min)</th>
-                  <th>Acciones</th>
+                  <th title="Identificador único de la ruta">ID</th>
+                  <th title="Nombre descriptivo de la ruta">Nombre</th>
+                  <th title="Comuna de origen de la ruta">Origen</th>
+                  <th title="Comuna de destino de la ruta">Destino</th>
+                  <th title="Distancia total de la ruta en kilómetros">Distancia (km)</th>
+                  <th title="Tiempo estimado de recorrido en minutos">Tiempo (min)</th>
+                  <th title="Opciones disponibles para este registro">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -323,20 +311,21 @@ export default function Rutas() {
               <div className="mobile-empty">No hay rutas disponibles</div>
             )}
           </div>
+            </>
+          )}
         </div>
 
+        {!loading && (
         <Pagination
           currentPage={currentPage}
-          totalPages={pagination.totalPaginas || 1}
-          totalItems={pagination.totalRegistros || rutas.length}
+          totalPages={pagination?.totalPaginas || 1}
+          totalItems={pagination?.totalRegistros || rutas.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(n) => {
-            setItemsPerPage(n);
-            setCurrentPage(1);
-          }}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
-      </div>
+        )}
+      </div>)}
 
       <Modal
         isOpen={modalOpen}
@@ -371,62 +360,12 @@ export default function Rutas() {
             />
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "0.5rem",
-                fontWeight: "500",
-              }}
-            >
-              Origen
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+              Selecciona origen y destino en el mapa
             </label>
-            <select
-              value={formData.origenId}
-              onChange={(e) =>
-                setFormData({ ...formData, origenId: parseInt(e.target.value) })
-              }
-              className="input"
-              style={{ width: "100%" }}
-              required
-            >
-              <option value="">Seleccionar origen</option>
-              {comunas.map((comuna) => (
-                <option key={comuna.id} value={comuna.id}>
-                  {comuna.nombre}
-                </option>
-              ))}
-            </select>
+            <MapaCrearRuta comunas={comunas} formData={formData} setFormData={setFormData} />
           </div>
-          <div style={{ marginBottom: "1rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "0.5rem",
-                fontWeight: "500",
-              }}
-            >
-              Destino
-            </label>
-            <select
-              value={formData.destinoId}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  destinoId: parseInt(e.target.value),
-                })
-              }
-              className="input"
-              style={{ width: "100%" }}
-              required
-            >
-              <option value="">Seleccionar destino</option>
-              {comunas.map((comuna) => (
-                <option key={comuna.id} value={comuna.id}>
-                  {comuna.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
+
           <div style={{ marginBottom: "1rem" }}>
             <label
               style={{
@@ -463,7 +402,7 @@ export default function Rutas() {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  distanciaKm: parseFloat(e.target.value),
+                  distanciaKm: isNaN(parseFloat(e.target.value)) ? "" : parseFloat(e.target.value),
                 })
               }
               className="input"
@@ -486,7 +425,7 @@ export default function Rutas() {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  tiempoEstimadoMinutos: parseInt(e.target.value),
+                  tiempoEstimadoMinutos: isNaN(parseInt(e.target.value, 10)) ? "" : parseInt(e.target.value, 10),
                 })
               }
               className="input"

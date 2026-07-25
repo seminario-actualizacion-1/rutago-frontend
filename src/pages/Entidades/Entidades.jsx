@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { usePaginacion } from "../../hooks/usePaginacion";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
-import { entidadesService } from "../../services/entidades.service";
+import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import { usuariosService } from "../../services/usuarios.service";
 import "./Entidades.css";
 
@@ -28,64 +29,49 @@ export default function Entidades() {
   const [editingEntidad, setEditingEntidad] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [pagination, setPagination] = useState({
-    paginaActual: 1,
-    registrosPorPagina: 10,
-    totalPaginas: 1,
-    totalRegistros: 0,
-    tienePaginaAnterior: false,
-    tienePaginaSiguiente: false,
-  });
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [refreshKey, setRefreshKey] = useState(0);
+  const {
+    currentPage,
+    itemsPerPage,
+    pagination,
+    handlePageChange,
+    handleItemsPerPageChange,
+    actualizarPaginacion,
+    queryParams,
+  } = usePaginacion();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
-  useEffect(() => {
-    const loadEntidades = async () => {
-      try {
-        setLoading(true);
-        const data = await entidadesService.getAll({
-          paginaActual: currentPage,
-          registrosPorPagina: itemsPerPage,
-          q: searchTerm || undefined,
-          sortBy,
-          sortOrder,
-        });
-        setEntidades(data.data || []);
-        setPagination(
-          data.paginacion || {
-            paginaActual: currentPage,
-            registrosPorPagina: itemsPerPage,
-            totalPaginas: 1,
-            totalRegistros: data.data?.length || 0,
-            tienePaginaAnterior: false,
-            tienePaginaSiguiente: false,
-          },
-        );
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchEntidades = async () => {
+    try {
+      setLoading(true);
+      const data = await perfilEntidadService.getAll({
+        ...queryParams,
+        q: searchTerm || undefined,
+        sortBy,
+        sortOrder,
+      });
+      setEntidades(data.data || []);
+      actualizarPaginacion(data.paginacion);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadEntidades();
-  }, [currentPage, itemsPerPage, searchTerm, refreshKey, sortBy, sortOrder]);
+  useEffect(() => {
+    fetchEntidades();
+  }, [currentPage, itemsPerPage, searchTerm, refreshKey, sortBy, sortOrder, queryParams.paginaActual, queryParams.registrosPorPagina]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setCurrentPage(1);
   };
 
   const handleSortChange = (field, order) => {
     setSortBy(field);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
   const handleNueva = () => {
@@ -101,7 +87,6 @@ export default function Entidades() {
       nombres: entidad.usuario?.nombres || "",
       apellidos: entidad.usuario?.apellidos || "",
       correo: entidad.usuario?.correo || "",
-      contrasena: "", // no se toca la contraseña en edición
       razonSocial: entidad.razonSocial || "",
       nit: entidad.nit || "",
       telefonoContacto: entidad.telefonoContacto || "",
@@ -128,52 +113,24 @@ export default function Entidades() {
         }
 
         // 2. Actualizar perfil de entidad
-        await entidadesService.update(editingEntidad.id, {
+        await perfilEntidadService.update(editingEntidad.id, {
           razonSocial: formData.razonSocial,
           nit: formData.nit,
           telefonoContacto: formData.telefonoContacto,
         });
       } else {
-        // ── CREAR ───────────────────────────────────────────────────
-        // 1. Crear el usuario con rol 4 (Entidad Externa)
-        const usuarioResponse = await usuariosService.create({
+        await perfilEntidadService.crearConUsuario({
           nombres: formData.nombres,
           apellidos: formData.apellidos,
           correo: formData.correo,
           contrasena: formData.contrasena,
-          rolId: 4,
-        });
-
-        // El backend devuelve { success, message, usuario: { id, nombres, correo } }
-        const usuarioId = usuarioResponse.usuario?.id;
-        if (!usuarioId)
-          throw new Error("No se pudo obtener el ID del usuario creado.");
-
-        // 2. Crear el perfil de entidad (pasamos usuarioId como número explícito)
-        await entidadesService.create({
-          usuarioId: Number(usuarioId),
           razonSocial: formData.razonSocial,
           nit: formData.nit,
           telefonoContacto: formData.telefonoContacto,
         });
       }
 
-      setCurrentPage(1);
-      const data = await entidadesService.getAll({
-        paginaActual: 1,
-        registrosPorPagina: itemsPerPage,
-      });
-      setEntidades(data.data || []);
-      setPagination(
-        data.paginacion || {
-          paginaActual: 1,
-          registrosPorPagina: itemsPerPage,
-          totalPaginas: 1,
-          totalRegistros: data.data?.length || 0,
-          tienePaginaAnterior: false,
-          tienePaginaSiguiente: false,
-        },
-      );
+      await fetchEntidades();
       setModalOpen(false);
       setEditingEntidad(null);
       setFormData(emptyForm);
@@ -188,9 +145,8 @@ export default function Entidades() {
     if (!window.confirm("¿Estás seguro de que deseas eliminar esta entidad?"))
       return;
     try {
-      await entidadesService.delete(id);
-      setCurrentPage(1);
-      setRefreshKey(k => k + 1);
+      await perfilEntidadService.delete(id);
+      await fetchEntidades();
     } catch (err) {
       setError(err.message);
     }
@@ -218,16 +174,6 @@ export default function Entidades() {
 
   const entidadesPaginadas = entidades;
 
-  if (loading)
-    return (
-      <div className="entidades-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando entidades...</p>
-        </div>
-      </div>
-    );
-
   return (
     <div className="entidades-container">
       <div className="page-header">
@@ -254,18 +200,25 @@ export default function Entidades() {
       />
 
         <div className="bg-white rounded-lg shadow-sm">
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando entidades...</p>
+            </div>
+          ) : (
+            <>
           {/* Desktop Table */}
           <div className="desktop-table">
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Correo</th>
-                  <th>Razón Social</th>
-                  <th>NIT</th>
-                  <th>Teléfono</th>
-                  <th>Acciones</th>
+                  <th title="Identificador único de la entidad">ID</th>
+                  <th title="Nombre del representante de la entidad">Nombre</th>
+                  <th title="Correo electrónico de contacto">Correo</th>
+                  <th title="Razón social de la entidad">Razón Social</th>
+                  <th title="Número de Identificación Tributaria">NIT</th>
+                  <th title="Teléfono de contacto de la entidad">Teléfono</th>
+                  <th title="Opciones disponibles para este registro">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -343,19 +296,20 @@ export default function Entidades() {
               <div className="mobile-empty">No hay entidades disponibles</div>
             )}
           </div>
+            </>
+          )}
         </div>
 
+        {!loading && (
         <Pagination
           currentPage={currentPage}
-          totalPages={pagination.totalPaginas || 1}
-          totalItems={pagination.totalRegistros || entidades.length}
+          totalPages={pagination?.totalPaginas || 1}
+          totalItems={pagination?.totalRegistros || entidades.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(n) => {
-            setItemsPerPage(n);
-            setCurrentPage(1);
-          }}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
+        )}
       </div>
 
       {/* ── MODAL ── */}

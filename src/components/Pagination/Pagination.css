@@ -63,6 +63,14 @@
     border-color: #0a883c;
 }
 
+.pagination-ellipsis {
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    cursor: default;
+    padding: 0.25rem 0.25rem;
+}
+
 .pagination-button:disabled {
     background: #f3f4f6;
     color: #9ca3af;

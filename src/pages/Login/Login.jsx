@@ -53,10 +53,12 @@ function Login() {
             autoComplete="email"
           />
           <div>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600", fontSize: "0.9rem", color: "#333" }}>
+            <label htmlFor="contrasena" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600", fontSize: "0.9rem", color: "#333" }}>
               Contraseña
             </label>
             <PasswordInput
+              name="contrasena"
+              id="contrasena"
               value={formData.contrasena}
               onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
               placeholder="Contraseña"

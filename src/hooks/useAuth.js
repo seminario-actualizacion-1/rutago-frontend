@@ -1,20 +1,12 @@
+import { authService } from "../services/auth.service";
+
 export function useAuth() {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const isAuthenticated = !!token;
-  const apiUrl = import.meta.env.VITE_API_URL || "/api";
-
   const login = async (credentials) => {
-    const response = await fetch(`${apiUrl}/usuarios/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Credenciales incorrectas");
-    }
-    const data = await response.json();
+    const data = await authService.login(credentials);
     localStorage.setItem("token", data.token);
+    if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
     localStorage.setItem(
       "rutago_user",
       JSON.stringify({
@@ -25,11 +17,10 @@ export function useAuth() {
       })
     );
   };
-
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("rutago_user");
   };
-
   return { isAuthenticated, login, logout };
 }

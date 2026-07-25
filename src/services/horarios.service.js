@@ -1,24 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+import * as api from "../api/horarios";
 
-const buildQueryString = (params = {}) => {
-  const searchParams = new URLSearchParams();
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      searchParams.append(key, value);
-    }
-  });
-
-  return searchParams.toString();
-};
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+const extractError = (err, fallback) =>
+  new Error(err.response?.data?.message || err.message || fallback);
 
 const normalizeHorarioPayload = (horario) => ({
   ...horario,
@@ -44,60 +27,51 @@ const normalizeHorarioPayload = (horario) => ({
 
 export const horariosService = {
   getAll: async (params = {}) => {
-    const query = buildQueryString(params);
-    const response = await fetch(
-      `${API_URL}/horarios${query ? `?${query}` : ""}`,
-      {
-        headers: getAuthHeaders(),
-      },
-    );
-    if (!response.ok) throw new Error("Error al cargar horarios");
-    return response.json();
+    try {
+      const res = await api.getHorarios(params);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar horarios");
+    }
   },
-
   getById: async (id) => {
-    const response = await fetch(`${API_URL}/horarios/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al cargar horario");
-    return response.json();
+    try {
+      const res = await api.getHorarioById(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar horario");
+    }
   },
-
+  getByRuta: async (rutaId) => {
+    try {
+      const res = await api.getHorariosByRuta(rutaId);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar horarios de la ruta");
+    }
+  },
   create: async (horario) => {
-    const response = await fetch(`${API_URL}/horarios`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(normalizeHorarioPayload(horario)),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || "Error al crear horario");
+    try {
+      const res = await api.createHorario(normalizeHorarioPayload(horario));
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al crear horario");
     }
-    return response.json();
   },
-
   update: async (id, horario) => {
-    const response = await fetch(`${API_URL}/horarios/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(normalizeHorarioPayload(horario)),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || "Error al actualizar horario");
+    try {
+      const res = await api.updateHorario(id, normalizeHorarioPayload(horario));
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al actualizar horario");
     }
-    return response.json();
   },
-
   delete: async (id) => {
-    const response = await fetch(`${API_URL}/horarios/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || "Error al eliminar horario");
+    try {
+      const res = await api.deleteHorario(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al eliminar horario");
     }
-    return response.json();
   },
 };

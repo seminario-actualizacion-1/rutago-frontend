@@ -2,12 +2,8 @@ import { useState, useRef } from "react";
 import "./TableToolbar.css";
 
 export default function TableToolbar({ searchValue, onSearchChange, filters, onFilterChange, placeholder, sortOptions, sortBy, sortOrder, onSortChange }) {
-  const [localSearch, setLocalSearch] = useState(searchValue || "");
+  const [localSearch, setLocalSearch] = useState("");
   const debounceRef = useRef(null);
-
-  if (searchValue !== undefined && searchValue !== localSearch) {
-    setLocalSearch(searchValue || "");
-  }
 
   const handleSearchInput = (e) => {
     const value = e.target.value;

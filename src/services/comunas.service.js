@@ -1,72 +1,47 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+import * as api from "../api/comunas";
 
-const buildQueryString = (params = {}) => {
-  const searchParams = new URLSearchParams();
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      searchParams.append(key, value);
-    }
-  });
-
-  return searchParams.toString();
-};
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+const extractError = (err, fallback) =>
+  new Error(err.response?.data?.message || err.message || fallback);
 
 export const comunasService = {
   getAll: async (params = {}) => {
-    const query = buildQueryString(params);
-    const response = await fetch(
-      `${API_URL}/comunas${query ? `?${query}` : ""}`,
-      {
-        headers: getAuthHeaders(),
-      },
-    );
-    if (!response.ok) throw new Error("Error al cargar comunas");
-    return response.json();
+    try {
+      const res = await api.getComunas(params);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar comunas");
+    }
   },
-
   getById: async (id) => {
-    const response = await fetch(`${API_URL}/comunas/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al cargar comuna");
-    return response.json();
+    try {
+      const res = await api.getComunaById(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al cargar comuna");
+    }
   },
-
   create: async (comuna) => {
-    const response = await fetch(`${API_URL}/comunas`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(comuna),
-    });
-    if (!response.ok) throw new Error("Error al crear comuna");
-    return response.json();
+    try {
+      const res = await api.createComuna(comuna);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al crear comuna");
+    }
   },
-
   update: async (id, comuna) => {
-    const response = await fetch(`${API_URL}/comunas/${id}`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(comuna),
-    });
-    if (!response.ok) throw new Error("Error al actualizar comuna");
-    return response.json();
+    try {
+      const res = await api.updateComuna(id, comuna);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al actualizar comuna");
+    }
   },
-
   delete: async (id) => {
-    const response = await fetch(`${API_URL}/comunas/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Error al eliminar comuna");
-    return response.json();
+    try {
+      const res = await api.deleteComuna(id);
+      return res.data;
+    } catch (err) {
+      throw extractError(err, "Error al eliminar comuna");
+    }
   },
 };

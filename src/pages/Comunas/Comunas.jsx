@@ -4,6 +4,7 @@ import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { comunasService } from "../../services/comunas.service";
+import { usePaginacion } from "../../hooks/usePaginacion";
 import "./Comunas.css";
 
 export default function Comunas() {
@@ -12,46 +13,34 @@ export default function Comunas() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingComuna, setEditingComuna] = useState(null);
-  const [pagination, setPagination] = useState({
-    paginaActual: 1,
-    registrosPorPagina: 10,
-    totalPaginas: 1,
-    totalRegistros: 0,
-    tienePaginaAnterior: false,
-    tienePaginaSiguiente: false,
-  });
   const [formData, setFormData] = useState({
     nombre: "",
   });
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const {
+    currentPage,
+    itemsPerPage,
+    pagination,
+    handlePageChange,
+    handleItemsPerPageChange,
+    actualizarPaginacion,
+    queryParams,
+  } = usePaginacion();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("nombre");
   const [sortOrder, setSortOrder] = useState("ASC");
 
-  const fetchComunas = async (page = currentPage, limit = itemsPerPage, q = searchTerm) => {
+  const fetchComunas = async () => {
     try {
       setLoading(true);
       const data = await comunasService.getAll({
-        paginaActual: page,
-        registrosPorPagina: limit,
-        q: q || undefined,
+        ...queryParams,
+        q: searchTerm || undefined,
         sortBy,
         sortOrder,
       });
       setComunas(data.data || []);
-      setPagination(
-        data.paginacion || {
-          paginaActual: page,
-          registrosPorPagina: limit,
-          totalPaginas: 1,
-          totalRegistros: data.data?.length || 0,
-          tienePaginaAnterior: false,
-          tienePaginaSiguiente: false,
-        },
-      );
+      actualizarPaginacion(data.paginacion);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -59,17 +48,10 @@ export default function Comunas() {
     }
   };
 
-  useEffect(() => {
-    const loadComunas = async () => {
-      await fetchComunas(currentPage, itemsPerPage, searchTerm);
-    };
-
-    loadComunas();
-  }, [currentPage, itemsPerPage, searchTerm, sortBy, sortOrder]);
+  useEffect(() => { fetchComunas(); }, [queryParams, searchTerm, sortBy, sortOrder]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setCurrentPage(1);
   };
 
   const sortOptions = [
@@ -80,7 +62,6 @@ export default function Comunas() {
   const handleSortChange = (field, order) => {
     setSortBy(field);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
   const handleEditar = (comuna) => {
@@ -99,8 +80,7 @@ export default function Comunas() {
       } else {
         await comunasService.create(formData);
       }
-      setCurrentPage(1);
-      await fetchComunas(1, itemsPerPage);
+      await fetchComunas();
       setModalOpen(false);
       setEditingComuna(null);
       setFormData({
@@ -127,33 +107,11 @@ export default function Comunas() {
 
     try {
       await comunasService.delete(id);
-      setCurrentPage(1);
-      await fetchComunas(1, itemsPerPage);
+      await fetchComunas();
     } catch (err) {
       setError(err.message);
     }
   };
-
-  const comunasPaginadas = comunas;
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
-
-  if (loading)
-    return (
-      <div className="comunas-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando comunas...</p>
-        </div>
-      </div>
-    );
 
   return (
     <div className="comunas-container">
@@ -187,19 +145,26 @@ export default function Comunas() {
         onSortChange={handleSortChange}
       />
         <div className="bg-white rounded-lg shadow-sm">
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando comunas...</p>
+            </div>
+          ) : (
+            <>
           {/* Desktop Table */}
           <div className="desktop-table">
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Acciones</th>
+                  <th title="Identificador único de la comuna">ID</th>
+                  <th title="Nombre de la comuna">Nombre</th>
+                  <th title="Opciones disponibles para este registro">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {comunasPaginadas.length > 0 ? (
-                  comunasPaginadas.map((comuna) => (
+                {comunas.length > 0 ? (
+                  comunas.map((comuna) => (
                     <tr key={comuna.id}>
                       <td>{comuna.id}</td>
                       <td>
@@ -226,9 +191,9 @@ export default function Comunas() {
 
           {/* Mobile Cards */}
           <div className="mobile-cards">
-            {comunasPaginadas.length > 0 ? (
+            {comunas.length > 0 ? (
               <div className="mobile-cards-list">
-                {comunasPaginadas.map((comuna) => (
+                {comunas.map((comuna) => (
                   <div key={comuna.id} className="mobile-card">
                     <div className="mobile-card-header">
                       <div className="mobile-card-info">
@@ -250,16 +215,20 @@ export default function Comunas() {
               <div className="mobile-empty">No hay comunas disponibles</div>
             )}
           </div>
+            </>
+          )}
         </div>
 
+        {!loading && (
         <Pagination
           currentPage={currentPage}
-          totalPages={pagination.totalPaginas || 1}
-          totalItems={pagination.totalRegistros || comunas.length}
+          totalPages={pagination?.totalPaginas || 1}
+          totalItems={pagination?.totalRegistros || comunas.length}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
           onItemsPerPageChange={handleItemsPerPageChange}
         />
+        )}
       </div>
 
       <Modal
