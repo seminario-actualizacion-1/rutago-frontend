@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 
-export default function PerfilPasajero({ perfil, onRefresh, tipoDocumentoOptions }) {
+export default function PerfilPasajero({
+  perfil,
+  onRefresh,
+  tipoDocumentoOptions,
+}) {
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     telefono: perfil?.telefono || "",
@@ -55,7 +59,10 @@ export default function PerfilPasajero({ perfil, onRefresh, tipoDocumentoOptions
 
   if (!editing) {
     return (
-      <div className="bg-white rounded-lg shadow-sm" style={{ marginTop: "1rem" }}>
+      <div
+        className="bg-white rounded-lg shadow-sm"
+        style={{ marginTop: "1rem" }}
+      >
         {message && <div className="success-message">{message}</div>}
         {error && <div className="error-message">{error}</div>}
         <div className="perfil-info">
@@ -70,11 +77,15 @@ export default function PerfilPasajero({ perfil, onRefresh, tipoDocumentoOptions
           </div>
           <div className="perfil-row">
             <span className="perfil-label">Teléfono:</span>
-            <span className="perfil-value">{perfil?.telefono || "No registrado"}</span>
+            <span className="perfil-value">
+              {perfil?.telefono || "No registrado"}
+            </span>
           </div>
           <div className="perfil-row">
             <span className="perfil-label">Dirección:</span>
-            <span className="perfil-value">{perfil?.direccion || "No registrada"}</span>
+            <span className="perfil-value">
+              {perfil?.direccion || "No registrada"}
+            </span>
           </div>
           <div className="perfil-row">
             <span className="perfil-label">Fecha de nacimiento:</span>
@@ -85,7 +96,10 @@ export default function PerfilPasajero({ perfil, onRefresh, tipoDocumentoOptions
             </span>
           </div>
           <div className="perfil-actions">
-            <button onClick={() => setEditing(true)} className="button button-outline">
+            <button
+              onClick={() => setEditing(true)}
+              className="button button-outline"
+            >
               Editar Perfil de Pasajero
             </button>
           </div>
@@ -95,7 +109,10 @@ export default function PerfilPasajero({ perfil, onRefresh, tipoDocumentoOptions
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm" style={{ marginTop: "1rem" }}>
+    <div
+      className="bg-white rounded-lg shadow-sm"
+      style={{ marginTop: "1rem" }}
+    >
       {message && <div className="success-message">{message}</div>}
       {error && <div className="error-message">{error}</div>}
       <h2>Editar perfil de pasajero</h2>
@@ -109,7 +126,7 @@ export default function PerfilPasajero({ perfil, onRefresh, tipoDocumentoOptions
         >
           {(tipoDocumentoOptions || []).map((td) => (
             <option key={td.id} value={td.id}>
-               {td.nombre} — {td.descripcion}
+              {td.nombre} — {td.descripcion}
             </option>
           ))}
         </select>
@@ -151,10 +168,18 @@ export default function PerfilPasajero({ perfil, onRefresh, tipoDocumentoOptions
         />
 
         <div className="form-actions">
-          <button type="button" onClick={handleCancel} className="button button-outline">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="button button-outline"
+          >
             Cancelar
           </button>
-          <button type="submit" className="button button-primary" disabled={loading}>
+          <button
+            type="submit"
+            className="button button-primary"
+            disabled={loading}
+          >
             {loading ? "Guardando..." : "Guardar Perfil de Pasajero"}
           </button>
         </div>

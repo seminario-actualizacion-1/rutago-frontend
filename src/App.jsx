@@ -119,10 +119,17 @@ export default function App() {
               <Route
                 path="/registro"
                 element={
-                  isLoggedIn ? <Navigate to="/dashboard" replace /> : <Registro />
+                  isLoggedIn ? (
+                    <Navigate to="/dashboard" replace />
+                  ) : (
+                    <Registro />
+                  )
                 }
               />
-              <Route path="/recuperar-password" element={<RecuperarPassword />} />
+              <Route
+                path="/recuperar-password"
+                element={<RecuperarPassword />}
+              />
               <Route
                 element={
                   <ProtectedRoute>
@@ -215,7 +222,13 @@ export default function App() {
                 <Route
                   path="/viajes"
                   element={
-                    <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.CONDUCTOR, ROLES.PASAJERO]}>
+                    <ProtectedRoute
+                      allowedRoles={[
+                        ROLES.ADMIN,
+                        ROLES.CONDUCTOR,
+                        ROLES.PASAJERO,
+                      ]}
+                    >
                       <Viajes />
                     </ProtectedRoute>
                   }

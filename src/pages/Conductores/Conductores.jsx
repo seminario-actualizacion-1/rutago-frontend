@@ -50,24 +50,23 @@ export default function Conductores() {
   const fetchDatos = async () => {
     try {
       setLoading(true);
-      const [conductoresData, usuariosData, vehiculosData] =
-        await Promise.all([
-          perfilConductorService.getAll({
-            ...queryParams,
-            q: searchTerm || undefined,
-            ...(filters.estadoId && { estadoId: filters.estadoId }),
-            sortBy,
-            sortOrder,
-          }),
-          usuariosService.getAll({
-            paginaActual: 1,
-            registrosPorPagina: 100,
-          }),
-          vehiculosService.getAll({
-            paginaActual: 1,
-            registrosPorPagina: 100,
-          }),
-        ]);
+      const [conductoresData, usuariosData, vehiculosData] = await Promise.all([
+        perfilConductorService.getAll({
+          ...queryParams,
+          q: searchTerm || undefined,
+          ...(filters.estadoId && { estadoId: filters.estadoId }),
+          sortBy,
+          sortOrder,
+        }),
+        usuariosService.getAll({
+          paginaActual: 1,
+          registrosPorPagina: 100,
+        }),
+        vehiculosService.getAll({
+          paginaActual: 1,
+          registrosPorPagina: 100,
+        }),
+      ]);
 
       setConductores(conductoresData.data || []);
       actualizarPaginacion(conductoresData.paginacion);
@@ -80,7 +79,9 @@ export default function Conductores() {
     }
   };
 
-  useEffect(() => { fetchDatos(); }, [queryParams, searchTerm, filters, sortBy, sortOrder]);
+  useEffect(() => {
+    fetchDatos();
+  }, [queryParams, searchTerm, filters, sortBy, sortOrder]);
 
   const handleNuevo = () => {
     setEditingConductor(null);
@@ -229,28 +230,28 @@ export default function Conductores() {
           </button>
         </div>
 
-      <TableToolbar
-        searchValue={searchTerm}
-        onSearchChange={handleSearchChange}
-        placeholder="Buscar por nombres, apellidos, correo o licencia..."
-        filters={[
-          {
-            name: "estadoId",
-            label: "Todos los estados",
-            value: filters.estadoId,
-            options: [
-              { value: 1, label: "Disponible" },
-              { value: 2, label: "En viaje" },
-              { value: 3, label: "Inactivo" },
-            ],
-          },
-        ]}
-        onFilterChange={handleFilterChange}
-        sortOptions={sortOptions}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-      />
+        <TableToolbar
+          searchValue={searchTerm}
+          onSearchChange={handleSearchChange}
+          placeholder="Buscar por nombres, apellidos, correo o licencia..."
+          filters={[
+            {
+              name: "estadoId",
+              label: "Todos los estados",
+              value: filters.estadoId,
+              options: [
+                { value: 1, label: "Disponible" },
+                { value: 2, label: "En viaje" },
+                { value: 3, label: "Inactivo" },
+              ],
+            },
+          ]}
+          onFilterChange={handleFilterChange}
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+        />
         <div className="bg-white rounded-lg shadow-sm">
           {loading ? (
             <div className="loading-container">
@@ -259,109 +260,120 @@ export default function Conductores() {
             </div>
           ) : (
             <>
-          {/* Desktop Table */}
-          <div className="desktop-table">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th title="Identificador único del conductor">ID</th>
-                  <th title="Nombre completo del usuario asociado">Usuario</th>
-                  <th title="Placa del vehículo asignado al conductor">Vehículo</th>
-                  <th title="Número de licencia de conducir">Licencia</th>
-                  <th title="Estado actual del conductor">Estado</th>
-                  <th title="Opciones disponibles para este registro">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {conductoresPaginados.length > 0 ? (
-                  conductoresPaginados.map((conductor) => (
-                    <tr key={conductor.id}>
-                      <td>{conductor.id}</td>
-                      <td>
-                        <span className="font-medium">
-                          {getUsuarioNombre(conductor)}
-                        </span>
-                      </td>
-                      <td>{getVehiculoPlaca(conductor)}</td>
-                      <td>{conductor.licenciaConducir || "-"}</td>
-                      <td>
-                        <span
-                          className={`badge ${getEstadoColor(conductor.estado?.id)}`}
-                        >
-                          {ESTADOS_CONDUCTOR[conductor.estado?.id] || conductor.estado?.nombre || conductor.estado?.id}
-                        </span>
-                      </td>
-                      <td>
-                        <ActionsMenu
-                          onEdit={() => handleEditar(conductor)}
-                          onDelete={() => handleEliminar(conductor.id)}
-                        />
-                      </td>
+              {/* Desktop Table */}
+              <div className="desktop-table">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Usuario</th>
+                      <th>Vehículo</th>
+                      <th>Licencia</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="text-center">
-                      No se encontraron conductores
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="mobile-cards">
-            {conductoresPaginados.length > 0 ? (
-              <div className="mobile-cards-list">
-                {conductoresPaginados.map((conductor) => (
-                  <div key={conductor.id} className="mobile-card">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-info">
-                        <h3>{getUsuarioNombre(conductor)}</h3>
-                        <p>{getVehiculoPlaca(conductor)}</p>
-                        <p>Licencia: {conductor.licenciaConducir || "-"}</p>
-                      </div>
-                      <span
-                        className={`mobile-badge ${getEstadoColor(conductor.estado?.id)}`}
-                        >
-                        {(ESTADOS_CONDUCTOR[conductor.estado?.id] || conductor.estado?.nombre || conductor.estado?.id || "").toString().toUpperCase()}
-                      </span>
-                    </div>
-
-                    <div className="mobile-card-body">
-                      <div className="mobile-card-row">
-                        <span>ID</span>
-                        <span>{conductor.id}</span>
-                      </div>
-                    </div>
-
-                    <div className="mobile-card-actions">
-                      <ActionsMenu
-                        onEdit={() => handleEditar(conductor)}
-                        onDelete={() => handleEliminar(conductor.id)}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  </thead>
+                  <tbody>
+                    {conductoresPaginados.length > 0 ? (
+                      conductoresPaginados.map((conductor) => (
+                        <tr key={conductor.id}>
+                          <td>{conductor.id}</td>
+                          <td>
+                            <span className="font-medium">
+                              {getUsuarioNombre(conductor)}
+                            </span>
+                          </td>
+                          <td>{getVehiculoPlaca(conductor)}</td>
+                          <td>{conductor.licenciaConducir || "-"}</td>
+                          <td>
+                            <span
+                              className={`badge ${getEstadoColor(conductor.estado?.id)}`}
+                            >
+                              {ESTADOS_CONDUCTOR[conductor.estado?.id] ||
+                                conductor.estado?.nombre ||
+                                conductor.estado?.id}
+                            </span>
+                          </td>
+                          <td>
+                            <ActionsMenu
+                              onEdit={() => handleEditar(conductor)}
+                              onDelete={() => handleEliminar(conductor.id)}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center">
+                          No se encontraron conductores
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            ) : (
-              <div className="mobile-empty">No hay conductores disponibles</div>
-            )}
-          </div>
+
+              {/* Mobile Cards */}
+              <div className="mobile-cards">
+                {conductoresPaginados.length > 0 ? (
+                  <div className="mobile-cards-list">
+                    {conductoresPaginados.map((conductor) => (
+                      <div key={conductor.id} className="mobile-card">
+                        <div className="mobile-card-header">
+                          <div className="mobile-card-info">
+                            <h3>{getUsuarioNombre(conductor)}</h3>
+                            <p>{getVehiculoPlaca(conductor)}</p>
+                            <p>Licencia: {conductor.licenciaConducir || "-"}</p>
+                          </div>
+                          <span
+                            className={`mobile-badge ${getEstadoColor(conductor.estado?.id)}`}
+                          >
+                            {(
+                              ESTADOS_CONDUCTOR[conductor.estado?.id] ||
+                              conductor.estado?.nombre ||
+                              conductor.estado?.id ||
+                              ""
+                            )
+                              .toString()
+                              .toUpperCase()}
+                          </span>
+                        </div>
+
+                        <div className="mobile-card-body">
+                          <div className="mobile-card-row">
+                            <span>ID</span>
+                            <span>{conductor.id}</span>
+                          </div>
+                        </div>
+
+                        <div className="mobile-card-actions">
+                          <ActionsMenu
+                            onEdit={() => handleEditar(conductor)}
+                            onDelete={() => handleEliminar(conductor.id)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mobile-empty">
+                    No hay conductores disponibles
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
 
         {!loading && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={pagination?.totalPaginas || 1}
-          totalItems={pagination?.totalRegistros || conductores.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination?.totalPaginas || 1}
+            totalItems={pagination?.totalRegistros || conductores.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
         )}
       </div>
 
@@ -442,12 +454,20 @@ export default function Conductores() {
                 />
               </div>
               <div style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.5rem",
+                    fontWeight: "500",
+                  }}
+                >
                   Contraseña
                 </label>
                 <PasswordInput
                   value={formData.contrasena}
-                  onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contrasena: e.target.value })
+                  }
                   placeholder="Contraseña"
                   required
                 />

@@ -5,15 +5,26 @@ export default function UsuariosPasajero({ formData, onChange }) {
   const [tiposDocumento, setTiposDocumento] = useState([]);
 
   useEffect(() => {
-    api.get("/tipos-documento").then((res) => {
-      if (res.data?.success) setTiposDocumento(res.data.data);
-    }).catch(() => {});
+    api
+      .get("/tipos-documento")
+      .then((res) => {
+        if (res.data?.success) setTiposDocumento(res.data.data);
+      })
+      .catch(() => {});
   }, []);
 
   return (
     <>
       <div style={{ marginBottom: "1rem" }}>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Teléfono</label>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: "500",
+          }}
+        >
+          Teléfono
+        </label>
         <input
           type="text"
           value={formData.telefono}
@@ -23,7 +34,15 @@ export default function UsuariosPasajero({ formData, onChange }) {
         />
       </div>
       <div style={{ marginBottom: "1rem" }}>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Dirección</label>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: "500",
+          }}
+        >
+          Dirección
+        </label>
         <input
           type="text"
           value={formData.direccion}
@@ -33,10 +52,20 @@ export default function UsuariosPasajero({ formData, onChange }) {
         />
       </div>
       <div style={{ marginBottom: "1rem" }}>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Tipo de Documento</label>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: "500",
+          }}
+        >
+          Tipo de Documento
+        </label>
         <select
           value={formData.tipoDocumentoId}
-          onChange={(e) => onChange("tipoDocumentoId", parseInt(e.target.value) || "")}
+          onChange={(e) =>
+            onChange("tipoDocumentoId", parseInt(e.target.value) || "")
+          }
           className="input"
           style={{ width: "100%" }}
         >
@@ -49,7 +78,15 @@ export default function UsuariosPasajero({ formData, onChange }) {
         </select>
       </div>
       <div style={{ marginBottom: "1rem" }}>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Número de Documento</label>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: "500",
+          }}
+        >
+          Número de Documento
+        </label>
         <input
           type="text"
           value={formData.numeroDocumento}
@@ -59,7 +96,15 @@ export default function UsuariosPasajero({ formData, onChange }) {
         />
       </div>
       <div style={{ marginBottom: "1.5rem" }}>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Fecha de Nacimiento</label>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: "500",
+          }}
+        >
+          Fecha de Nacimiento
+        </label>
         <input
           type="date"
           value={formData.fechaNacimiento}

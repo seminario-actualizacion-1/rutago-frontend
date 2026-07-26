@@ -1,9 +1,12 @@
-import './Footer.css';
+import "./Footer.css";
 
 export default function Footer() {
   return (
     <footer className="footer">
-      <p>© {new Date().getFullYear()} RutaGo — Transporte intermunicipal inteligente</p>
+      <p>
+        © {new Date().getFullYear()} RutaGo — Transporte intermunicipal
+        inteligente
+      </p>
     </footer>
   );
 }

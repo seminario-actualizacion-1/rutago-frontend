@@ -5,7 +5,9 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s, transform 0.1s;
+  transition:
+    background 0.3s,
+    transform 0.1s;
 }
 
 .btn:hover {
@@ -13,27 +15,27 @@
 }
 
 .btn-primary {
-  background-color: #08863A;
+  background-color: #08863a;
   color: #fff;
 }
 
 .btn-primary:hover {
-  background-color: #0A883C;
+  background-color: #0a883c;
 }
 
 .btn-accent {
-  background-color: #FDC202;
+  background-color: #fdc202;
   color: #333;
 }
 
 .btn-accent:hover {
-  background-color: #FCC604;
+  background-color: #fcc604;
 }
 
 .btn-outline {
   background: transparent;
-  border: 2px solid #08863A;
-  color: #08863A;
+  border: 2px solid #08863a;
+  color: #08863a;
 }
 
 .btn-outline:hover {

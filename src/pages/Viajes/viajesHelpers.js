@@ -24,7 +24,8 @@ export function obtenerNombrePersona(usuario) {
 
 export function textoCupos(viaje) {
   const ocupados = viaje.pasajeros?.length || 0;
-  const capacidad = viaje.horario?.vehiculo?.capacidadPasajeros || viaje.capacidad || 0;
+  const capacidad =
+    viaje.horario?.vehiculo?.capacidadPasajeros || viaje.capacidad || 0;
   return `${ocupados}/${capacidad}`;
 }
 

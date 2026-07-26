@@ -31,10 +31,23 @@ function RecuperarPassword() {
   return (
     <div className="login-container">
       <Card title="Recuperar Contraseña">
-        <p className="description">Introduce tu correo y te enviaremos instrucciones.</p>
+        <p className="description">
+          Introduce tu correo y te enviaremos instrucciones.
+        </p>
         {mensaje && <p className="status-message">{mensaje}</p>}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <Input name="correo" label="Correo" type="email" placeholder="Correo electrónico" value={correo} onChange={(e) => setCorreo(e.target.value)} autoComplete="email" />
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+        >
+          <Input
+            name="correo"
+            label="Correo"
+            type="email"
+            placeholder="Correo electrónico"
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
+            autoComplete="email"
+          />
           <Button type="submit" variant="primary" fullWidth disabled={loading}>
             {loading ? "Enviando..." : "Enviar instrucciones"}
           </Button>

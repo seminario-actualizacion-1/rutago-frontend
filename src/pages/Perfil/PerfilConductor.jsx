@@ -46,13 +46,18 @@ export default function PerfilConductor({ perfil, onRefresh }) {
 
   if (!editing) {
     return (
-      <div className="bg-white rounded-lg shadow-sm" style={{ marginTop: "1rem" }}>
+      <div
+        className="bg-white rounded-lg shadow-sm"
+        style={{ marginTop: "1rem" }}
+      >
         {message && <div className="success-message">{message}</div>}
         {error && <div className="error-message">{error}</div>}
         <div className="perfil-info">
           <div className="perfil-row">
             <span className="perfil-label">Licencia:</span>
-            <span className="perfil-value">{perfil?.licenciaConducir || "No registrada"}</span>
+            <span className="perfil-value">
+              {perfil?.licenciaConducir || "No registrada"}
+            </span>
           </div>
           <div className="perfil-row">
             <span className="perfil-label">Vehículo asignado:</span>
@@ -65,11 +70,16 @@ export default function PerfilConductor({ perfil, onRefresh }) {
           <div className="perfil-row">
             <span className="perfil-label">Estado:</span>
             <span className="perfil-value">
-              {ESTADOS_CONDUCTOR[perfil?.estadoId] || perfil?.estadoId || "No definido"}
+              {ESTADOS_CONDUCTOR[perfil?.estadoId] ||
+                perfil?.estadoId ||
+                "No definido"}
             </span>
           </div>
           <div className="perfil-actions">
-            <button onClick={() => setEditing(true)} className="button button-outline">
+            <button
+              onClick={() => setEditing(true)}
+              className="button button-outline"
+            >
               Editar Perfil de Conductor
             </button>
           </div>
@@ -79,7 +89,10 @@ export default function PerfilConductor({ perfil, onRefresh }) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm" style={{ marginTop: "1rem" }}>
+    <div
+      className="bg-white rounded-lg shadow-sm"
+      style={{ marginTop: "1rem" }}
+    >
       {message && <div className="success-message">{message}</div>}
       {error && <div className="error-message">{error}</div>}
       <h2>Editar perfil de conductor</h2>
@@ -106,10 +119,18 @@ export default function PerfilConductor({ perfil, onRefresh }) {
         </select>
 
         <div className="form-actions">
-          <button type="button" onClick={handleCancel} className="button button-outline">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="button button-outline"
+          >
             Cancelar
           </button>
-          <button type="submit" className="button button-primary" disabled={loading}>
+          <button
+            type="submit"
+            className="button button-primary"
+            disabled={loading}
+          >
             {loading ? "Guardando..." : "Guardar Perfil de Conductor"}
           </button>
         </div>

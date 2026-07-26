@@ -1,12 +1,24 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
-export default function PasswordInput({ name, id, value, onChange, placeholder, required, autoComplete }) {
+export default function PasswordInput({
+  name,
+  id,
+  value,
+  onChange,
+  placeholder,
+  required,
+  autoComplete,
+}) {
   const [show, setShow] = useState(false);
 
   return (
     <div className="input-group" style={{ position: "relative" }}>
-      {id && <label htmlFor={id} style={{ display: "none" }}>{placeholder}</label>}
+      {id && (
+        <label htmlFor={id} style={{ display: "none" }}>
+          {placeholder}
+        </label>
+      )}
       <input
         id={id}
         name={name}

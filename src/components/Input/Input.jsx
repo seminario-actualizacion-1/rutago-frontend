@@ -1,6 +1,15 @@
-import './Input.css';
+import "./Input.css";
 
-export default function Input({ label, name, type = 'text', value, onChange, placeholder, required, autoComplete }) {
+export default function Input({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  required,
+  autoComplete,
+}) {
   return (
     <div className="input-group">
       {label && <label htmlFor={name}>{label}</label>}

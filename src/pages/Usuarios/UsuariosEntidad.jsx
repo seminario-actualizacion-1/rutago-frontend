@@ -2,7 +2,13 @@ export default function UsuariosEntidad({ formData, onChange }) {
   return (
     <>
       <div style={{ marginBottom: "1rem" }}>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: "500",
+          }}
+        >
           Razón Social
         </label>
         <input
@@ -15,7 +21,13 @@ export default function UsuariosEntidad({ formData, onChange }) {
         />
       </div>
       <div style={{ marginBottom: "1rem" }}>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: "500",
+          }}
+        >
           NIT
         </label>
         <input
@@ -28,7 +40,13 @@ export default function UsuariosEntidad({ formData, onChange }) {
         />
       </div>
       <div style={{ marginBottom: "1.5rem" }}>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            fontWeight: "500",
+          }}
+        >
           Teléfono de Contacto
         </label>
         <input

@@ -20,31 +20,59 @@ export default function AdminDashboard() {
     (async () => {
       try {
         setLoading(true);
-        const [users, conductores, pasajeros, vehiculos, viajes, entidades, barrios, comunas, rutas, horarios] =
-          await Promise.all([
-            usuariosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            perfilConductorService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            perfilPasajeroService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            vehiculosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            viajesService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            perfilEntidadService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            barriosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            comunasService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            rutasService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-            horariosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-          ]);
+        const [
+          users,
+          conductores,
+          pasajeros,
+          vehiculos,
+          viajes,
+          entidades,
+          barrios,
+          comunas,
+          rutas,
+          horarios,
+        ] = await Promise.all([
+          usuariosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
+          perfilConductorService.getAll({
+            paginaActual: 1,
+            registrosPorPagina: 1,
+          }),
+          perfilPasajeroService.getAll({
+            paginaActual: 1,
+            registrosPorPagina: 1,
+          }),
+          vehiculosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
+          viajesService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
+          perfilEntidadService.getAll({
+            paginaActual: 1,
+            registrosPorPagina: 1,
+          }),
+          barriosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
+          comunasService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
+          rutasService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
+          horariosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
+        ]);
         if (!mounted) return;
         setStats({
           usuarios: users.paginacion?.totalRegistros || users.data?.length || 0,
-          conductores: conductores.paginacion?.totalRegistros || conductores.data?.length || 0,
-          pasajeros: pasajeros.paginacion?.totalRegistros || pasajeros.data?.length || 0,
-          vehiculos: vehiculos.paginacion?.totalRegistros || vehiculos.data?.length || 0,
+          conductores:
+            conductores.paginacion?.totalRegistros ||
+            conductores.data?.length ||
+            0,
+          pasajeros:
+            pasajeros.paginacion?.totalRegistros || pasajeros.data?.length || 0,
+          vehiculos:
+            vehiculos.paginacion?.totalRegistros || vehiculos.data?.length || 0,
           viajes: viajes.paginacion?.totalRegistros || viajes.data?.length || 0,
-          entidades: entidades.paginacion?.totalRegistros || entidades.data?.length || 0,
-          barrios: barrios.paginacion?.totalRegistros || barrios.data?.length || 0,
-          comunas: comunas.paginacion?.totalRegistros || comunas.data?.length || 0,
+          entidades:
+            entidades.paginacion?.totalRegistros || entidades.data?.length || 0,
+          barrios:
+            barrios.paginacion?.totalRegistros || barrios.data?.length || 0,
+          comunas:
+            comunas.paginacion?.totalRegistros || comunas.data?.length || 0,
           rutas: rutas.paginacion?.totalRegistros || rutas.data?.length || 0,
-          horarios: horarios.paginacion?.totalRegistros || horarios.data?.length || 0,
+          horarios:
+            horarios.paginacion?.totalRegistros || horarios.data?.length || 0,
         });
       } catch (error) {
         if (!mounted) return;
@@ -53,12 +81,18 @@ export default function AdminDashboard() {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const modulos = [
     { nombre: "Usuarios", ruta: "/usuarios", cantidad: stats?.usuarios },
-    { nombre: "Conductores", ruta: "/conductores", cantidad: stats?.conductores },
+    {
+      nombre: "Conductores",
+      ruta: "/conductores",
+      cantidad: stats?.conductores,
+    },
     { nombre: "Pasajeros", ruta: "/pasajeros", cantidad: stats?.pasajeros },
     { nombre: "Vehículos", ruta: "/vehiculos", cantidad: stats?.vehiculos },
     { nombre: "Barrios", ruta: "/barrios", cantidad: stats?.barrios },
@@ -72,7 +106,9 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <>
-        <div className="page-header"><h1>Panel de Administración</h1></div>
+        <div className="page-header">
+          <h1>Panel de Administración</h1>
+        </div>
         <div className="loading-container">
           <div className="spinner"></div>
           <p>Cargando estadísticas...</p>
@@ -99,10 +135,16 @@ export default function AdminDashboard() {
           <tbody>
             {modulos.map((m) => (
               <tr key={m.nombre}>
-                <td><span className="font-medium">{m.nombre}</span></td>
+                <td>
+                  <span className="font-medium">{m.nombre}</span>
+                </td>
                 <td>{m.cantidad ?? "—"}</td>
                 <td>
-                  <Link to={m.ruta} className="button button-outline" style={{ padding: "0.3rem 0.75rem", fontSize: "0.8rem" }}>
+                  <Link
+                    to={m.ruta}
+                    className="button button-outline"
+                    style={{ padding: "0.3rem 0.75rem", fontSize: "0.8rem" }}
+                  >
                     Gestionar
                   </Link>
                 </td>

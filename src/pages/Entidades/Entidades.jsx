@@ -63,7 +63,16 @@ export default function Entidades() {
 
   useEffect(() => {
     fetchEntidades();
-  }, [currentPage, itemsPerPage, searchTerm, refreshKey, sortBy, sortOrder, queryParams.paginaActual, queryParams.registrosPorPagina]);
+  }, [
+    currentPage,
+    itemsPerPage,
+    searchTerm,
+    refreshKey,
+    sortBy,
+    sortOrder,
+    queryParams.paginaActual,
+    queryParams.registrosPorPagina,
+  ]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
@@ -189,15 +198,15 @@ export default function Entidades() {
           </button>
         </div>
 
-      <TableToolbar
-        searchValue={searchTerm}
-        onSearchChange={handleSearchChange}
-        placeholder="Buscar por razón social, NIT, nombres o correo..."
-        sortOptions={sortOptions}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-      />
+        <TableToolbar
+          searchValue={searchTerm}
+          onSearchChange={handleSearchChange}
+          placeholder="Buscar por razón social, NIT, nombres o correo..."
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+        />
 
         <div className="bg-white rounded-lg shadow-sm">
           {loading ? (
@@ -207,108 +216,110 @@ export default function Entidades() {
             </div>
           ) : (
             <>
-          {/* Desktop Table */}
-          <div className="desktop-table">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th title="Identificador único de la entidad">ID</th>
-                  <th title="Nombre del representante de la entidad">Nombre</th>
-                  <th title="Correo electrónico de contacto">Correo</th>
-                  <th title="Razón social de la entidad">Razón Social</th>
-                  <th title="Número de Identificación Tributaria">NIT</th>
-                  <th title="Teléfono de contacto de la entidad">Teléfono</th>
-                  <th title="Opciones disponibles para este registro">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {entidadesPaginadas.length > 0 ? (
-                  entidadesPaginadas.map((entidad) => (
-                    <tr key={entidad.id}>
-                      <td>{entidad.id}</td>
-                      <td>
-                        <span className="font-medium">
-                          {entidad.usuario
-                            ? `${entidad.usuario.nombres} ${entidad.usuario.apellidos || ""}`
-                            : "—"}
-                        </span>
-                      </td>
-                      <td>{entidad.usuario?.correo || "—"}</td>
-                      <td>{entidad.razonSocial}</td>
-                      <td>{entidad.nit || "—"}</td>
-                      <td>{entidad.telefonoContacto || "—"}</td>
-                      <td>
-                        <ActionsMenu
-                          onEdit={() => handleEditar(entidad)}
-                          onDelete={() => handleEliminar(entidad.id)}
-                        />
-                      </td>
+              {/* Desktop Table */}
+              <div className="desktop-table">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Correo</th>
+                      <th>Razón Social</th>
+                      <th>NIT</th>
+                      <th>Teléfono</th>
+                      <th>Acciones</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center">
-                      No se encontraron entidades
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="mobile-cards">
-            {entidadesPaginadas.length > 0 ? (
-              <div className="mobile-cards-list">
-                {entidadesPaginadas.map((entidad) => (
-                  <div key={entidad.id} className="mobile-card">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-info">
-                        <h3>{entidad.razonSocial}</h3>
-                        <p>
-                          {entidad.usuario
-                            ? `${entidad.usuario.nombres} ${entidad.usuario.apellidos || ""}`
-                            : "—"}
-                        </p>
-                        <p>NIT: {entidad.nit || "—"}</p>
-                      </div>
-                    </div>
-                    <div className="mobile-card-body">
-                      <div className="mobile-card-row">
-                        <span>Correo</span>
-                        <span>{entidad.usuario?.correo || "—"}</span>
-                      </div>
-                      <div className="mobile-card-row">
-                        <span>Teléfono</span>
-                        <span>{entidad.telefonoContacto || "—"}</span>
-                      </div>
-                    </div>
-                    <div className="mobile-card-actions">
-                      <ActionsMenu
-                        onEdit={() => handleEditar(entidad)}
-                        onDelete={() => handleEliminar(entidad.id)}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  </thead>
+                  <tbody>
+                    {entidadesPaginadas.length > 0 ? (
+                      entidadesPaginadas.map((entidad) => (
+                        <tr key={entidad.id}>
+                          <td>{entidad.id}</td>
+                          <td>
+                            <span className="font-medium">
+                              {entidad.usuario
+                                ? `${entidad.usuario.nombres} ${entidad.usuario.apellidos || ""}`
+                                : "—"}
+                            </span>
+                          </td>
+                          <td>{entidad.usuario?.correo || "—"}</td>
+                          <td>{entidad.razonSocial}</td>
+                          <td>{entidad.nit || "—"}</td>
+                          <td>{entidad.telefonoContacto || "—"}</td>
+                          <td>
+                            <ActionsMenu
+                              onEdit={() => handleEditar(entidad)}
+                              onDelete={() => handleEliminar(entidad.id)}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="text-center">
+                          No se encontraron entidades
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            ) : (
-              <div className="mobile-empty">No hay entidades disponibles</div>
-            )}
-          </div>
+
+              {/* Mobile Cards */}
+              <div className="mobile-cards">
+                {entidadesPaginadas.length > 0 ? (
+                  <div className="mobile-cards-list">
+                    {entidadesPaginadas.map((entidad) => (
+                      <div key={entidad.id} className="mobile-card">
+                        <div className="mobile-card-header">
+                          <div className="mobile-card-info">
+                            <h3>{entidad.razonSocial}</h3>
+                            <p>
+                              {entidad.usuario
+                                ? `${entidad.usuario.nombres} ${entidad.usuario.apellidos || ""}`
+                                : "—"}
+                            </p>
+                            <p>NIT: {entidad.nit || "—"}</p>
+                          </div>
+                        </div>
+                        <div className="mobile-card-body">
+                          <div className="mobile-card-row">
+                            <span>Correo</span>
+                            <span>{entidad.usuario?.correo || "—"}</span>
+                          </div>
+                          <div className="mobile-card-row">
+                            <span>Teléfono</span>
+                            <span>{entidad.telefonoContacto || "—"}</span>
+                          </div>
+                        </div>
+                        <div className="mobile-card-actions">
+                          <ActionsMenu
+                            onEdit={() => handleEditar(entidad)}
+                            onDelete={() => handleEliminar(entidad.id)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mobile-empty">
+                    No hay entidades disponibles
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
 
         {!loading && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={pagination?.totalPaginas || 1}
-          totalItems={pagination?.totalRegistros || entidades.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination?.totalPaginas || 1}
+            totalItems={pagination?.totalRegistros || entidades.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
         )}
       </div>
 
@@ -390,12 +401,20 @@ export default function Entidades() {
           {/* Contraseña solo al crear */}
           {!editingEntidad && (
             <div style={{ marginBottom: "1.25rem" }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
                 Contraseña *
               </label>
               <PasswordInput
                 value={formData.contrasena}
-                onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, contrasena: e.target.value })
+                }
                 placeholder="Contraseña"
                 required
               />

@@ -47,23 +47,34 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
 
   if (!editing) {
     return (
-      <div className="bg-white rounded-lg shadow-sm" style={{ marginTop: "1rem" }}>
+      <div
+        className="bg-white rounded-lg shadow-sm"
+        style={{ marginTop: "1rem" }}
+      >
         {message && <div className="success-message">{message}</div>}
         {error && <div className="error-message">{error}</div>}
         <div className="perfil-info">
           <div className="perfil-row">
             <span className="perfil-label">Teléfono de contacto:</span>
-            <span className="perfil-value">{perfil?.telefonoContacto || "No registrado"}</span>
+            <span className="perfil-value">
+              {perfil?.telefonoContacto || "No registrado"}
+            </span>
           </div>
           <div className="perfil-row">
             <span className="perfil-label">Dirección:</span>
-            <span className="perfil-value">{perfil?.direccion || "No registrada"}</span>
+            <span className="perfil-value">
+              {perfil?.direccion || "No registrada"}
+            </span>
           </div>
           <div className="perfil-row">
             <span className="perfil-label">Sitio web:</span>
             <span className="perfil-value">
               {perfil?.sitioWeb ? (
-                <a href={perfil.sitioWeb} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={perfil.sitioWeb}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {perfil.sitioWeb}
                 </a>
               ) : (
@@ -72,7 +83,10 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
             </span>
           </div>
           <div className="perfil-actions">
-            <button onClick={() => setEditing(true)} className="button button-outline">
+            <button
+              onClick={() => setEditing(true)}
+              className="button button-outline"
+            >
               Editar Perfil de Entidad
             </button>
           </div>
@@ -82,7 +96,10 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm" style={{ marginTop: "1rem" }}>
+    <div
+      className="bg-white rounded-lg shadow-sm"
+      style={{ marginTop: "1rem" }}
+    >
       {message && <div className="success-message">{message}</div>}
       {error && <div className="error-message">{error}</div>}
       <h2>Editar perfil de entidad</h2>
@@ -115,10 +132,18 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
         />
 
         <div className="form-actions">
-          <button type="button" onClick={handleCancel} className="button button-outline">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="button button-outline"
+          >
             Cancelar
           </button>
-          <button type="submit" className="button button-primary" disabled={loading}>
+          <button
+            type="submit"
+            className="button button-primary"
+            disabled={loading}
+          >
             {loading ? "Guardando..." : "Guardar Perfil de Entidad"}
           </button>
         </div>

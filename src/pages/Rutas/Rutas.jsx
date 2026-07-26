@@ -170,7 +170,7 @@ export default function Rutas() {
 
   const sortOptions = [
     { value: "id", label: "ID" },
-    { value: "nombre", label: "Nombre" }
+    { value: "nombre", label: "Nombre" },
   ];
 
   return (
@@ -180,7 +180,10 @@ export default function Rutas() {
       </div>
       {error && !modalOpen && <p className="error">{error}</p>}
 
-      <div className="table-actions" style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}>
+      <div
+        className="table-actions"
+        style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}
+      >
         <button
           onClick={() => {
             setEditingRuta(null);
@@ -207,125 +210,134 @@ export default function Rutas() {
       </div>
 
       {vistaMapa ? (
-        <div className="bg-white rounded-lg shadow-sm" style={{ padding: "1rem" }}>
-          <h3 style={{ marginBottom: "0.75rem" }}>Mapa de Rutas — Buenaventura</h3>
+        <div
+          className="bg-white rounded-lg shadow-sm"
+          style={{ padding: "1rem" }}
+        >
+          <h3 style={{ marginBottom: "0.75rem" }}>
+            Mapa de Rutas — Buenaventura
+          </h3>
           <MapaRutas rutas={rutas} />
         </div>
       ) : (
-      <div className="table-container">
-
-      <TableToolbar
-        searchValue={searchTerm}
-        onSearchChange={handleSearchChange}
-        placeholder="Buscar por nombre, origen o destino..."
-        sortOptions={sortOptions}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-      />
-        <div className="bg-white rounded-lg shadow-sm">
-          {loading ? (
-            <div className="loading-container">
-              <div className="spinner"></div>
-              <p>Cargando rutas...</p>
-            </div>
-          ) : (
-            <>
-          {/* Desktop Table */}
-          <div className="desktop-table">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th title="Identificador único de la ruta">ID</th>
-                  <th title="Nombre descriptivo de la ruta">Nombre</th>
-                  <th title="Comuna de origen de la ruta">Origen</th>
-                  <th title="Comuna de destino de la ruta">Destino</th>
-                  <th title="Distancia total de la ruta en kilómetros">Distancia (km)</th>
-                  <th title="Tiempo estimado de recorrido en minutos">Tiempo (min)</th>
-                  <th title="Opciones disponibles para este registro">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rutasPaginadas.length > 0 ? (
-                  rutasPaginadas.map((ruta) => (
-                    <tr key={ruta.id}>
-                      <td>{ruta.id}</td>
-                      <td>
-                        <span className="font-medium">{ruta.nombre}</span>
-                      </td>
-                      <td>{getComunaNombre(ruta.origen?.id)}</td>
-                      <td>{getComunaNombre(ruta.destino?.id)}</td>
-                      <td>{ruta.distanciaKm || "-"}</td>
-                      <td>{ruta.tiempoEstimadoMinutos || "-"}</td>
-                      <td>
-                        <ActionsMenu
-                          onEdit={() => handleEditar(ruta)}
-                          onDelete={() => handleEliminar(ruta.id)}
-                        />
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center">
-                      No se encontraron rutas
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="mobile-cards">
-            {rutasPaginadas.length > 0 ? (
-              <div className="mobile-cards-list">
-                {rutasPaginadas.map((ruta) => (
-                  <div key={ruta.id} className="mobile-card">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-info">
-                        <h3>{ruta.nombre}</h3>
-                        <p>Origen: {getComunaNombre(ruta.origen?.id)}</p>
-                        <p>Destino: {getComunaNombre(ruta.destino?.id)}</p>
-                        <p>Distancia: {ruta.distanciaKm || "-"} km</p>
-                      </div>
-                    </div>
-
-                    <div className="mobile-card-body">
-                      <div className="mobile-card-row">
-                        <span>Tiempo</span>
-                        <span>{ruta.tiempoEstimadoMinutos || "-"} min</span>
-                      </div>
-                    </div>
-
-                    <div className="mobile-card-actions">
-                      <ActionsMenu
-                        onEdit={() => handleEditar(ruta)}
-                        onDelete={() => handleEliminar(ruta.id)}
-                      />
-                    </div>
-                  </div>
-                ))}
+        <div className="table-container">
+          <TableToolbar
+            searchValue={searchTerm}
+            onSearchChange={handleSearchChange}
+            placeholder="Buscar por nombre, origen o destino..."
+            sortOptions={sortOptions}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={handleSortChange}
+          />
+          <div className="bg-white rounded-lg shadow-sm">
+            {loading ? (
+              <div className="loading-container">
+                <div className="spinner"></div>
+                <p>Cargando rutas...</p>
               </div>
             ) : (
-              <div className="mobile-empty">No hay rutas disponibles</div>
+              <>
+                {/* Desktop Table */}
+                <div className="desktop-table">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Origen</th>
+                        <th>Destino</th>
+                        <th>Distancia (km)</th>
+                        <th>Tiempo (min)</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rutasPaginadas.length > 0 ? (
+                        rutasPaginadas.map((ruta) => (
+                          <tr key={ruta.id}>
+                            <td>{ruta.id}</td>
+                            <td>
+                              <span className="font-medium">{ruta.nombre}</span>
+                            </td>
+                            <td>{getComunaNombre(ruta.origen?.id)}</td>
+                            <td>{getComunaNombre(ruta.destino?.id)}</td>
+                            <td>{ruta.distanciaKm || "-"}</td>
+                            <td>{ruta.tiempoEstimadoMinutos || "-"}</td>
+                            <td>
+                              <ActionsMenu
+                                onEdit={() => handleEditar(ruta)}
+                                onDelete={() => handleEliminar(ruta.id)}
+                              />
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="7" className="text-center">
+                            No se encontraron rutas
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="mobile-cards">
+                  {rutasPaginadas.length > 0 ? (
+                    <div className="mobile-cards-list">
+                      {rutasPaginadas.map((ruta) => (
+                        <div key={ruta.id} className="mobile-card">
+                          <div className="mobile-card-header">
+                            <div className="mobile-card-info">
+                              <h3>{ruta.nombre}</h3>
+                              <p>Origen: {getComunaNombre(ruta.origen?.id)}</p>
+                              <p>
+                                Destino: {getComunaNombre(ruta.destino?.id)}
+                              </p>
+                              <p>Distancia: {ruta.distanciaKm || "-"} km</p>
+                            </div>
+                          </div>
+
+                          <div className="mobile-card-body">
+                            <div className="mobile-card-row">
+                              <span>Tiempo</span>
+                              <span>
+                                {ruta.tiempoEstimadoMinutos || "-"} min
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="mobile-card-actions">
+                            <ActionsMenu
+                              onEdit={() => handleEditar(ruta)}
+                              onDelete={() => handleEliminar(ruta.id)}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mobile-empty">No hay rutas disponibles</div>
+                  )}
+                </div>
+              </>
             )}
           </div>
-            </>
+
+          {!loading && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={pagination?.totalPaginas || 1}
+              totalItems={pagination?.totalRegistros || rutas.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+            />
           )}
         </div>
-
-        {!loading && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={pagination?.totalPaginas || 1}
-          totalItems={pagination?.totalRegistros || rutas.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
-        )}
-      </div>)}
+      )}
 
       <Modal
         isOpen={modalOpen}
@@ -360,10 +372,20 @@ export default function Rutas() {
             />
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Selecciona origen y destino en el mapa
             </label>
-            <MapaCrearRuta comunas={comunas} formData={formData} setFormData={setFormData} />
+            <MapaCrearRuta
+              comunas={comunas}
+              formData={formData}
+              setFormData={setFormData}
+            />
           </div>
 
           <div style={{ marginBottom: "1rem" }}>
@@ -402,7 +424,9 @@ export default function Rutas() {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  distanciaKm: isNaN(parseFloat(e.target.value)) ? "" : parseFloat(e.target.value),
+                  distanciaKm: isNaN(parseFloat(e.target.value))
+                    ? ""
+                    : parseFloat(e.target.value),
                 })
               }
               className="input"
@@ -425,7 +449,9 @@ export default function Rutas() {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  tiempoEstimadoMinutos: isNaN(parseInt(e.target.value, 10)) ? "" : parseInt(e.target.value, 10),
+                  tiempoEstimadoMinutos: isNaN(parseInt(e.target.value, 10))
+                    ? ""
+                    : parseInt(e.target.value, 10),
                 })
               }
               className="input"

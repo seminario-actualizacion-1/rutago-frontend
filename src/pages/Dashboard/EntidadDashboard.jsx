@@ -12,7 +12,9 @@ export default function EntidadDashboard() {
           paginaActual: 1,
           registrosPorPagina: 1,
         });
-        setTotalVehiculos(data.paginacion?.totalRegistros || data.data?.length || 0);
+        setTotalVehiculos(
+          data.paginacion?.totalRegistros || data.data?.length || 0,
+        );
       } catch (error) {
         console.error("Error al cargar datos de la entidad:", error);
       }

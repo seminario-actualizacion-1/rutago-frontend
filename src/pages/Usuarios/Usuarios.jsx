@@ -45,9 +45,14 @@ export default function Usuarios() {
   });
 
   const {
-    currentPage, itemsPerPage, pagination,
-    handlePageChange, handleItemsPerPageChange,
-    actualizarPaginacion, queryParams, setCurrentPage,
+    currentPage,
+    itemsPerPage,
+    pagination,
+    handlePageChange,
+    handleItemsPerPageChange,
+    actualizarPaginacion,
+    queryParams,
+    setCurrentPage,
   } = usePaginacion();
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ rolId: "" });
@@ -63,11 +68,11 @@ export default function Usuarios() {
         sortBy,
         sortOrder,
       };
-      
+
       if (filters.rolId) {
         params.rolId = filters.rolId;
       }
-      
+
       const data = await usuariosService.getAll(params);
       setUsuarios(data.data || []);
       actualizarPaginacion(data.paginacion);
@@ -93,10 +98,7 @@ export default function Usuarios() {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([
-        fetchUsuarios(),
-        fetchVehiculos(),
-      ]);
+      await Promise.all([fetchUsuarios(), fetchVehiculos()]);
     };
 
     loadData();
@@ -156,14 +158,14 @@ export default function Usuarios() {
           usuarioEditando.perfilConductor?.vehiculo?.id != null
             ? Number(usuarioEditando.perfilConductor.vehiculo.id)
             : "",
-        estadoConductor:
-          usuarioEditando.perfilConductor?.estadoId || 1,
+        estadoConductor: usuarioEditando.perfilConductor?.estadoId || 1,
         razonSocial: usuarioEditando.perfilEntidad?.razonSocial || "",
         nit: usuarioEditando.perfilEntidad?.nit || "",
         telefonoContacto: usuarioEditando.perfilEntidad?.telefonoContacto || "",
         telefono: usuarioEditando.perfilPasajero?.telefono || "",
         direccion: usuarioEditando.perfilPasajero?.direccion || "",
-        tipoDocumentoId: usuarioEditando.perfilPasajero?.tipoDocumento?.id?.toString() || "",
+        tipoDocumentoId:
+          usuarioEditando.perfilPasajero?.tipoDocumento?.id?.toString() || "",
         numeroDocumento: usuarioEditando.perfilPasajero?.numeroDocumento || "",
         fechaNacimiento: usuarioEditando.perfilPasajero?.fechaNacimiento
           ? usuarioEditando.perfilPasajero.fechaNacimiento.split("T")[0]
@@ -251,7 +253,9 @@ export default function Usuarios() {
       // En edición, limpiar perfiles que ya no corresponden
       if (editingUsuario) {
         if (rolId !== 2 && editingUsuario.perfilConductor) {
-          await perfilConductorService.delete(editingUsuario.perfilConductor.id);
+          await perfilConductorService.delete(
+            editingUsuario.perfilConductor.id,
+          );
         }
         if (rolId !== 4 && editingUsuario.perfilEntidad) {
           await perfilEntidadService.delete(editingUsuario.perfilEntidad.id);
@@ -262,12 +266,15 @@ export default function Usuarios() {
 
         // Guardar perfil adicional según rol (solo edición)
         if (rolId === 2 && editingUsuario.perfilConductor) {
-          await perfilConductorService.update(editingUsuario.perfilConductor.id, {
-            usuarioId,
-            vehiculoId: formData.vehiculoId || null,
-            licenciaConducir: formData.licenciaConducir,
-            estadoId: formData.estadoConductor,
-          });
+          await perfilConductorService.update(
+            editingUsuario.perfilConductor.id,
+            {
+              usuarioId,
+              vehiculoId: formData.vehiculoId || null,
+              licenciaConducir: formData.licenciaConducir,
+              estadoId: formData.estadoConductor,
+            },
+          );
         } else if (rolId === 4 && editingUsuario.perfilEntidad) {
           await perfilEntidadService.update(editingUsuario.perfilEntidad.id, {
             usuarioId,
@@ -401,7 +408,7 @@ export default function Usuarios() {
     { value: "nombres", label: "Nombres" },
     { value: "apellidos", label: "Apellidos" },
     { value: "correo", label: "Correo" },
-    { value: "rolId", label: "Rol" }
+    { value: "rolId", label: "Rol" },
   ];
 
   return (
@@ -425,13 +432,13 @@ export default function Usuarios() {
                 rolId: "",
                 licenciaConducir: "",
                 vehiculoId: "",
-    estadoConductor: 1,
+                estadoConductor: 1,
                 razonSocial: "",
                 nit: "",
                 telefonoContacto: "",
                 telefono: "",
                 direccion: "",
-    tipoDocumentoId: "",
+                tipoDocumentoId: "",
                 numeroDocumento: "",
                 fechaNacimiento: "",
               });
@@ -443,140 +450,146 @@ export default function Usuarios() {
           </button>
         </div>
 
-      <TableToolbar
-        searchValue={searchTerm}
-        onSearchChange={handleSearchChange}
-        placeholder="Buscar por nombres, apellidos o correo..."
-        filters={[
-          {
-            name: "rolId",
-            label: "Todos los roles",
-            value: filters.rolId,
-            options: [
-              { value: "1", label: "Administrador" },
-              { value: "2", label: "Conductor" },
-              { value: "3", label: "Pasajero" },
-              { value: "4", label: "Entidad Externa" },
-            ],
-          },
-        ]}
-        onFilterChange={handleFilterChange}
-        sortOptions={sortOptions}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-      />
+        <TableToolbar
+          searchValue={searchTerm}
+          onSearchChange={handleSearchChange}
+          placeholder="Buscar por nombres, apellidos o correo..."
+          filters={[
+            {
+              name: "rolId",
+              label: "Todos los roles",
+              value: filters.rolId,
+              options: [
+                { value: "1", label: "Administrador" },
+                { value: "2", label: "Conductor" },
+                { value: "3", label: "Pasajero" },
+                { value: "4", label: "Entidad Externa" },
+              ],
+            },
+          ]}
+          onFilterChange={handleFilterChange}
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+        />
 
         <div className="usuarios-table-wrapper">
-        <div className="bg-white rounded-lg shadow-sm">
-          {loading ? (
-            <div className="loading-container">
-              <div className="spinner"></div>
-              <p>Cargando usuarios...</p>
-            </div>
-          ) : (
-            <>
-          {/* Desktop Table */}
-          <div className="desktop-table">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th title="Identificador único del usuario">ID</th>
-                  <th title="Nombres del usuario">Nombres</th>
-                  <th title="Apellidos del usuario">Apellidos</th>
-                  <th title="Correo electrónico del usuario">Correo</th>
-                  <th title="Rol asignado al usuario en el sistema">Rol</th>
-                  <th title="Opciones disponibles para este registro">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usuariosPaginados.length > 0 ? (
-                  usuariosPaginados.map((usuario) => (
-                    <tr key={usuario.id}>
-                      <td>{usuario.id}</td>
-                      <td>
-                        <span className="font-medium">{usuario.nombres}</span>
-                      </td>
-                      <td>{usuario.apellidos || "-"}</td>
-                      <td>{usuario.correo}</td>
-                      <td>
-                        <span className={`badge ${getRolColor(usuario.rol?.id)}`}>
-                          {getRolNombre(usuario.rol?.id)}
-                        </span>
-                      </td>
-                      <td>
-                        <ActionsMenu
-                          onEdit={() => handleEditar(usuario)}
-                          onDelete={() => handleEliminar(usuario)}
-                        />
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="text-center">
-                      No se encontraron usuarios
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="mobile-cards">
-            {usuariosPaginados.length > 0 ? (
-              <div className="mobile-cards-list">
-                {usuariosPaginados.map((usuario) => (
-                  <div key={usuario.id} className="mobile-card">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-info">
-                        <h3>{usuario.nombres}</h3>
-                        <p>{usuario.apellidos || "Sin apellidos"}</p>
-                        <p>{usuario.correo}</p>
-                      </div>
-                      <span
-                        className={`mobile-badge ${getRolColor(usuario.rol?.id)}`}
-                      >
-                        {getRolNombre(usuario.rol?.id).toUpperCase()}
-                      </span>
-                    </div>
-
-                    <div className="mobile-card-body">
-                      <div className="mobile-card-row">
-                        <span>ID</span>
-                        <span>{usuario.id}</span>
-                      </div>
-                    </div>
-
-                    <div className="mobile-card-actions">
-                      <ActionsMenu
-                        onEdit={() => handleEditar(usuario)}
-                        onDelete={() => handleEliminar(usuario)}
-                      />
-                    </div>
-                  </div>
-                ))}
+          <div className="bg-white rounded-lg shadow-sm">
+            {loading ? (
+              <div className="loading-container">
+                <div className="spinner"></div>
+                <p>Cargando usuarios...</p>
               </div>
             ) : (
-              <div className="mobile-empty">No hay usuarios disponibles</div>
+              <>
+                {/* Desktop Table */}
+                <div className="desktop-table">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Nombres</th>
+                        <th>Apellidos</th>
+                        <th>Correo</th>
+                        <th>Rol</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usuariosPaginados.length > 0 ? (
+                        usuariosPaginados.map((usuario) => (
+                          <tr key={usuario.id}>
+                            <td>{usuario.id}</td>
+                            <td>
+                              <span className="font-medium">
+                                {usuario.nombres}
+                              </span>
+                            </td>
+                            <td>{usuario.apellidos || "-"}</td>
+                            <td>{usuario.correo}</td>
+                            <td>
+                              <span
+                                className={`badge ${getRolColor(usuario.rol?.id)}`}
+                              >
+                                {getRolNombre(usuario.rol?.id)}
+                              </span>
+                            </td>
+                            <td>
+                              <ActionsMenu
+                                onEdit={() => handleEditar(usuario)}
+                                onDelete={() => handleEliminar(usuario)}
+                              />
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="6" className="text-center">
+                            No se encontraron usuarios
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="mobile-cards">
+                  {usuariosPaginados.length > 0 ? (
+                    <div className="mobile-cards-list">
+                      {usuariosPaginados.map((usuario) => (
+                        <div key={usuario.id} className="mobile-card">
+                          <div className="mobile-card-header">
+                            <div className="mobile-card-info">
+                              <h3>{usuario.nombres}</h3>
+                              <p>{usuario.apellidos || "Sin apellidos"}</p>
+                              <p>{usuario.correo}</p>
+                            </div>
+                            <span
+                              className={`mobile-badge ${getRolColor(usuario.rol?.id)}`}
+                            >
+                              {getRolNombre(usuario.rol?.id).toUpperCase()}
+                            </span>
+                          </div>
+
+                          <div className="mobile-card-body">
+                            <div className="mobile-card-row">
+                              <span>ID</span>
+                              <span>{usuario.id}</span>
+                            </div>
+                          </div>
+
+                          <div className="mobile-card-actions">
+                            <ActionsMenu
+                              onEdit={() => handleEditar(usuario)}
+                              onDelete={() => handleEliminar(usuario)}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mobile-empty">
+                      No hay usuarios disponibles
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
-            </>
+
+          {!loading && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={pagination?.totalPaginas || 1}
+              totalItems={pagination?.totalRegistros || usuarios.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+            />
           )}
         </div>
-
-        {!loading && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={pagination?.totalPaginas || 1}
-          totalItems={pagination?.totalRegistros || usuarios.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
-        )}
-      </div>
       </div>
 
       <Modal
@@ -654,12 +667,20 @@ export default function Usuarios() {
           </div>
           {!editingUsuario && (
             <div style={{ marginBottom: "1rem" }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
                 Contraseña
               </label>
               <PasswordInput
                 value={formData.contrasena}
-                onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, contrasena: e.target.value })
+                }
                 placeholder="Contraseña"
                 required
               />
@@ -701,10 +722,7 @@ export default function Usuarios() {
           )}
 
           {rolSeleccionado === 4 && (
-            <UsuariosEntidad
-              formData={formData}
-              onChange={handleFieldChange}
-            />
+            <UsuariosEntidad formData={formData} onChange={handleFieldChange} />
           )}
 
           {rolSeleccionado === 3 && (

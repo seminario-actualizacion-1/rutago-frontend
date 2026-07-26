@@ -90,7 +90,9 @@ export default function Vehiculos() {
     }
   };
 
-  useEffect(() => { fetchVehiculos(); }, [queryParams, searchTerm, filters, sortBy, sortOrder]);
+  useEffect(() => {
+    fetchVehiculos();
+  }, [queryParams, searchTerm, filters, sortBy, sortOrder]);
 
   const handleNuevoVehiculo = async () => {
     setEditingVehiculo(null);
@@ -247,24 +249,24 @@ export default function Vehiculos() {
           </button>
         </div>
 
-      <TableToolbar
-        searchValue={searchTerm}
-        onSearchChange={handleSearchChange}
-        placeholder="Buscar por placa, marca, modelo o color..."
-        filters={[
-          {
-            name: "estadoId",
-            label: "Todos los estados",
-            value: filters.estadoId,
-            options: estadoOptions,
-          },
-        ]}
-        onFilterChange={handleFilterChange}
-        sortOptions={sortOptions}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-      />
+        <TableToolbar
+          searchValue={searchTerm}
+          onSearchChange={handleSearchChange}
+          placeholder="Buscar por placa, marca, modelo o color..."
+          filters={[
+            {
+              name: "estadoId",
+              label: "Todos los estados",
+              value: filters.estadoId,
+              options: estadoOptions,
+            },
+          ]}
+          onFilterChange={handleFilterChange}
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+        />
         <div className="bg-white rounded-lg shadow-sm">
           {loading ? (
             <div className="loading-container">
@@ -273,113 +275,121 @@ export default function Vehiculos() {
             </div>
           ) : (
             <>
-          {/* Desktop Table */}
-          <div className="desktop-table">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th title="Identificador único del vehículo">ID</th>
-                  <th title="Placa del vehículo">Placa</th>
-                  <th title="Marca del vehículo">Marca</th>
-                  <th title="Modelo del vehículo">Modelo</th>
-                  <th title="Color del vehículo">Color</th>
-                  <th title="Número máximo de pasajeros">Capacidad</th>
-                  <th title="Estado actual del vehículo">Estado</th>
-                  <th title="Opciones disponibles para este registro">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vehiculosPaginados.length > 0 ? (
-                  vehiculosPaginados.map((vehiculo) => (
-                    <tr key={vehiculo.id}>
-                      <td>{vehiculo.id}</td>
-                      <td>
-                        <span className="font-medium">{vehiculo.placa}</span>
-                      </td>
-                      <td>{vehiculo.marca}</td>
-                      <td>{vehiculo.modelo}</td>
-                      <td>{vehiculo.color}</td>
-                      <td>{vehiculo.capacidadPasajeros}</td>
-                      <td>
-                        <span
-                          className={`badge ${getEstadoColor(vehiculo.estado)}`}
-                        >
-                          {vehiculo.estado?.nombre || ESTADOS_VEHICULO[vehiculo.estado?.id] || vehiculo.estado?.id}
-                        </span>
-                      </td>
-                      <td>
-                        <ActionsMenu
-                          onEdit={() => handleEditar(vehiculo)}
-                          onDelete={() => handleEliminar(vehiculo.id)}
-                        />
-                      </td>
+              {/* Desktop Table */}
+              <div className="desktop-table">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Placa</th>
+                      <th>Marca</th>
+                      <th>Modelo</th>
+                      <th>Color</th>
+                      <th>Capacidad</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="text-center">
-                      No se encontraron vehículos
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="mobile-cards">
-            {vehiculosPaginados.length > 0 ? (
-              <div className="mobile-cards-list">
-                {vehiculosPaginados.map((vehiculo) => (
-                  <div key={vehiculo.id} className="mobile-card">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-info">
-                        <h3>{vehiculo.placa}</h3>
-                        <p>
-                          {vehiculo.marca} {vehiculo.modelo}
-                        </p>
-                        <p>Color: {vehiculo.color}</p>
-                      </div>
-                      <span
-                        className={`mobile-badge ${getEstadoColor(vehiculo.estado)}`}
-                      >
-                        {vehiculo.estado?.nombre || ESTADOS_VEHICULO[vehiculo.estado?.id] || vehiculo.estado?.id}
-                      </span>
-                    </div>
-
-                    <div className="mobile-card-body">
-                      <div className="mobile-card-row">
-                        <span>Capacidad</span>
-                        <span>{vehiculo.capacidadPasajeros}</span>
-                      </div>
-                    </div>
-
-                    <div className="mobile-card-actions">
-                      <ActionsMenu
-                        onEdit={() => handleEditar(vehiculo)}
-                        onDelete={() => handleEliminar(vehiculo.id)}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  </thead>
+                  <tbody>
+                    {vehiculosPaginados.length > 0 ? (
+                      vehiculosPaginados.map((vehiculo) => (
+                        <tr key={vehiculo.id}>
+                          <td>{vehiculo.id}</td>
+                          <td>
+                            <span className="font-medium">
+                              {vehiculo.placa}
+                            </span>
+                          </td>
+                          <td>{vehiculo.marca}</td>
+                          <td>{vehiculo.modelo}</td>
+                          <td>{vehiculo.color}</td>
+                          <td>{vehiculo.capacidadPasajeros}</td>
+                          <td>
+                            <span
+                              className={`badge ${getEstadoColor(vehiculo.estado)}`}
+                            >
+                              {vehiculo.estado?.nombre ||
+                                ESTADOS_VEHICULO[vehiculo.estado?.id] ||
+                                vehiculo.estado?.id}
+                            </span>
+                          </td>
+                          <td>
+                            <ActionsMenu
+                              onEdit={() => handleEditar(vehiculo)}
+                              onDelete={() => handleEliminar(vehiculo.id)}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="8" className="text-center">
+                          No se encontraron vehículos
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            ) : (
-              <div className="mobile-empty">No hay vehículos disponibles</div>
-            )}
-          </div>
+
+              {/* Mobile Cards */}
+              <div className="mobile-cards">
+                {vehiculosPaginados.length > 0 ? (
+                  <div className="mobile-cards-list">
+                    {vehiculosPaginados.map((vehiculo) => (
+                      <div key={vehiculo.id} className="mobile-card">
+                        <div className="mobile-card-header">
+                          <div className="mobile-card-info">
+                            <h3>{vehiculo.placa}</h3>
+                            <p>
+                              {vehiculo.marca} {vehiculo.modelo}
+                            </p>
+                            <p>Color: {vehiculo.color}</p>
+                          </div>
+                          <span
+                            className={`mobile-badge ${getEstadoColor(vehiculo.estado)}`}
+                          >
+                            {vehiculo.estado?.nombre ||
+                              ESTADOS_VEHICULO[vehiculo.estado?.id] ||
+                              vehiculo.estado?.id}
+                          </span>
+                        </div>
+
+                        <div className="mobile-card-body">
+                          <div className="mobile-card-row">
+                            <span>Capacidad</span>
+                            <span>{vehiculo.capacidadPasajeros}</span>
+                          </div>
+                        </div>
+
+                        <div className="mobile-card-actions">
+                          <ActionsMenu
+                            onEdit={() => handleEditar(vehiculo)}
+                            onDelete={() => handleEliminar(vehiculo.id)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mobile-empty">
+                    No hay vehículos disponibles
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
 
         {!loading && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={pagination?.totalPaginas || 1}
-          totalItems={pagination?.totalRegistros || vehiculos.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination?.totalPaginas || 1}
+            totalItems={pagination?.totalRegistros || vehiculos.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
         )}
       </div>
 
@@ -561,7 +571,13 @@ export default function Vehiculos() {
             </select>
           </div>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
               Ubicación — haz clic en el mapa
             </label>
             <MapaSelector
@@ -574,7 +590,13 @@ export default function Vehiculos() {
           </div>
           <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem" }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
                 Latitud
               </label>
               <input
@@ -583,14 +605,23 @@ export default function Vehiculos() {
                 value={formData.latitud}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setFormData({ ...formData, latitud: isNaN(parseFloat(value)) ? "" : parseFloat(value) });
+                  setFormData({
+                    ...formData,
+                    latitud: isNaN(parseFloat(value)) ? "" : parseFloat(value),
+                  });
                 }}
                 className="input"
                 style={{ width: "100%" }}
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
                 Longitud
               </label>
               <input
@@ -599,7 +630,10 @@ export default function Vehiculos() {
                 value={formData.longitud}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setFormData({ ...formData, longitud: isNaN(parseFloat(value)) ? "" : parseFloat(value) });
+                  setFormData({
+                    ...formData,
+                    longitud: isNaN(parseFloat(value)) ? "" : parseFloat(value),
+                  });
                 }}
                 className="input"
                 style={{ width: "100%" }}

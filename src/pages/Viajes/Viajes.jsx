@@ -338,7 +338,7 @@ export default function Viajes() {
                 <option value="">Seleccione un horario</option>
                 {horarios.map((h) => (
                   <option key={h.id} value={h.id}>
-                    {h.horaSalida?.slice(0, 5)} - {h.diasSemana || ""}
+                    {h.horaSalida?.slice(0, 5)}{h.fechaInicio ? ` - ${h.fechaInicio.split("-").reverse().join("/")} al ${h.fechaFin ? h.fechaFin.split("-").reverse().join("/") : ""}` : ""}
                   </option>
                 ))}
               </select>
