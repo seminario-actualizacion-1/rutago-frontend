@@ -8,36 +8,26 @@ import { rutasService } from "../../services/rutas.service";
 import { vehiculosService } from "../../services/vehiculos.service";
 import { usePaginacion } from "../../hooks/usePaginacion";
 
-const frecuenciaOptions = [
-  { value: "", label: "Sin frecuencia definida" },
-  { value: 10, label: "Cada 10 minutos" },
-  { value: 15, label: "Cada 15 minutos" },
-  { value: 20, label: "Cada 20 minutos" },
-  { value: 30, label: "Cada 30 minutos" },
-  { value: 45, label: "Cada 45 minutos" },
-  { value: 60, label: "Cada 60 minutos" },
-];
+const minutosATime = (min) => {
+  if (!min && min !== 0) return "";
+  const h = Math.floor(min / 60).toString().padStart(2, "0");
+  const m = (min % 60).toString().padStart(2, "0");
+  return `${h}:${m}`;
+};
 
-const diasSemanaOptions = [
-  "Lunes a Viernes",
-  "Lunes a Sábado",
-  "Todos los días",
-  "Solo Lunes",
-  "Solo Martes",
-  "Solo Miércoles",
-  "Solo Jueves",
-  "Solo Viernes",
-  "Solo Sábado",
-  "Solo Domingo",
-  "Sábados y Domingos",
-];
+const timeAMinutos = (time) => {
+  if (!time) return "";
+  const [h, m] = time.split(":");
+  return parseInt(h) * 60 + parseInt(m);
+};
 
 const emptyForm = {
   vehiculoId: "",
   rutaId: "",
   horaSalida: "",
   frecuenciaMinutos: "",
-  diasSemana: "",
+  fechaInicio: "",
+  fechaFin: "",
 };
 
 export default function Horarios() {
@@ -135,8 +125,9 @@ export default function Horarios() {
       horaSalida: horario.horaSalida
         ? String(horario.horaSalida).slice(0, 5)
         : "",
-      frecuenciaMinutos: horario.frecuenciaMinutos || "",
-      diasSemana: horario.diasSemana || "",
+      frecuenciaMinutos: minutosATime(horario.frecuenciaMinutos),
+      fechaInicio: horario.fechaInicio || "",
+      fechaFin: horario.fechaFin || "",
     });
     setError("");
     setModalOpen(true);
@@ -144,10 +135,14 @@ export default function Horarios() {
 
   const handleGuardar = async () => {
     try {
+      const payload = {
+        ...formData,
+        frecuenciaMinutos: timeAMinutos(formData.frecuenciaMinutos),
+      };
       if (editingHorario) {
-        await horariosService.update(editingHorario.id, formData);
+        await horariosService.update(editingHorario.id, payload);
       } else {
-        await horariosService.create(formData);
+        await horariosService.create(payload);
       }
       setError("");
       await fetchHorarios();
@@ -195,7 +190,7 @@ export default function Horarios() {
 
   const sortOptions = [
     { value: "id", label: "ID" },
-    { value: "horaSalida", label: "Hora de salida" }
+    { value: "horaSalida", label: "Hora de salida" },
   ];
 
   return (
@@ -212,15 +207,15 @@ export default function Horarios() {
           </button>
         </div>
 
-      <TableToolbar
-        searchValue={searchTerm}
-        onSearchChange={handleSearchChange}
-        placeholder="Buscar por ruta, vehículo u hora..."
-        sortOptions={sortOptions}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-      />
+        <TableToolbar
+          searchValue={searchTerm}
+          onSearchChange={handleSearchChange}
+          placeholder="Buscar por ruta, vehículo u hora..."
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+        />
 
         <div className="bg-white rounded-lg shadow-sm">
           {loading ? (
@@ -230,104 +225,110 @@ export default function Horarios() {
             </div>
           ) : (
             <>
-          <div className="desktop-table">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th title="Identificador único del horario">ID</th>
-                  <th title="Nombre de la ruta asociada">Ruta</th>
-                  <th title="Vehículo asignado a este horario">Vehículo</th>
-                  <th title="Hora de salida programada">Hora de salida</th>
-                  <th title="Intervalo de tiempo entre cada salida">Frecuencia</th>
-                  <th title="Días de la semana en que aplica el horario">Días</th>
-                  <th title="Opciones disponibles para este registro">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {horariosPaginados.length > 0 ? (
-                  horariosPaginados.map((horario) => (
-                    <tr key={horario.id}>
-                      <td>{horario.id}</td>
-                      <td>{getRutaLabel(horario.ruta?.id)}</td>
-                      <td>{getVehiculoLabel(horario.vehiculo?.id)}</td>
-                      <td>{horario.horaSalida || "-"}</td>
-                      <td>
-                        {horario.frecuenciaMinutos
-                          ? `${horario.frecuenciaMinutos} min`
-                          : "-"}
-                      </td>
-                      <td>{horario.diasSemana || "-"}</td>
-                      <td>
-                        <ActionsMenu
-                          onEdit={() => handleEditar(horario)}
-                          onDelete={() => handleEliminar(horario.id)}
-                        />
-                      </td>
+              <div className="desktop-table">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Ruta</th>
+                      <th>Vehículo</th>
+                      <th>Hora de salida</th>
+                      <th>Frecuencia</th>
+                      <th>Días</th>
+                      <th>Acciones</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center">
-                      No se encontraron horarios
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mobile-cards">
-            {horariosPaginados.length > 0 ? (
-              <div className="mobile-cards-list">
-                {horariosPaginados.map((horario) => (
-                  <div key={horario.id} className="mobile-card">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-info">
-                        <h3>{getRutaLabel(horario.ruta?.id)}</h3>
-                        <p>{getVehiculoLabel(horario.vehiculo?.id)}</p>
-                        <p>Salida: {horario.horaSalida || "-"}</p>
-                      </div>
-                    </div>
-                    <div className="mobile-card-body">
-                      <div className="mobile-card-row">
-                        <span>Frecuencia</span>
-                        <span>
-                          {horario.frecuenciaMinutos
-                            ? `${horario.frecuenciaMinutos} min`
-                            : "-"}
-                        </span>
-                      </div>
-                      <div className="mobile-card-row">
-                        <span>Días</span>
-                        <span>{horario.diasSemana || "-"}</span>
-                      </div>
-                    </div>
-                    <div className="mobile-card-actions">
-                      <ActionsMenu
-                        onEdit={() => handleEditar(horario)}
-                        onDelete={() => handleEliminar(horario.id)}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  </thead>
+                  <tbody>
+                    {horariosPaginados.length > 0 ? (
+                      horariosPaginados.map((horario) => (
+                        <tr key={horario.id}>
+                          <td>{horario.id}</td>
+                          <td>{getRutaLabel(horario.ruta?.id)}</td>
+                          <td>{getVehiculoLabel(horario.vehiculo?.id)}</td>
+                          <td>{horario.horaSalida || "-"}</td>
+                          <td>
+                            {horario.frecuenciaMinutos
+                              ? minutosATime(horario.frecuenciaMinutos)
+                              : "-"}
+                          </td>
+                          <td>
+                            {horario.fechaInicio
+                              ? `${horario.fechaInicio.split("-").reverse().join("/")} → ${horario.fechaFin ? horario.fechaFin.split("-").reverse().join("/") : "-"}`
+                              : "-"}
+                          </td>
+                          <td>
+                            <ActionsMenu
+                              onEdit={() => handleEditar(horario)}
+                              onDelete={() => handleEliminar(horario.id)}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="text-center">
+                          No se encontraron horarios
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            ) : (
-              <div className="mobile-empty">No hay horarios disponibles</div>
-            )}
-          </div>
+
+              <div className="mobile-cards">
+                {horariosPaginados.length > 0 ? (
+                  <div className="mobile-cards-list">
+                    {horariosPaginados.map((horario) => (
+                      <div key={horario.id} className="mobile-card">
+                        <div className="mobile-card-header">
+                          <div className="mobile-card-info">
+                            <h3>{getRutaLabel(horario.ruta?.id)}</h3>
+                            <p>{getVehiculoLabel(horario.vehiculo?.id)}</p>
+                            <p>Salida: {horario.horaSalida || "-"}</p>
+                          </div>
+                        </div>
+                        <div className="mobile-card-body">
+                          <div className="mobile-card-row">
+                          <span>Frecuencia</span>
+                          <span>
+                            {horario.frecuenciaMinutos
+                              ? minutosATime(horario.frecuenciaMinutos)
+                              : "-"}
+                          </span>
+                          </div>
+                          <div className="mobile-card-row">
+                            <span>Días</span>
+                            <span>{horario.fechaInicio ? `${horario.fechaInicio.split("-").reverse().join("/")} → ${horario.fechaFin ? horario.fechaFin.split("-").reverse().join("/") : "-"}` : "-"}</span>
+                          </div>
+                        </div>
+                        <div className="mobile-card-actions">
+                          <ActionsMenu
+                            onEdit={() => handleEditar(horario)}
+                            onDelete={() => handleEliminar(horario.id)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mobile-empty">
+                    No hay horarios disponibles
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
 
         {!loading && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={pagination?.totalPaginas || 1}
-          totalItems={pagination?.totalRegistros || horarios.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination?.totalPaginas || 1}
+            totalItems={pagination?.totalRegistros || horarios.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
         )}
       </div>
 
@@ -436,26 +437,17 @@ export default function Horarios() {
                 fontWeight: "500",
               }}
             >
-              Frecuencia (minutos)
+              Frecuencia (HH:mm)
             </label>
-            <select
+            <input
+              type="time"
               value={formData.frecuenciaMinutos}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData({
-                  ...formData,
-                  frecuenciaMinutos: value === "" ? "" : parseInt(value, 10),
-                });
-              }}
+              onChange={(e) =>
+                setFormData({ ...formData, frecuenciaMinutos: e.target.value })
+              }
               className="input"
               style={{ width: "100%" }}
-            >
-              {frecuenciaOptions.map((option) => (
-                <option key={String(option.value)} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div style={{ marginBottom: "1.5rem" }}>
@@ -466,23 +458,29 @@ export default function Horarios() {
                 fontWeight: "500",
               }}
             >
-              Días de la semana
+              Fecha de inicio
             </label>
-            <select
-              value={formData.diasSemana}
-              onChange={(e) =>
-                setFormData({ ...formData, diasSemana: e.target.value })
-              }
-              className="input"
-              style={{ width: "100%" }}
-            >
-              <option value="">Seleccionar días</option>
-              {diasSemanaOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <input
+                type="date"
+                value={formData.fechaInicio}
+                onChange={(e) =>
+                  setFormData({ ...formData, fechaInicio: e.target.value })
+                }
+                className="input"
+                style={{ flex: 1 }}
+              />
+              <span style={{ color: "#999" }}>→</span>
+              <input
+                type="date"
+                value={formData.fechaFin}
+                onChange={(e) =>
+                  setFormData({ ...formData, fechaFin: e.target.value })
+                }
+                className="input"
+                style={{ flex: 1 }}
+              />
+            </div>
           </div>
 
           {error && (

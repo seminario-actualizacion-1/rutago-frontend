@@ -70,16 +70,18 @@ export default function Sidebar({ rol }) {
   const config = obtenerRol(rol);
 
   return (
-    <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ""}`}>
+    <aside
+      className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ""}`}
+    >
       <div className={styles.header}>
-        <span className={styles.title}>
-          {config.titulo}
-        </span>
+        <span className={styles.title}>{config.titulo}</span>
         {!sidebarCollapsed && <span className={styles.badge}>RutaGo</span>}
       </div>
       <nav className={styles.nav}>
         <div className={styles.section}>
-          {!sidebarCollapsed && <div className={styles.sectionTitle}>Módulos</div>}
+          {!sidebarCollapsed && (
+            <div className={styles.sectionTitle}>Módulos</div>
+          )}
           {config.modulos.map((item) => (
             <NavLink
               key={item.to}

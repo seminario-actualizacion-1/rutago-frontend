@@ -27,7 +27,7 @@
 .navbar-brand h1 {
   margin: 0;
   font-size: 1.5rem;
-  color: #08863A;
+  color: #08863a;
 }
 
 .navbar-right {
@@ -52,11 +52,11 @@
 
 .nav-link:hover {
   background: rgba(8, 134, 58, 0.1);
-  color: #08863A;
+  color: #08863a;
 }
 
 .nav-link.active {
-  background: #08863A;
+  background: #08863a;
   color: #fff;
 }
 
@@ -77,7 +77,9 @@
   border: none;
   font-size: inherit;
   font-family: inherit;
-  transition: background 0.3s, transform 0.1s;
+  transition:
+    background 0.3s,
+    transform 0.1s;
 }
 
 .nav-btn:hover {
@@ -85,21 +87,21 @@
 }
 
 .nav-btn-primary {
-  background-color: #08863A;
+  background-color: #08863a;
   color: #fff;
 }
 
 .nav-btn-primary:hover {
-  background-color: #0A883C;
+  background-color: #0a883c;
 }
 
 .nav-btn-accent {
-  background-color: #FDC202;
+  background-color: #fdc202;
   color: #333;
 }
 
 .nav-btn-accent:hover {
-  background-color: #FCC604;
+  background-color: #fcc604;
 }
 
 /* Icon buttons */
@@ -152,19 +154,21 @@
   cursor: pointer;
   font-size: inherit;
   font-family: inherit;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 }
 
 .user-dropdown-toggle:hover {
   background: rgba(8, 134, 58, 0.05);
-  border-color: #08863A;
+  border-color: #08863a;
 }
 
 .user-avatar {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #08863A;
+  background: #08863a;
   color: #fff;
   display: flex;
   align-items: center;

@@ -3,7 +3,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(180deg, #FEFEFE 0%, rgba(8, 134, 58, 0.06) 100%);
+  background: linear-gradient(180deg, #fefefe 0%, rgba(8, 134, 58, 0.06) 100%);
   padding: 20px;
 }
 
@@ -24,7 +24,7 @@
 }
 
 .login-links a {
-  color: #08863A;
+  color: #08863a;
   text-decoration: none;
   font-weight: 500;
 }
@@ -41,7 +41,7 @@
 
 .status-message {
   text-align: center;
-  color: #08863A;
+  color: #08863a;
   background: rgba(8, 134, 58, 0.1);
   padding: 10px;
   border-radius: 6px;

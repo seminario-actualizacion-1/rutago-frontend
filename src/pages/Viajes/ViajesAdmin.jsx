@@ -5,7 +5,12 @@ import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import MapaRutas from "../../components/MapaRutas/MapaRutas";
 import { viajesService } from "../../services/viajes.service";
 import { ESTADOS_VIAJE } from "../../config/estados";
-import { obtenerEstadoId, obtenerEstadoColor, obtenerNombrePersona, textoCupos } from "./viajesHelpers";
+import {
+  obtenerEstadoId,
+  obtenerEstadoColor,
+  obtenerNombrePersona,
+  textoCupos,
+} from "./viajesHelpers";
 
 export default function ViajesAdmin({ onVerDetalle, onEditar }) {
   const [viajes, setViajes] = useState([]);
@@ -20,14 +25,17 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
 
-  const queryParams = useMemo(() => ({
-    paginaActual: currentPage,
-    registrosPorPagina: itemsPerPage,
-    q: searchTerm || undefined,
-    ...(filters.estadoId && { estadoId: filters.estadoId }),
-    sortBy,
-    sortOrder,
-  }), [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder]);
+  const queryParams = useMemo(
+    () => ({
+      paginaActual: currentPage,
+      registrosPorPagina: itemsPerPage,
+      q: searchTerm || undefined,
+      ...(filters.estadoId && { estadoId: filters.estadoId }),
+      sortBy,
+      sortOrder,
+    }),
+    [currentPage, itemsPerPage, searchTerm, filters, sortBy, sortOrder],
+  );
 
   const loadViajes = async () => {
     try {
@@ -42,7 +50,9 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
     }
   };
 
-  useEffect(() => { loadViajes(); }, [queryParams]);
+  useEffect(() => {
+    loadViajes();
+  }, [queryParams]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
@@ -61,7 +71,10 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
   };
 
   const handlePageChange = (page) => setCurrentPage(page);
-  const handleItemsPerPageChange = (n) => { setItemsPerPage(n); setCurrentPage(1); };
+  const handleItemsPerPageChange = (n) => {
+    setItemsPerPage(n);
+    setCurrentPage(1);
+  };
 
   const handleEliminar = async (viajeId) => {
     try {
@@ -74,11 +87,13 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
 
   const rutasUnicas = useMemo(() => {
     const visto = new Set();
-    return viajes.map((v) => v.ruta).filter((r) => {
-      if (!r || visto.has(r.id)) return false;
-      visto.add(r.id);
-      return true;
-    });
+    return viajes
+      .map((v) => v.ruta)
+      .filter((r) => {
+        if (!r || visto.has(r.id)) return false;
+        visto.add(r.id);
+        return true;
+      });
   }, [viajes]);
 
   return (
@@ -88,7 +103,10 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
       </div>
 
       <div style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}>
-        <button onClick={() => setVistaMapa(!vistaMapa)} className="button button-outline">
+        <button
+          onClick={() => setVistaMapa(!vistaMapa)}
+          className="button button-outline"
+        >
           {vistaMapa ? "Ver Tabla" : "Ver Mapa"}
         </button>
       </div>
@@ -96,8 +114,13 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
       {error && <p className="error">{error}</p>}
 
       {vistaMapa ? (
-        <div className="bg-white rounded-lg shadow-sm" style={{ padding: "1rem" }}>
-          <h3 style={{ marginBottom: "0.75rem" }}>Mapa de Rutas — Buenaventura</h3>
+        <div
+          className="bg-white rounded-lg shadow-sm"
+          style={{ padding: "1rem" }}
+        >
+          <h3 style={{ marginBottom: "0.75rem" }}>
+            Mapa de Rutas — Buenaventura
+          </h3>
           <MapaRutas rutas={rutasUnicas} showSearch />
         </div>
       ) : (
@@ -106,18 +129,20 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
             searchValue={searchTerm}
             onSearchChange={handleSearchChange}
             placeholder="Buscar por ruta..."
-            filters={[{
-              name: "estadoId",
-              label: "Todos los estados",
-              value: filters.estadoId,
-              options: [
-                { value: 1, label: "Buscando" },
-                { value: 2, label: "Aceptado" },
-                { value: 3, label: "En curso" },
-                { value: 4, label: "Finalizado" },
-                { value: 5, label: "Cancelado" },
-              ],
-            }]}
+            filters={[
+              {
+                name: "estadoId",
+                label: "Todos los estados",
+                value: filters.estadoId,
+                options: [
+                  { value: 1, label: "Buscando" },
+                  { value: 2, label: "Aceptado" },
+                  { value: 3, label: "En curso" },
+                  { value: 4, label: "Finalizado" },
+                  { value: 5, label: "Cancelado" },
+                ],
+              },
+            ]}
             onFilterChange={handleFilterChange}
             sortOptions={[
               { value: "id", label: "ID" },
@@ -140,14 +165,14 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
                   <table className="table">
                     <thead>
                       <tr>
-                        <th title="Identificador único del viaje">ID</th>
-                        <th title="Estado actual del viaje (Buscando, Aceptado, En curso, Finalizado, Cancelado)">Estado</th>
-                        <th title="Cupos disponibles y ocupados en el viaje">Cupos</th>
-                        <th title="Nombre de la ruta del viaje">Ruta</th>
-                        <th title="Hora de salida programada">Horario</th>
-                        <th title="Precio estimado del viaje">Precio</th>
-                        <th title="Nombre del conductor asignado">Conductor</th>
-                        <th title="Opciones disponibles para este registro">Acciones</th>
+                        <th>ID</th>
+                        <th>Estado</th>
+                        <th>Cupos</th>
+                        <th>Ruta</th>
+                        <th>Horario</th>
+                        <th>Precio</th>
+                        <th>Conductor</th>
+                        <th>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -156,13 +181,24 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
                           <tr key={viaje.id}>
                             <td>{viaje.id}</td>
                             <td>
-                              <span className={`badge ${obtenerEstadoColor(obtenerEstadoId(viaje))}`}>
-                                {viaje.estado?.nombre || ESTADOS_VIAJE[obtenerEstadoId(viaje)] || obtenerEstadoId(viaje) || "-"}
+                              <span
+                                className={`badge ${obtenerEstadoColor(obtenerEstadoId(viaje))}`}
+                              >
+                                {viaje.estado?.nombre ||
+                                  ESTADOS_VIAJE[obtenerEstadoId(viaje)] ||
+                                  obtenerEstadoId(viaje) ||
+                                  "-"}
                               </span>
                             </td>
                             <td>{textoCupos(viaje)}</td>
-                            <td><span className="font-medium">{viaje.ruta?.nombre || "-"}</span></td>
-                            <td>{viaje.horario?.horaSalida?.slice(0, 5) || "-"}</td>
+                            <td>
+                              <span className="font-medium">
+                                {viaje.ruta?.nombre || "-"}
+                              </span>
+                            </td>
+                            <td>
+                              {viaje.horario?.horaSalida?.slice(0, 5) || "-"}
+                            </td>
                             <td>${viaje.precioEstimado || "-"}</td>
                             <td>{obtenerNombrePersona(viaje.conductor)}</td>
                             <td>
@@ -177,7 +213,9 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={8} className="text-center">No se encontraron recorridos registrados</td>
+                          <td colSpan={8} className="text-center">
+                            No se encontraron recorridos registrados
+                          </td>
                         </tr>
                       )}
                     </tbody>
@@ -193,16 +231,37 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
                             <div className="mobile-card-info">
                               <h3>Viaje #{viaje.id}</h3>
                               <p>{viaje.ruta?.nombre || "-"}</p>
-                              <p>Horario: {viaje.horario?.horaSalida?.slice(0, 5) || "-"}</p>
+                              <p>
+                                Horario:{" "}
+                                {viaje.horario?.horaSalida?.slice(0, 5) || "-"}
+                              </p>
                             </div>
-                            <span className={`mobile-badge ${obtenerEstadoColor(obtenerEstadoId(viaje))}`}>
-                              {(viaje.estado?.nombre || ESTADOS_VIAJE[obtenerEstadoId(viaje)] || obtenerEstadoId(viaje) || "-").toString()}
+                            <span
+                              className={`mobile-badge ${obtenerEstadoColor(obtenerEstadoId(viaje))}`}
+                            >
+                              {(
+                                viaje.estado?.nombre ||
+                                ESTADOS_VIAJE[obtenerEstadoId(viaje)] ||
+                                obtenerEstadoId(viaje) ||
+                                "-"
+                              ).toString()}
                             </span>
                           </div>
                           <div className="mobile-card-body">
-                            <div className="mobile-card-row"><span>Cupos</span><span>{textoCupos(viaje)}</span></div>
-                            <div className="mobile-card-row"><span>Precio</span><span>${viaje.precioEstimado || "-"}</span></div>
-                            <div className="mobile-card-row"><span>Conductor</span><span>{obtenerNombrePersona(viaje.conductor)}</span></div>
+                            <div className="mobile-card-row">
+                              <span>Cupos</span>
+                              <span>{textoCupos(viaje)}</span>
+                            </div>
+                            <div className="mobile-card-row">
+                              <span>Precio</span>
+                              <span>${viaje.precioEstimado || "-"}</span>
+                            </div>
+                            <div className="mobile-card-row">
+                              <span>Conductor</span>
+                              <span>
+                                {obtenerNombrePersona(viaje.conductor)}
+                              </span>
+                            </div>
                           </div>
                           <div className="mobile-card-actions">
                             <ActionsMenu
@@ -216,7 +275,9 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
                       ))}
                     </div>
                   ) : (
-                    <div className="mobile-empty">No hay recorridos disponibles</div>
+                    <div className="mobile-empty">
+                      No hay recorridos disponibles
+                    </div>
                   )}
                 </div>
               </>

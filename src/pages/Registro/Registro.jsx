@@ -8,7 +8,12 @@ import Card from "../../components/Card/Card";
 import "./Registro.css";
 
 function Registro() {
-  const [formData, setFormData] = useState({ nombres: "", apellidos: "", correo: "", contrasena: "" });
+  const [formData, setFormData] = useState({
+    nombres: "",
+    apellidos: "",
+    correo: "",
+    contrasena: "",
+  });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -33,15 +38,56 @@ function Registro() {
     <div className="login-container">
       <Card title="Crear Cuenta">
         {error && <p className="error-message">{error}</p>}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <Input name="nombres" label="Nombres" placeholder="Tus nombres" value={formData.nombres} onChange={handleChange} autoComplete="given-name" />
-          <Input name="apellidos" label="Apellidos" placeholder="Tus apellidos" value={formData.apellidos} onChange={handleChange} autoComplete="family-name" />
-          <Input name="correo" label="Correo" type="email" placeholder="Correo electrónico" value={formData.correo} onChange={handleChange} autoComplete="email" />
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+        >
+          <Input
+            name="nombres"
+            label="Nombres"
+            placeholder="Tus nombres"
+            value={formData.nombres}
+            onChange={handleChange}
+            autoComplete="given-name"
+          />
+          <Input
+            name="apellidos"
+            label="Apellidos"
+            placeholder="Tus apellidos"
+            value={formData.apellidos}
+            onChange={handleChange}
+            autoComplete="family-name"
+          />
+          <Input
+            name="correo"
+            label="Correo"
+            type="email"
+            placeholder="Correo electrónico"
+            value={formData.correo}
+            onChange={handleChange}
+            autoComplete="email"
+          />
           <div>
-            <label htmlFor="contrasena" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600", fontSize: "0.9rem", color: "#333" }}>
+            <label
+              htmlFor="contrasena"
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "600",
+                fontSize: "0.9rem",
+                color: "#333",
+              }}
+            >
               Contraseña
             </label>
-            <PasswordInput name="contrasena" id="contrasena" placeholder="Tu contraseña" value={formData.contrasena} onChange={handleChange} autoComplete="new-password" />
+            <PasswordInput
+              name="contrasena"
+              id="contrasena"
+              placeholder="Tu contraseña"
+              value={formData.contrasena}
+              onChange={handleChange}
+              autoComplete="new-password"
+            />
           </div>
           <Button type="submit">Crear Cuenta</Button>
         </form>

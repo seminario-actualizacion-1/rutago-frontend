@@ -1,6 +1,6 @@
 .home-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #FEFEFE 0%, rgba(8, 134, 58, 0.06) 100%);
+  background: linear-gradient(180deg, #fefefe 0%, rgba(8, 134, 58, 0.06) 100%);
   display: flex;
   flex-direction: column;
 }
@@ -35,11 +35,11 @@
 }
 
 .text-verde {
-  color: #08863A;
+  color: #08863a;
 }
 
 .text-amarillo {
-  color: #FDC202;
+  color: #fdc202;
   margin-left: 6px;
 }
 
@@ -96,7 +96,7 @@
 .feature-card h3 {
   margin: 0 0 0.5rem;
   font-size: 1rem;
-  color: #08863A;
+  color: #08863a;
 }
 
 .feature-card p {

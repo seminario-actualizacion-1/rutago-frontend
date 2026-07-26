@@ -43,12 +43,16 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="navbar-left">
         {isLoggedIn && (
-            <button className={`nav-icon-btn hamburger-btn ${sidebarCollapsed ? "collapsed" : ""}`} onClick={toggleCollapse} aria-label="Menú">
-              <span className="hamburger-line" />
-              <span className="hamburger-line" />
-              <span className="hamburger-line" />
-            </button>
-          )}
+          <button
+            className={`nav-icon-btn hamburger-btn ${sidebarCollapsed ? "collapsed" : ""}`}
+            onClick={toggleCollapse}
+            aria-label="Menú"
+          >
+            <span className="hamburger-line" />
+            <span className="hamburger-line" />
+            <span className="hamburger-line" />
+          </button>
+        )}
         <Link to="/" className="navbar-brand">
           <Logo />
         </Link>
@@ -61,17 +65,28 @@ export default function Navbar() {
               className="user-dropdown-toggle"
               onClick={() => setDropdownOpen((v) => !v)}
             >
-              <span className="user-avatar">{user?.nombres?.charAt(0) || "U"}</span>
+              <span className="user-avatar">
+                {user?.nombres?.charAt(0) || "U"}
+              </span>
               <span className="user-name">{user?.nombres || "Usuario"}</span>
-              <span className={`dropdown-arrow ${dropdownOpen ? "open" : ""}`}>&#9660;</span>
+              <span className={`dropdown-arrow ${dropdownOpen ? "open" : ""}`}>
+                &#9660;
+              </span>
             </button>
             {dropdownOpen && (
               <div className="user-dropdown-menu">
-                <Link to="/perfil" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                <Link
+                  to="/perfil"
+                  className="dropdown-item"
+                  onClick={() => setDropdownOpen(false)}
+                >
                   Mi Perfil
                 </Link>
                 <hr className="dropdown-divider" />
-                <button className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
+                <button
+                  className="dropdown-item dropdown-item-danger"
+                  onClick={handleLogout}
+                >
                   Cerrar Sesión
                 </button>
               </div>

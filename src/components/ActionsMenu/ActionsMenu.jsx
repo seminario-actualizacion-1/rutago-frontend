@@ -10,9 +10,18 @@ export default function ActionsMenu({
     const value = event.target.value;
     event.target.value = "";
 
-    if (value === "ver") { onView?.(); return; }
-    if (value === "editar") { onEdit?.(); return; }
-    if (value === "eliminar") { onDelete?.(); return; }
+    if (value === "ver") {
+      onView?.();
+      return;
+    }
+    if (value === "editar") {
+      onEdit?.();
+      return;
+    }
+    if (value === "eliminar") {
+      onDelete?.();
+      return;
+    }
   };
 
   return (

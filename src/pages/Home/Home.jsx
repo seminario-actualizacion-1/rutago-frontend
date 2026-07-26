@@ -43,7 +43,8 @@ function Home() {
 
           <p className="home-description">
             Conecta pasajeros, conductores y entidades en una sola plataforma.
-            Gestiona rutas, solicita viajes y administra el sistema desde un solo lugar.
+            Gestiona rutas, solicita viajes y administra el sistema desde un
+            solo lugar.
           </p>
 
           <div className="home-actions">

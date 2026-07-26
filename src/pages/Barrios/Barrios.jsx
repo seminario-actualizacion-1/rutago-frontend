@@ -56,16 +56,23 @@ export default function Barrios() {
 
   const fetchComunas = async () => {
     try {
-      const data = await comunasService.getAll({ paginaActual: 1, registrosPorPagina: 100 });
+      const data = await comunasService.getAll({
+        paginaActual: 1,
+        registrosPorPagina: 100,
+      });
       setComunas(data.data || []);
     } catch (err) {
       console.error("Error al cargar comunas:", err);
     }
   };
 
-  useEffect(() => { fetchComunas(); }, []);
+  useEffect(() => {
+    fetchComunas();
+  }, []);
 
-  useEffect(() => { fetchBarrios(); }, [queryParams, searchTerm, filters, sortBy, sortOrder]);
+  useEffect(() => {
+    fetchBarrios();
+  }, [queryParams, searchTerm, filters, sortBy, sortOrder]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
@@ -120,7 +127,8 @@ export default function Barrios() {
   };
 
   const handleEliminar = async (id) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este barrio?")) return;
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este barrio?"))
+      return;
     try {
       await barriosService.delete(id);
       await fetchBarrios();
@@ -156,24 +164,27 @@ export default function Barrios() {
           </button>
         </div>
 
-      <TableToolbar
-        searchValue={searchTerm}
-        onSearchChange={handleSearchChange}
-        placeholder="Buscar por nombre..."
-        filters={[
-          {
-            name: "comunaId",
-            label: "Todas las comunas",
-            value: filters.comunaId,
-            options: comunas.map(c => ({ value: String(c.id), label: c.nombre })),
-          },
-        ]}
-        onFilterChange={handleFilterChange}
-        sortOptions={sortOptions}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-      />
+        <TableToolbar
+          searchValue={searchTerm}
+          onSearchChange={handleSearchChange}
+          placeholder="Buscar por nombre..."
+          filters={[
+            {
+              name: "comunaId",
+              label: "Todas las comunas",
+              value: filters.comunaId,
+              options: comunas.map((c) => ({
+                value: String(c.id),
+                label: c.nombre,
+              })),
+            },
+          ]}
+          onFilterChange={handleFilterChange}
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+        />
         <div className="bg-white rounded-lg shadow-sm">
           {loading ? (
             <div className="loading-container">
@@ -182,85 +193,85 @@ export default function Barrios() {
             </div>
           ) : (
             <>
-          {/* Desktop Table */}
-          <div className="desktop-table">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th title="Identificador único del barrio">ID</th>
-                  <th title="Nombre del barrio">Nombre</th>
-                  <th title="Comuna a la que pertenece el barrio">Comuna</th>
-                  <th title="Opciones disponibles para este registro">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {barrios.length > 0 ? (
-                  barrios.map((barrio) => (
-                    <tr key={barrio.id}>
-                      <td>{barrio.id}</td>
-                      <td>
-                        <span className="font-medium">{barrio.nombre}</span>
-                      </td>
-                      <td>{getComunaNombre(barrio.comuna?.id)}</td>
-                      <td>
-                        <ActionsMenu
-                          onEdit={() => handleEditar(barrio)}
-                          onDelete={() => handleEliminar(barrio.id)}
-                        />
-                      </td>
+              {/* Desktop Table */}
+              <div className="desktop-table">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Comuna</th>
+                      <th>Acciones</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="text-center">
-                      No se encontraron barrios
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="mobile-cards">
-            {barrios.length > 0 ? (
-              <div className="mobile-cards-list">
-                {barrios.map((barrio) => (
-                  <div key={barrio.id} className="mobile-card">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-info">
-                        <h3>{barrio.nombre}</h3>
-                        <p>Comuna: {getComunaNombre(barrio.comuna?.id)}</p>
-                        <p>ID: {barrio.id}</p>
-                      </div>
-                    </div>
-
-                    <div className="mobile-card-actions">
-                      <ActionsMenu
-                        onEdit={() => handleEditar(barrio)}
-                        onDelete={() => handleEliminar(barrio.id)}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  </thead>
+                  <tbody>
+                    {barrios.length > 0 ? (
+                      barrios.map((barrio) => (
+                        <tr key={barrio.id}>
+                          <td>{barrio.id}</td>
+                          <td>
+                            <span className="font-medium">{barrio.nombre}</span>
+                          </td>
+                          <td>{getComunaNombre(barrio.comuna?.id)}</td>
+                          <td>
+                            <ActionsMenu
+                              onEdit={() => handleEditar(barrio)}
+                              onDelete={() => handleEliminar(barrio.id)}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="text-center">
+                          No se encontraron barrios
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            ) : (
-              <div className="mobile-empty">No hay barrios disponibles</div>
-            )}
-          </div>
+
+              {/* Mobile Cards */}
+              <div className="mobile-cards">
+                {barrios.length > 0 ? (
+                  <div className="mobile-cards-list">
+                    {barrios.map((barrio) => (
+                      <div key={barrio.id} className="mobile-card">
+                        <div className="mobile-card-header">
+                          <div className="mobile-card-info">
+                            <h3>{barrio.nombre}</h3>
+                            <p>Comuna: {getComunaNombre(barrio.comuna?.id)}</p>
+                            <p>ID: {barrio.id}</p>
+                          </div>
+                        </div>
+
+                        <div className="mobile-card-actions">
+                          <ActionsMenu
+                            onEdit={() => handleEditar(barrio)}
+                            onDelete={() => handleEliminar(barrio.id)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mobile-empty">No hay barrios disponibles</div>
+                )}
+              </div>
             </>
           )}
         </div>
 
         {!loading && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={pagination?.totalPaginas || 1}
-          totalItems={pagination?.totalRegistros || barrios.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination?.totalPaginas || 1}
+            totalItems={pagination?.totalRegistros || barrios.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
         )}
       </div>
 
@@ -276,20 +287,71 @@ export default function Barrios() {
           }}
         >
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Nombre</label>
-            <input type="text" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className="input" style={{ width: "100%" }} required />
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              Nombre
+            </label>
+            <input
+              type="text"
+              value={formData.nombre}
+              onChange={(e) =>
+                setFormData({ ...formData, nombre: e.target.value })
+              }
+              className="input"
+              style={{ width: "100%" }}
+              required
+            />
           </div>
           <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>Comuna</label>
-            <select value={formData.comunaId} onChange={(e) => setFormData({ ...formData, comunaId: parseInt(e.target.value) })} className="input" style={{ width: "100%" }} required>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "0.5rem",
+                fontWeight: "500",
+              }}
+            >
+              Comuna
+            </label>
+            <select
+              value={formData.comunaId}
+              onChange={(e) =>
+                setFormData({ ...formData, comunaId: parseInt(e.target.value) })
+              }
+              className="input"
+              style={{ width: "100%" }}
+              required
+            >
               <option value="">Seleccionar comuna</option>
-              {comunas.map((comuna) => (<option key={comuna.id} value={comuna.id}>{comuna.nombre}</option>))}
+              {comunas.map((comuna) => (
+                <option key={comuna.id} value={comuna.id}>
+                  {comuna.nombre}
+                </option>
+              ))}
             </select>
           </div>
           {error && <p className="error">{error}</p>}
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={handleCerrarModal} className="button button-outline">Cancelar</button>
-            <button type="submit" className="button button-primary">Guardar</button>
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              justifyContent: "flex-end",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCerrarModal}
+              className="button button-outline"
+            >
+              Cancelar
+            </button>
+            <button type="submit" className="button button-primary">
+              Guardar
+            </button>
           </div>
         </form>
       </Modal>

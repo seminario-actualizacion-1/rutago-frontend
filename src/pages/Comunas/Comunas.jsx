@@ -48,7 +48,9 @@ export default function Comunas() {
     }
   };
 
-  useEffect(() => { fetchComunas(); }, [queryParams, searchTerm, sortBy, sortOrder]);
+  useEffect(() => {
+    fetchComunas();
+  }, [queryParams, searchTerm, sortBy, sortOrder]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
@@ -135,15 +137,15 @@ export default function Comunas() {
           </button>
         </div>
 
-      <TableToolbar
-        searchValue={searchTerm}
-        onSearchChange={handleSearchChange}
-        placeholder="Buscar por nombre..."
-        sortOptions={sortOptions}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-      />
+        <TableToolbar
+          searchValue={searchTerm}
+          onSearchChange={handleSearchChange}
+          placeholder="Buscar por nombre..."
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+        />
         <div className="bg-white rounded-lg shadow-sm">
           {loading ? (
             <div className="loading-container">
@@ -152,82 +154,82 @@ export default function Comunas() {
             </div>
           ) : (
             <>
-          {/* Desktop Table */}
-          <div className="desktop-table">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th title="Identificador único de la comuna">ID</th>
-                  <th title="Nombre de la comuna">Nombre</th>
-                  <th title="Opciones disponibles para este registro">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {comunas.length > 0 ? (
-                  comunas.map((comuna) => (
-                    <tr key={comuna.id}>
-                      <td>{comuna.id}</td>
-                      <td>
-                        <span className="font-medium">{comuna.nombre}</span>
-                      </td>
-                      <td>
-                        <ActionsMenu
-                          onEdit={() => handleEditar(comuna)}
-                          onDelete={() => handleEliminar(comuna.id)}
-                        />
-                      </td>
+              {/* Desktop Table */}
+              <div className="desktop-table">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Acciones</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="3" className="text-center">
-                      No se encontraron comunas
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="mobile-cards">
-            {comunas.length > 0 ? (
-              <div className="mobile-cards-list">
-                {comunas.map((comuna) => (
-                  <div key={comuna.id} className="mobile-card">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-info">
-                        <h3>{comuna.nombre}</h3>
-                        <p>ID: {comuna.id}</p>
-                      </div>
-                    </div>
-
-                    <div className="mobile-card-actions">
-                      <ActionsMenu
-                        onEdit={() => handleEditar(comuna)}
-                        onDelete={() => handleEliminar(comuna.id)}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  </thead>
+                  <tbody>
+                    {comunas.length > 0 ? (
+                      comunas.map((comuna) => (
+                        <tr key={comuna.id}>
+                          <td>{comuna.id}</td>
+                          <td>
+                            <span className="font-medium">{comuna.nombre}</span>
+                          </td>
+                          <td>
+                            <ActionsMenu
+                              onEdit={() => handleEditar(comuna)}
+                              onDelete={() => handleEliminar(comuna.id)}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" className="text-center">
+                          No se encontraron comunas
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            ) : (
-              <div className="mobile-empty">No hay comunas disponibles</div>
-            )}
-          </div>
+
+              {/* Mobile Cards */}
+              <div className="mobile-cards">
+                {comunas.length > 0 ? (
+                  <div className="mobile-cards-list">
+                    {comunas.map((comuna) => (
+                      <div key={comuna.id} className="mobile-card">
+                        <div className="mobile-card-header">
+                          <div className="mobile-card-info">
+                            <h3>{comuna.nombre}</h3>
+                            <p>ID: {comuna.id}</p>
+                          </div>
+                        </div>
+
+                        <div className="mobile-card-actions">
+                          <ActionsMenu
+                            onEdit={() => handleEditar(comuna)}
+                            onDelete={() => handleEliminar(comuna.id)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mobile-empty">No hay comunas disponibles</div>
+                )}
+              </div>
             </>
           )}
         </div>
 
         {!loading && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={pagination?.totalPaginas || 1}
-          totalItems={pagination?.totalRegistros || comunas.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination?.totalPaginas || 1}
+            totalItems={pagination?.totalRegistros || comunas.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
         )}
       </div>
 

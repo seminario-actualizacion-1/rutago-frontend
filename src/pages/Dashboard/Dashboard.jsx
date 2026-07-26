@@ -20,7 +20,9 @@ export default function Dashboard() {
   if (!user) {
     return (
       <div className="dashboard-container">
-        <p style={{ textAlign: "center", marginTop: "2rem" }}>Cargando perfil...</p>
+        <p style={{ textAlign: "center", marginTop: "2rem" }}>
+          Cargando perfil...
+        </p>
       </div>
     );
   }

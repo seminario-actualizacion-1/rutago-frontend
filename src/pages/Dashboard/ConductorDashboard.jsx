@@ -19,7 +19,9 @@ export default function ConductorDashboard() {
       ]);
       const lista = viajesData.data || [];
       setTotalViajes(viajesData.paginacion?.totalRegistros || lista.length);
-      setViajeActivo(lista.find((v) => v.estado?.id === 2 || v.estado?.id === 3) || null);
+      setViajeActivo(
+        lista.find((v) => v.estado?.id === 2 || v.estado?.id === 3) || null,
+      );
       setDisponibles(disponiblesData.data || []);
     } catch (error) {
       console.error("Error al cargar datos del conductor:", error);
@@ -29,8 +31,12 @@ export default function ConductorDashboard() {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    fetchData().finally(() => { if (mounted) setLoading(false); });
-    return () => { mounted = false; };
+    fetchData().finally(() => {
+      if (mounted) setLoading(false);
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleAction = async (viajeId, action) => {
@@ -67,22 +73,38 @@ export default function ConductorDashboard() {
       {viajeActivo ? (
         <div className="dashboard-card">
           <h2>Viaje en curso</h2>
-          <p><strong>Origen:</strong> {viajeActivo.ruta?.origen?.nombre || "—"}</p>
-          <p><strong>Destino:</strong> {viajeActivo.ruta?.destino?.nombre || "—"}</p>
+          <p>
+            <strong>Origen:</strong> {viajeActivo.ruta?.origen?.nombre || "—"}
+          </p>
+          <p>
+            <strong>Destino:</strong> {viajeActivo.ruta?.destino?.nombre || "—"}
+          </p>
           <p>
             <strong>Estado:</strong>{" "}
-            <span className={`badge ${obtenerEstadoColor(viajeActivo.estado?.id)}`}>
-              {viajeActivo.estado?.nombre || ESTADOS_VIAJE[viajeActivo.estado?.id]}
+            <span
+              className={`badge ${obtenerEstadoColor(viajeActivo.estado?.id)}`}
+            >
+              {viajeActivo.estado?.nombre ||
+                ESTADOS_VIAJE[viajeActivo.estado?.id]}
             </span>
           </p>
-          <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem", flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              marginTop: "1rem",
+              flexWrap: "wrap",
+            }}
+          >
             {viajeActivo.estado?.id === 2 && (
               <button
                 className="button button-primary"
                 onClick={() => handleAction(viajeActivo.id, "iniciar")}
                 disabled={accionando === `${viajeActivo.id}-iniciar`}
               >
-                {accionando === `${viajeActivo.id}-iniciar` ? "..." : "Iniciar viaje"}
+                {accionando === `${viajeActivo.id}-iniciar`
+                  ? "..."
+                  : "Iniciar viaje"}
               </button>
             )}
             {viajeActivo.estado?.id === 3 && (
@@ -91,7 +113,9 @@ export default function ConductorDashboard() {
                 onClick={() => handleAction(viajeActivo.id, "finalizar")}
                 disabled={accionando === `${viajeActivo.id}-finalizar`}
               >
-                {accionando === `${viajeActivo.id}-finalizar` ? "..." : "Finalizar viaje"}
+                {accionando === `${viajeActivo.id}-finalizar`
+                  ? "..."
+                  : "Finalizar viaje"}
               </button>
             )}
             {(viajeActivo.estado?.id === 2 || viajeActivo.estado?.id === 3) && (
@@ -100,7 +124,9 @@ export default function ConductorDashboard() {
                 onClick={() => handleAction(viajeActivo.id, "cancelar")}
                 disabled={accionando === `${viajeActivo.id}-cancelar`}
               >
-                {accionando === `${viajeActivo.id}-cancelar` ? "..." : "Cancelar viaje"}
+                {accionando === `${viajeActivo.id}-cancelar`
+                  ? "..."
+                  : "Cancelar viaje"}
               </button>
             )}
           </div>
@@ -116,15 +142,38 @@ export default function ConductorDashboard() {
         <div className="dashboard-card" style={{ marginTop: "1.5rem" }}>
           <h2>Viajes disponibles ({disponibles.length})</h2>
           {disponibles.map((viaje) => (
-            <div key={viaje.id} className="dashboard-card" style={{ marginTop: "0.75rem", padding: "1rem" }}>
-              <p><strong>Origen:</strong> {viaje.ruta?.origen?.nombre || "—"} &rarr; <strong>Destino:</strong> {viaje.ruta?.destino?.nombre || "—"}</p>
-              <p><strong>Ruta:</strong> {viaje.ruta?.nombre || "—"}</p>
+            <div
+              key={viaje.id}
+              className="dashboard-card"
+              style={{ marginTop: "0.75rem", padding: "1rem" }}
+            >
+              <p>
+                <strong>Origen:</strong> {viaje.ruta?.origen?.nombre || "—"}{" "}
+                &rarr; <strong>Destino:</strong>{" "}
+                {viaje.ruta?.destino?.nombre || "—"}
+              </p>
+              <p>
+                <strong>Ruta:</strong> {viaje.ruta?.nombre || "—"}
+              </p>
               <p>
                 <strong>Pasajero:</strong>{" "}
-                {viaje.pasajeros?.map((p) => `${p.pasajero?.nombres || ""} ${p.pasajero?.apellidos || ""}`).join(", ") || "—"}
+                {viaje.pasajeros
+                  ?.map(
+                    (p) =>
+                      `${p.pasajero?.nombres || ""} ${p.pasajero?.apellidos || ""}`,
+                  )
+                  .join(", ") || "—"}
               </p>
-              <p><strong>Horario:</strong> {viaje.horario?.horaSalida || "Sin horario"}</p>
-              {viaje.precioEstimado != null && <p><strong>Precio estimado:</strong> ${Number(viaje.precioEstimado).toLocaleString("es-CO")}</p>}
+              <p>
+                <strong>Horario:</strong>{" "}
+                {viaje.horario?.horaSalida || "Sin horario"}
+              </p>
+              {viaje.precioEstimado != null && (
+                <p>
+                  <strong>Precio estimado:</strong> $
+                  {Number(viaje.precioEstimado).toLocaleString("es-CO")}
+                </p>
+              )}
               <button
                 className="button button-primary"
                 onClick={() => handleAction(viaje.id, "aceptar")}
@@ -139,7 +188,9 @@ export default function ConductorDashboard() {
       )}
 
       <div style={{ marginTop: "1.5rem" }}>
-        <Link to="/viajes" className="button button-primary">Ver todos mis viajes</Link>
+        <Link to="/viajes" className="button button-primary">
+          Ver todos mis viajes
+        </Link>
       </div>
     </>
   );

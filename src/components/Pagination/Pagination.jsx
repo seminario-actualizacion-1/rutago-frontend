@@ -17,7 +17,8 @@ const Pagination = ({
 
   const maxVisiblePages = 5;
   const mostrarEllipsisInicio = currentPage > 3 && totalPages > maxVisiblePages;
-  const mostrarEllipsisFin = currentPage < totalPages - 2 && totalPages > maxVisiblePages;
+  const mostrarEllipsisFin =
+    currentPage < totalPages - 2 && totalPages > maxVisiblePages;
 
   const getPageNumbers = () => {
     const pages = [];
@@ -77,7 +78,12 @@ const Pagination = ({
 
           {mostrarEllipsisInicio && (
             <>
-              <button className="pagination-button" onClick={() => onPageChange(1)}>1</button>
+              <button
+                className="pagination-button"
+                onClick={() => onPageChange(1)}
+              >
+                1
+              </button>
               <span className="pagination-button pagination-ellipsis">…</span>
             </>
           )}
@@ -93,7 +99,12 @@ const Pagination = ({
           {mostrarEllipsisFin && (
             <>
               <span className="pagination-button pagination-ellipsis">…</span>
-              <button className="pagination-button" onClick={() => onPageChange(totalPages)}>{totalPages}</button>
+              <button
+                className="pagination-button"
+                onClick={() => onPageChange(totalPages)}
+              >
+                {totalPages}
+              </button>
             </>
           )}
 
