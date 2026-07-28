@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
 import { useLayout } from "../../context/LayoutContext";
-import { useRoles } from "../../hooks/useRoles";
 import {
   LayoutDashboard,
   User,
@@ -17,12 +16,11 @@ import {
 } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
-export default function Sidebar({ rol }) {
+export default function Sidebar({ rolNombre = "Pasajero" }) {
   const { sidebarCollapsed } = useLayout();
-  const { obtenerId: obtenerIdRol } = useRoles();
 
   const menus = {
-    [obtenerIdRol("Administrador")]: {
+    Administrador: {
       titulo: "Administrador",
       modulos: [
         { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
@@ -39,7 +37,7 @@ export default function Sidebar({ rol }) {
         { to: "/entidades", label: "Entidades", icon: Building },
       ],
     },
-    [obtenerIdRol("Conductor")]: {
+    Conductor: {
       titulo: "Conductor",
       modulos: [
         { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
@@ -47,7 +45,7 @@ export default function Sidebar({ rol }) {
         { to: "/viajes", label: "Mis viajes", icon: Navigation },
       ],
     },
-    [obtenerIdRol("Pasajero")]: {
+    Pasajero: {
       titulo: "Pasajero",
       modulos: [
         { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
@@ -55,7 +53,7 @@ export default function Sidebar({ rol }) {
         { to: "/viajes", label: "Mis viajes", icon: Navigation, end: true },
       ],
     },
-    [obtenerIdRol("Entidad Externa")]: {
+    "Entidad Externa": {
       titulo: "Entidad Externa",
       modulos: [
         { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
@@ -65,12 +63,7 @@ export default function Sidebar({ rol }) {
     },
   };
 
-  function obtenerRol(rolId) {
-    if (!rolId) return menus[obtenerIdRol("Pasajero")];
-    return menus[rolId] ?? menus[obtenerIdRol("Pasajero")];
-  }
-
-  const config = obtenerRol(rol);
+  const config = menus[rolNombre] ?? menus["Pasajero"];
 
   return (
     <aside
