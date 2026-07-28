@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Modal from "../../components/Modal/Modal";
 import MapaRutas from "../../components/MapaRutas/MapaRutas";
 import { useEstadosViaje } from "../../hooks/useEstadosViaje";
@@ -16,8 +17,8 @@ import ViajesAdmin from "./ViajesAdmin";
 import "./Viajes.css";
 
 export default function Viajes() {
+  const navigate = useNavigate();
   const [detalleViaje, setDetalleViaje] = useState(null);
-  const [mapaExpandido, setMapaExpandido] = useState(false);
   const [editandoViaje, setEditandoViaje] = useState(null);
   const [recargarAdmin, setRecargarAdmin] = useState(0);
   const [error, setError] = useState("");
@@ -140,7 +141,7 @@ export default function Viajes() {
                   {detalleViaje.ruta && (
                     <button
                       type="button"
-                      onClick={() => setMapaExpandido(true)}
+                      onClick={() => navigate(`/viajes/${detalleViaje.id}/mapa`)}
                       style={{
                         background: "none",
                         border: "1px solid #ccc",
@@ -219,68 +220,6 @@ export default function Viajes() {
                     )}
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {mapaExpandido && detalleViaje?.ruta && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 9999,
-              backgroundColor: "rgba(0,0,0,0.5)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onClick={() => setMapaExpandido(false)}
-          >
-            <div
-              style={{
-                width: "95vw",
-                height: "90vh",
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                overflow: "hidden",
-                display: "flex",
-                flexDirection: "column",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "8px 12px",
-                  borderBottom: "1px solid #e5e7eb",
-                }}
-              >
-                <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>
-                  {detalleViaje.ruta.nombre}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setMapaExpandido(false)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    fontSize: "1.3rem",
-                    cursor: "pointer",
-                    color: "#666",
-                    lineHeight: 1,
-                  }}
-                >
-                  &times;
-                </button>
-              </div>
-              <div style={{ flex: 1 }}>
-                <MapaRutas rutas={[detalleViaje.ruta]} showSearch />
               </div>
             </div>
           </div>

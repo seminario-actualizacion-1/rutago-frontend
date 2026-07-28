@@ -132,19 +132,20 @@ export default function MapaRutas({ rutas = [], showSearch = false }) {
           if (!iconCache[colorHex])
             iconCache[colorHex] = svgMarkerIcon(colorHex);
           const icono = iconCache[colorHex];
-          let geometria = null;
+          let coordenadas = null;
           if (ruta.rutaGeometria) {
             try {
-              geometria = JSON.parse(ruta.rutaGeometria);
+              const parsed = JSON.parse(ruta.rutaGeometria);
+              coordenadas = parsed.type === "LineString" ? parsed.coordinates : parsed;
             } catch {
-              geometria = null;
+              coordenadas = null;
             }
           }
-          const oCoord = geometria
-            ? geometria[0]
+          const oCoord = coordenadas
+            ? coordenadas[0]
             : COMUNA_CENTROS[ruta.origen.id];
-          const dCoord = geometria
-            ? geometria[geometria.length - 1]
+          const dCoord = coordenadas
+            ? coordenadas[coordenadas.length - 1]
             : COMUNA_CENTROS[ruta.destino.id];
           return (
             <div key={ruta.id}>
@@ -217,7 +218,7 @@ export default function MapaRutas({ rutas = [], showSearch = false }) {
                 </Popup>
               </Marker>
               <Polyline
-                positions={geometria || [oCoord, dCoord]}
+                positions={coordenadas || [oCoord, dCoord]}
                 color={colorHex}
                 weight={3}
                 opacity={0.7}

@@ -20,6 +20,8 @@ import Horarios from "./pages/Horarios/Horarios";
 import Entidades from "./pages/Entidades/Entidades";
 import Perfil from "./pages/Perfil/Perfil";
 import Viajes from "./pages/Viajes/Viajes";
+import RutasMapaPage from "./pages/Rutas/RutasMapaPage";
+import ViajesMapaPage from "./pages/Viajes/ViajesMapaPage";
 import Usuarios from "./pages/Usuarios/Usuarios";
 import { usuariosService } from "./services/usuarios.service";
 import { ROLES } from "./config/roles";
@@ -198,6 +200,14 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="/rutas/mapa"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                      <RutasMapaPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/horarios"
                   element={
                     <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
@@ -225,6 +235,20 @@ export default function App() {
                       ]}
                     >
                       <Viajes />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/viajes/:id/mapa"
+                  element={
+                    <ProtectedRoute
+                      allowedRoles={[
+                        ROLES.ADMIN,
+                        ROLES.CONDUCTOR,
+                        ROLES.PASAJERO,
+                      ]}
+                    >
+                      <ViajesMapaPage />
                     </ProtectedRoute>
                   }
                 />
