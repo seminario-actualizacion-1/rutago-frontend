@@ -1,4 +1,4 @@
-import { ROLES } from "../../config/roles";
+import { useRoles } from "../../hooks/useRoles";
 import AdminDashboard from "./AdminDashboard";
 import ConductorDashboard from "./ConductorDashboard";
 import PasajeroDashboard from "./PasajeroDashboard";
@@ -16,8 +16,9 @@ function getInitialUser() {
 
 export default function Dashboard() {
   const user = getInitialUser();
+  const { obtenerId: obtenerIdRol, loading } = useRoles();
 
-  if (!user) {
+  if (!user || loading) {
     return (
       <div className="dashboard-container">
         <p style={{ textAlign: "center", marginTop: "2rem" }}>
@@ -31,10 +32,10 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      {rol === ROLES.ADMIN && <AdminDashboard />}
-      {rol === ROLES.CONDUCTOR && <ConductorDashboard />}
-      {rol === ROLES.PASAJERO && <PasajeroDashboard />}
-      {rol === ROLES.ENTIDAD && <EntidadDashboard />}
+      {rol === obtenerIdRol("Administrador") && <AdminDashboard />}
+      {rol === obtenerIdRol("Conductor") && <ConductorDashboard />}
+      {rol === obtenerIdRol("Pasajero") && <PasajeroDashboard />}
+      {rol === obtenerIdRol("Entidad Externa") && <EntidadDashboard />}
     </div>
   );
 }

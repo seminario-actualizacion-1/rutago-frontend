@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { viajesService } from "../../services/viajes.service";
-import { ESTADOS_VIAJE } from "../../config/estados";
+import { useEstadosViaje } from "../../hooks/useEstadosViaje";
 import { obtenerEstadoColor } from "./dashboardUtils";
 
 export default function ConductorDashboard() {
-  const [viajeActivo, setViajeActivo] = useState(null);
+  const { nombre, ESTADO, loading: loadingEstados } = useEstadosViaje();
+  const [enCurso, setEnCurso] = useState([]);
+  const [asignados, setAsignados] = useState([]);
   const [totalViajes, setTotalViajes] = useState(0);
   const [disponibles, setDisponibles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,14 +16,13 @@ export default function ConductorDashboard() {
   const fetchData = async () => {
     try {
       const [viajesData, disponiblesData] = await Promise.all([
-        viajesService.getMisViajes({ paginaActual: 1, registrosPorPagina: 10 }),
+        viajesService.getMisViajes({ paginaActual: 1, registrosPorPagina: 50 }),
         viajesService.getDisponibles(),
       ]);
       const lista = viajesData.data || [];
       setTotalViajes(viajesData.paginacion?.totalRegistros || lista.length);
-      setViajeActivo(
-        lista.find((v) => v.estado?.id === 2 || v.estado?.id === 3) || null,
-      );
+      setEnCurso(lista.filter((v) => v.estado?.id === ESTADO.EN_CURSO));
+      setAsignados(lista.filter((v) => v.estado?.id === ESTADO.ACEPTADO));
       setDisponibles(disponiblesData.data || []);
     } catch (error) {
       console.error("Error al cargar datos del conductor:", error);
@@ -29,15 +30,15 @@ export default function ConductorDashboard() {
   };
 
   useEffect(() => {
+    if (loadingEstados) return;
     let mounted = true;
-    setLoading(true);
     fetchData().finally(() => {
       if (mounted) setLoading(false);
     });
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [loadingEstados]);
 
   const handleAction = async (viajeId, action) => {
     setAccionando(`${viajeId}-${action}`);
@@ -53,6 +54,59 @@ export default function ConductorDashboard() {
 
   if (loading) return <div className="loading-spinner" />;
 
+  const viajeCard = (viaje, acciones) => (
+    <div
+      key={viaje.id}
+      className="dashboard-card"
+      style={{ marginTop: "0.75rem", padding: "1rem" }}
+    >
+      <p>
+        <strong>Origen:</strong> {viaje.ruta?.origen?.nombre || "—"}{" "}
+        &rarr; <strong>Destino:</strong>{" "}
+        {viaje.ruta?.destino?.nombre || "—"}
+      </p>
+      <p>
+        <strong>Ruta:</strong> {viaje.ruta?.nombre || "—"}
+      </p>
+      <p>
+        <strong>Horario:</strong>{" "}
+        {viaje.horario?.horaSalida || "Sin horario"}
+      </p>
+      {viaje.pasajeros?.length > 0 && (
+        <p>
+          <strong>Solicitudes:</strong> {viaje.pasajeros.length} —{" "}
+          {viaje.pasajeros
+            .map((p) => `${p.pasajero?.nombres || ""} ${p.pasajero?.apellidos || ""}`)
+            .join(", ")}
+        </p>
+      )}
+      {viaje.precioEstimado != null && (
+        <p>
+          <strong>Precio estimado:</strong> $
+          {Number(viaje.precioEstimado).toLocaleString("es-CO")}
+        </p>
+      )}
+      <p>
+        <strong>Estado:</strong>{" "}
+        <span className={`badge ${obtenerEstadoColor(viaje.estado?.id)}`}>
+          {viaje.estado?.nombre || nombre(viaje.estado?.id)}
+        </span>
+      </p>
+      {acciones && (
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            marginTop: "0.75rem",
+            flexWrap: "wrap",
+          }}
+        >
+          {acciones}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       <div className="page-header">
@@ -65,125 +119,84 @@ export default function ConductorDashboard() {
           <span className="stat-label">Viajes totales</span>
         </div>
         <div className="stat-card stat-card-blue">
-          <span className="stat-number">{viajeActivo ? 1 : 0}</span>
-          <span className="stat-label">Viaje activo</span>
+          <span className="stat-number">{enCurso.length}</span>
+          <span className="stat-label">En curso</span>
         </div>
       </div>
 
-      {viajeActivo ? (
+      {enCurso.length > 0 && (
         <div className="dashboard-card">
-          <h2>Viaje en curso</h2>
-          <p>
-            <strong>Origen:</strong> {viajeActivo.ruta?.origen?.nombre || "—"}
-          </p>
-          <p>
-            <strong>Destino:</strong> {viajeActivo.ruta?.destino?.nombre || "—"}
-          </p>
-          <p>
-            <strong>Estado:</strong>{" "}
-            <span
-              className={`badge ${obtenerEstadoColor(viajeActivo.estado?.id)}`}
-            >
-              {viajeActivo.estado?.nombre ||
-                ESTADOS_VIAJE[viajeActivo.estado?.id]}
-            </span>
-          </p>
-          <div
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              marginTop: "1rem",
-              flexWrap: "wrap",
-            }}
-          >
-            {viajeActivo.estado?.id === 2 && (
-              <button
-                className="button button-primary"
-                onClick={() => handleAction(viajeActivo.id, "iniciar")}
-                disabled={accionando === `${viajeActivo.id}-iniciar`}
-              >
-                {accionando === `${viajeActivo.id}-iniciar`
-                  ? "..."
-                  : "Iniciar viaje"}
-              </button>
-            )}
-            {viajeActivo.estado?.id === 3 && (
-              <button
-                className="button button-success"
-                onClick={() => handleAction(viajeActivo.id, "finalizar")}
-                disabled={accionando === `${viajeActivo.id}-finalizar`}
-              >
-                {accionando === `${viajeActivo.id}-finalizar`
-                  ? "..."
-                  : "Finalizar viaje"}
-              </button>
-            )}
-            {(viajeActivo.estado?.id === 2 || viajeActivo.estado?.id === 3) && (
-              <button
-                className="button button-danger"
-                onClick={() => handleAction(viajeActivo.id, "cancelar")}
-                disabled={accionando === `${viajeActivo.id}-cancelar`}
-              >
-                {accionando === `${viajeActivo.id}-cancelar`
-                  ? "..."
-                  : "Cancelar viaje"}
-              </button>
-            )}
-          </div>
+          <h2>Viajes en curso ({enCurso.length})</h2>
+          {enCurso.map((viaje) =>
+            viajeCard(viaje, (
+              <>
+                <button
+                  className="button button-success"
+                  onClick={() => handleAction(viaje.id, "finalizar")}
+                  disabled={accionando === `${viaje.id}-finalizar`}
+                >
+                  {accionando === `${viaje.id}-finalizar` ? "..." : "Finalizar viaje"}
+                </button>
+                <button
+                  className="button button-danger"
+                  onClick={() => handleAction(viaje.id, "cancelar")}
+                  disabled={accionando === `${viaje.id}-cancelar`}
+                >
+                  {accionando === `${viaje.id}-cancelar` ? "..." : "Cancelar viaje"}
+                </button>
+              </>
+            ))
+          )}
         </div>
-      ) : (
+      )}
+
+      {asignados.length > 0 && (
+        <div className="dashboard-card" style={{ marginTop: "1.5rem" }}>
+          <h2>Viajes asignados ({asignados.length})</h2>
+          {asignados.map((viaje) =>
+            viajeCard(viaje, (
+              <>
+                <button
+                  className="button button-primary"
+                  onClick={() => handleAction(viaje.id, "iniciar")}
+                  disabled={accionando === `${viaje.id}-iniciar`}
+                >
+                  {accionando === `${viaje.id}-iniciar` ? "..." : "Iniciar viaje"}
+                </button>
+                <button
+                  className="button button-danger"
+                  onClick={() => handleAction(viaje.id, "cancelar")}
+                  disabled={accionando === `${viaje.id}-cancelar`}
+                >
+                  {accionando === `${viaje.id}-cancelar` ? "..." : "Cancelar viaje"}
+                </button>
+              </>
+            ))
+          )}
+        </div>
+      )}
+
+      {enCurso.length === 0 && asignados.length === 0 && (
         <div className="dashboard-card">
-          <h2>Sin viaje activo</h2>
-          <p>Actualmente no tienes ningún viaje en curso.</p>
+          <h2>Sin viajes pendientes</h2>
+          <p>Actualmente no tienes viajes en curso ni asignados.</p>
         </div>
       )}
 
       {disponibles.length > 0 && (
         <div className="dashboard-card" style={{ marginTop: "1.5rem" }}>
           <h2>Viajes disponibles ({disponibles.length})</h2>
-          {disponibles.map((viaje) => (
-            <div
-              key={viaje.id}
-              className="dashboard-card"
-              style={{ marginTop: "0.75rem", padding: "1rem" }}
-            >
-              <p>
-                <strong>Origen:</strong> {viaje.ruta?.origen?.nombre || "—"}{" "}
-                &rarr; <strong>Destino:</strong>{" "}
-                {viaje.ruta?.destino?.nombre || "—"}
-              </p>
-              <p>
-                <strong>Ruta:</strong> {viaje.ruta?.nombre || "—"}
-              </p>
-              <p>
-                <strong>Pasajero:</strong>{" "}
-                {viaje.pasajeros
-                  ?.map(
-                    (p) =>
-                      `${p.pasajero?.nombres || ""} ${p.pasajero?.apellidos || ""}`,
-                  )
-                  .join(", ") || "—"}
-              </p>
-              <p>
-                <strong>Horario:</strong>{" "}
-                {viaje.horario?.horaSalida || "Sin horario"}
-              </p>
-              {viaje.precioEstimado != null && (
-                <p>
-                  <strong>Precio estimado:</strong> $
-                  {Number(viaje.precioEstimado).toLocaleString("es-CO")}
-                </p>
-              )}
+          {disponibles.map((viaje) =>
+            viajeCard(viaje, (
               <button
                 className="button button-primary"
                 onClick={() => handleAction(viaje.id, "aceptar")}
                 disabled={accionando === `${viaje.id}-aceptar`}
-                style={{ marginTop: "0.5rem" }}
               >
                 {accionando === `${viaje.id}-aceptar` ? "..." : "Aceptar viaje"}
               </button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
 

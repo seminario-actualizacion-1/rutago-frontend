@@ -4,19 +4,9 @@ import { useLayout } from "../../context/LayoutContext";
 import Logo from "../Logo/Logo";
 import "./Navbar.css";
 
-function getInitialUser() {
-  try {
-    const stored = localStorage.getItem("rutago_user");
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
-}
-
-export default function Navbar() {
+export default function Navbar({ user }) {
   const location = useLocation();
   const { toggleCollapse, sidebarCollapsed } = useLayout();
-  const user = getInitialUser();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -36,7 +26,7 @@ export default function Navbar() {
     window.location.replace("/login");
   };
 
-  const isLoggedIn = !!localStorage.getItem("token");
+  const isLoggedIn = !!user;
   const ocultarEn = ["/login", "/registro", "/recuperar-password"];
 
   return (

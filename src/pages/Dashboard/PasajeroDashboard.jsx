@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { viajesService } from "../../services/viajes.service";
-import { ESTADOS_VIAJE } from "../../config/estados";
+import { useEstadosViaje } from "../../hooks/useEstadosViaje";
 import { obtenerEstadoColor } from "./dashboardUtils";
 
 export default function PasajeroDashboard() {
+  const { nombre } = useEstadosViaje();
   const [ultimosViajes, setUltimosViajes] = useState([]);
   const [totalViajes, setTotalViajes] = useState(0);
 
@@ -45,7 +46,7 @@ export default function PasajeroDashboard() {
 
       <div className="dashboard-section">
         <Link
-          to="/viajes/solicitar"
+          to="/viajes"
           className="button button-primary"
           style={{ marginBottom: "1rem" }}
         >
@@ -64,7 +65,7 @@ export default function PasajeroDashboard() {
               </span>
               <span className={`badge ${obtenerEstadoColor(v.estado?.id)}`}>
                 {v.estado?.nombre ||
-                  ESTADOS_VIAJE[v.estado?.id] ||
+                  nombre(v.estado?.id) ||
                   v.estado?.id}
               </span>
             </div>

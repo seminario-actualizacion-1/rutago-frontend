@@ -37,10 +37,11 @@ api.interceptors.response.use(
           localStorage.removeItem("rutago_user");
           window.location.href = "/login";
           return false;
+        } finally {
+          refreshing = null;
         }
       })();
     const ok = await refreshing;
-    refreshing = null;
     if (!ok) return Promise.reject(error);
     originalRequest.headers.Authorization = `Bearer ${localStorage.getItem("token")}`;
     return api(originalRequest);

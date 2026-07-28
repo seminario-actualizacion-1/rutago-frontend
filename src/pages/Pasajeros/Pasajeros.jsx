@@ -7,6 +7,7 @@ import { perfilPasajeroService } from "../../services/perfilPasajero.service";
 import { usuariosService } from "../../services/usuarios.service";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import { usePaginacion } from "../../hooks/usePaginacion";
+import { useTiposDocumento } from "../../hooks/useTiposDocumento";
 import "./Pasajeros.css";
 
 const emptyForm = {
@@ -38,6 +39,8 @@ export default function Pasajeros() {
     actualizarPaginacion,
     queryParams,
   } = usePaginacion();
+
+  const { opciones: opcionesTiposDocumento } = useTiposDocumento();
 
   const handleNuevo = () => {
     setEditingPasajero(null);
@@ -496,13 +499,9 @@ export default function Pasajeros() {
               style={{ width: "100%" }}
             >
               <option value="">Seleccionar</option>
-              <option value="1">CC — Cédula de Ciudadanía</option>
-              <option value="2">TI — Tarjeta de Identidad</option>
-              <option value="3">CE — Cédula de Extranjería</option>
-              <option value="4">
-                NIT — Número de Identificación Tributaria
-              </option>
-              <option value="5">PASAPORTE — Pasaporte</option>
+              {opcionesTiposDocumento().map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
             </select>
           </div>
           <div style={{ marginBottom: "1rem" }}>

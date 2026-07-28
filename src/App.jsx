@@ -20,7 +20,6 @@ import Horarios from "./pages/Horarios/Horarios";
 import Entidades from "./pages/Entidades/Entidades";
 import Perfil from "./pages/Perfil/Perfil";
 import Viajes from "./pages/Viajes/Viajes";
-import SolicitarViaje from "./pages/Viajes/SolicitarViaje";
 import Usuarios from "./pages/Usuarios/Usuarios";
 import { usuariosService } from "./services/usuarios.service";
 import { ROLES } from "./config/roles";
@@ -40,9 +39,13 @@ export default function App() {
   const [verificandoToken, setVerificandoToken] = useState(true);
 
   useEffect(() => {
-    const handleStorage = () => setUser(getInitialUser());
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    const handleAuth = () => setUser(getInitialUser());
+    window.addEventListener("storage", handleAuth);
+    window.addEventListener("auth-change", handleAuth);
+    return () => {
+      window.removeEventListener("storage", handleAuth);
+      window.removeEventListener("auth-change", handleAuth);
+    };
   }, []);
 
   useEffect(() => {
@@ -106,7 +109,7 @@ export default function App() {
     <BrowserRouter>
       <LayoutProvider>
         <div className="app">
-          <Navbar />
+          <Navbar user={user} />
           <div className="app-body">
             <Routes>
               <Route path="/" element={<Home />} />
@@ -211,14 +214,6 @@ export default function App() {
                   }
                 />
                 <Route path="/perfil" element={<Perfil />} />
-                <Route
-                  path="/viajes/solicitar"
-                  element={
-                    <ProtectedRoute allowedRoles={[ROLES.PASAJERO]}>
-                      <SolicitarViaje />
-                    </ProtectedRoute>
-                  }
-                />
                 <Route
                   path="/viajes"
                   element={

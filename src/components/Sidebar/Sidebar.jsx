@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useLayout } from "../../context/LayoutContext";
+import { useRoles } from "../../hooks/useRoles";
 import {
   LayoutDashboard,
   User,
@@ -16,57 +17,59 @@ import {
 } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
-const menus = {
-  1: {
-    titulo: "Administrador",
-    modulos: [
-      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
-      { to: "/perfil", label: "Mi perfil", icon: User },
-      { to: "/usuarios", label: "Usuarios", icon: Users },
-      { to: "/pasajeros", label: "Pasajeros", icon: UserCheck },
-      { to: "/conductores", label: "Conductores", icon: Car },
-      { to: "/vehiculos", label: "Vehículos", icon: Truck },
-      { to: "/barrios", label: "Barrios", icon: MapPin },
-      { to: "/comunas", label: "Comunas", icon: Building2 },
-      { to: "/rutas", label: "Rutas", icon: Route },
-      { to: "/horarios", label: "Horarios", icon: Clock },
-      { to: "/viajes", label: "Viajes", icon: Navigation },
-      { to: "/entidades", label: "Entidades", icon: Building },
-    ],
-  },
-  2: {
-    titulo: "Conductor",
-    modulos: [
-      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
-      { to: "/perfil", label: "Mi perfil", icon: User },
-      { to: "/viajes", label: "Mis viajes", icon: Navigation },
-    ],
-  },
-  3: {
-    titulo: "Pasajero",
-    modulos: [
-      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
-      { to: "/perfil", label: "Mi perfil", icon: User },
-      { to: "/viajes", label: "Mis viajes", icon: Navigation, end: true },
-    ],
-  },
-  4: {
-    titulo: "Entidad Externa",
-    modulos: [
-      { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
-      { to: "/perfil", label: "Mi perfil", icon: User },
-      { to: "/vehiculos", label: "Vehículos", icon: Truck },
-    ],
-  },
-};
-
-function obtenerRol(rolId) {
-  if (!rolId) return menus[3];
-  return menus[rolId] ?? menus[3];
-}
-
 export default function Sidebar({ rol }) {
   const { sidebarCollapsed } = useLayout();
+  const { obtenerId: obtenerIdRol } = useRoles();
+
+  const menus = {
+    [obtenerIdRol("Administrador")]: {
+      titulo: "Administrador",
+      modulos: [
+        { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
+        { to: "/perfil", label: "Mi perfil", icon: User },
+        { to: "/usuarios", label: "Usuarios", icon: Users },
+        { to: "/pasajeros", label: "Pasajeros", icon: UserCheck },
+        { to: "/conductores", label: "Conductores", icon: Car },
+        { to: "/vehiculos", label: "Vehículos", icon: Truck },
+        { to: "/barrios", label: "Barrios", icon: MapPin },
+        { to: "/comunas", label: "Comunas", icon: Building2 },
+        { to: "/rutas", label: "Rutas", icon: Route },
+        { to: "/horarios", label: "Horarios", icon: Clock },
+        { to: "/viajes", label: "Viajes", icon: Navigation },
+        { to: "/entidades", label: "Entidades", icon: Building },
+      ],
+    },
+    [obtenerIdRol("Conductor")]: {
+      titulo: "Conductor",
+      modulos: [
+        { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
+        { to: "/perfil", label: "Mi perfil", icon: User },
+        { to: "/viajes", label: "Mis viajes", icon: Navigation },
+      ],
+    },
+    [obtenerIdRol("Pasajero")]: {
+      titulo: "Pasajero",
+      modulos: [
+        { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
+        { to: "/perfil", label: "Mi perfil", icon: User },
+        { to: "/viajes", label: "Mis viajes", icon: Navigation, end: true },
+      ],
+    },
+    [obtenerIdRol("Entidad Externa")]: {
+      titulo: "Entidad Externa",
+      modulos: [
+        { to: "/dashboard", label: "Inicio", icon: LayoutDashboard, end: true },
+        { to: "/perfil", label: "Mi perfil", icon: User },
+        { to: "/vehiculos", label: "Vehículos", icon: Truck },
+      ],
+    },
+  };
+
+  function obtenerRol(rolId) {
+    if (!rolId) return menus[obtenerIdRol("Pasajero")];
+    return menus[rolId] ?? menus[obtenerIdRol("Pasajero")];
+  }
+
   const config = obtenerRol(rol);
 
   return (

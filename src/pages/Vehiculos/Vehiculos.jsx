@@ -6,9 +6,9 @@ import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import MapaSelector from "../../components/MapaSelector/MapaSelector";
 import { vehiculosService } from "../../services/vehiculos.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
-import { ROLES } from "../../config/roles";
-import { ESTADOS_VEHICULO } from "../../config/estados";
 import { usePaginacion } from "../../hooks/usePaginacion";
+import { useEstadosVehiculo } from "../../hooks/useEstadosVehiculo";
+import { useRoles } from "../../hooks/useRoles";
 import "./Vehiculos.css";
 
 function getInitialUser() {
@@ -22,7 +22,9 @@ function getInitialUser() {
 
 export default function Vehiculos() {
   const user = getInitialUser();
-  const esAdmin = user?.rol?.id === ROLES.ADMIN;
+  const { opciones: opcionesEstadosVehiculo, nombre: nombreEstadoVehiculo } = useEstadosVehiculo();
+  const { obtenerId: obtenerIdRol, loading: loadingRoles } = useRoles();
+  const esAdmin = user?.rol?.id === obtenerIdRol("Administrador");
   const [vehiculos, setVehiculos] = useState([]);
   const [entidades, setEntidades] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -150,11 +152,7 @@ export default function Vehiculos() {
     setSortOrder(order);
   };
 
-  const estadoOptions = [
-    { value: 1, label: "En Terminal" },
-    { value: 2, label: "En Ruta" },
-    { value: 3, label: "Próximo" },
-  ];
+  const estadoOptions = opcionesEstadosVehiculo();
 
   const handleGuardar = async () => {
     try {
@@ -231,6 +229,8 @@ export default function Vehiculos() {
   ];
 
   const vehiculosPaginados = vehiculos;
+
+  if (loadingRoles) return <div className="vehiculos-container"><p style={{ textAlign: "center", padding: "2rem" }}>Cargando...</p></div>;
 
   return (
     <div className="vehiculos-container">
@@ -309,7 +309,7 @@ export default function Vehiculos() {
                               className={`badge ${getEstadoColor(vehiculo.estado)}`}
                             >
                               {vehiculo.estado?.nombre ||
-                                ESTADOS_VEHICULO[vehiculo.estado?.id] ||
+                                nombreEstadoVehiculo(vehiculo.estado?.id) ||
                                 vehiculo.estado?.id}
                             </span>
                           </td>
@@ -350,7 +350,7 @@ export default function Vehiculos() {
                             className={`mobile-badge ${getEstadoColor(vehiculo.estado)}`}
                           >
                             {vehiculo.estado?.nombre ||
-                              ESTADOS_VEHICULO[vehiculo.estado?.id] ||
+                               nombreEstadoVehiculo(vehiculo.estado?.id) ||
                               vehiculo.estado?.id}
                           </span>
                         </div>
@@ -565,9 +565,11 @@ export default function Vehiculos() {
               style={{ width: "100%" }}
               required
             >
-              <option value="1">En Terminal</option>
-              <option value="2">En Ruta</option>
-              <option value="3">Próximo</option>
+              {opcionesEstadosVehiculo().map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </div>
           <div style={{ marginBottom: "1rem" }}>

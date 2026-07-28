@@ -1,7 +1,8 @@
 ﻿import { useState } from "react";
 import Modal from "../../components/Modal/Modal";
 import MapaRutas from "../../components/MapaRutas/MapaRutas";
-import { ESTADOS_VIAJE } from "../../config/estados";
+import { useEstadosViaje } from "../../hooks/useEstadosViaje";
+import { useRoles } from "../../hooks/useRoles";
 import { viajesService } from "../../services/viajes.service";
 import {
   obtenerEstadoId,
@@ -18,6 +19,7 @@ export default function Viajes() {
   const [detalleViaje, setDetalleViaje] = useState(null);
   const [mapaExpandido, setMapaExpandido] = useState(false);
   const [editandoViaje, setEditandoViaje] = useState(null);
+  const [recargarAdmin, setRecargarAdmin] = useState(0);
   const [error, setError] = useState("");
   const [formEdit, setFormEdit] = useState({
     rutaId: "",
@@ -30,10 +32,13 @@ export default function Viajes() {
   const [horarios, setHorarios] = useState([]);
   const [conductores, setConductores] = useState([]);
 
+  const { nombre, opciones } = useEstadosViaje();
+  const { obtenerId: obtenerIdRol, loading: loadingRoles } = useRoles();
   const user = getInitialUser();
-  const esAdmin = user?.rol?.id === 1;
-  const esPasajero = user?.rol?.id === 3;
-  const esConductor = user?.rol?.id === 2;
+  const rolUsuario = user?.rol?.id;
+  const esAdmin = rolUsuario === obtenerIdRol("Administrador");
+  const esPasajero = rolUsuario === obtenerIdRol("Pasajero");
+  const esConductor = rolUsuario === obtenerIdRol("Conductor");
 
   const handleVerDetalle = async (viaje) => {
     try {
@@ -84,6 +89,8 @@ export default function Viajes() {
     }
   };
 
+  if (loadingRoles) return <div className="viajes-container"><p style={{ textAlign: "center", padding: "2rem" }}>Cargando...</p></div>;
+
   if (esPasajero) {
     return (
       <div className="viajes-container">
@@ -104,7 +111,7 @@ export default function Viajes() {
 
   return (
     <div className="viajes-container">
-      <ViajesAdmin onVerDetalle={handleVerDetalle} onEditar={abrirEditar} />
+      <ViajesAdmin onVerDetalle={handleVerDetalle} onEditar={abrirEditar} recargar={recargarAdmin} />
       {renderModales()}
     </div>
   );
@@ -165,7 +172,7 @@ export default function Viajes() {
                     <label>Estado</label>
                     <span>
                       {detalleViaje.estado?.nombre ||
-                        ESTADOS_VIAJE[obtenerEstadoId(detalleViaje)] ||
+                        nombre(obtenerEstadoId(detalleViaje)) ||
                         obtenerEstadoId(detalleViaje) ||
                         "-"}
                     </span>
@@ -396,7 +403,7 @@ export default function Viajes() {
                 style={{ width: "100%" }}
               >
                 <option value="">Seleccione un estado</option>
-                {Object.entries(ESTADOS_VIAJE).map(([id, label]) => (
+                {opciones().map(({ value: id, label }) => (
                   <option key={id} value={id}>
                     {label}
                   </option>
@@ -453,8 +460,12 @@ export default function Viajes() {
 
   async function handleGuardarEditar() {
     try {
-      await viajesService.update(editandoViaje.id, formEdit);
+      const datos = Object.fromEntries(
+        Object.entries(formEdit).filter(([, v]) => v !== "")
+      );
+      await viajesService.update(editandoViaje.id, datos);
       setEditandoViaje(null);
+      setRecargarAdmin((v) => v + 1);
       setFormEdit({
         rutaId: "",
         horarioId: "",
