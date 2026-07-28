@@ -22,9 +22,10 @@ function getInitialUser() {
 
 export default function Vehiculos() {
   const user = getInitialUser();
-  const { opciones: opcionesEstadosVehiculo, nombre: nombreEstadoVehiculo } = useEstadosVehiculo();
+  const { opciones: opcionesEstadosVehiculo, nombre: nombreEstadoVehiculo } =
+    useEstadosVehiculo();
   const { obtenerId: obtenerIdRol, loading: loadingRoles } = useRoles();
-  const esAdmin = user?.rol?.id === obtenerIdRol("Administrador");
+  const esAdmin = user?.rol?.nombreRol === "Administrador";
   const [vehiculos, setVehiculos] = useState([]);
   const [entidades, setEntidades] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -230,7 +231,12 @@ export default function Vehiculos() {
 
   const vehiculosPaginados = vehiculos;
 
-  if (loadingRoles) return <div className="vehiculos-container"><p style={{ textAlign: "center", padding: "2rem" }}>Cargando...</p></div>;
+  if (loadingRoles)
+    return (
+      <div className="vehiculos-container">
+        <p style={{ textAlign: "center", padding: "2rem" }}>Cargando...</p>
+      </div>
+    );
 
   return (
     <div className="vehiculos-container">
@@ -350,7 +356,7 @@ export default function Vehiculos() {
                             className={`mobile-badge ${getEstadoColor(vehiculo.estado)}`}
                           >
                             {vehiculo.estado?.nombre ||
-                               nombreEstadoVehiculo(vehiculo.estado?.id) ||
+                              nombreEstadoVehiculo(vehiculo.estado?.id) ||
                               vehiculo.estado?.id}
                           </span>
                         </div>

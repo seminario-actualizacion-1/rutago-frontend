@@ -13,7 +13,6 @@ export default function RutasMapaPage() {
     const loadData = async () => {
       try {
         setLoading(true);
-        // Fetch a large number of routes to show on the map
         const data = await rutasService.getAll({
           paginaActual: 1,
           registrosPorPagina: 100,
@@ -29,14 +28,20 @@ export default function RutasMapaPage() {
   }, []);
 
   return (
-    <div className="rutas-container" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div
+      className="rutas-container"
+      style={{ display: "flex", flexDirection: "column", height: "100%" }}
+    >
       <div className="page-header">
         <h1>Mapa de Rutas — Buenaventura</h1>
       </div>
 
       {error && <p className="error">{error}</p>}
 
-      <div className="table-actions" style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}>
+      <div
+        className="table-actions"
+        style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}
+      >
         <button
           onClick={() => navigate("/rutas")}
           className="button button-outline"
@@ -45,9 +50,26 @@ export default function RutasMapaPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm" style={{ padding: "1rem", flex: 1, display: "flex", flexDirection: "column" }}>
+      <div
+        className="bg-white rounded-lg shadow-sm"
+        style={{
+          padding: "1rem",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         {loading ? (
-          <div className="loading-container" style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+          <div
+            className="loading-container"
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             <div className="spinner"></div>
             <p>Cargando rutas en el mapa...</p>
           </div>

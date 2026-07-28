@@ -14,11 +14,12 @@ function getInitialUser() {
 export default function DashboardLayout() {
   const user = getInitialUser();
   const rol = user?.rol?.id ?? 3;
+  const rolNombre = user?.rol?.nombreRol ?? "Pasajero";
   const { sidebarCollapsed } = useLayout();
 
   return (
     <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
-      <Sidebar rol={rol} />
+      <Sidebar rolNombre={rolNombre} />
       <main
         style={{
           flex: 1,
