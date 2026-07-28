@@ -8,7 +8,7 @@ import { perfilConductorService } from "../../services/perfilConductor.service";
 import { usuariosService } from "../../services/usuarios.service";
 import { vehiculosService } from "../../services/vehiculos.service";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
-import { ESTADOS_CONDUCTOR } from "../../config/estados";
+import { useEstadosConductor } from "../../hooks/useEstadosConductor";
 import "./Conductores.css";
 
 const emptyForm = {
@@ -23,6 +23,7 @@ const emptyForm = {
 };
 
 export default function Conductores() {
+  const { opciones: opcionesEstadosConductor, nombre: nombreEstadoConductor } = useEstadosConductor();
   const [conductores, setConductores] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [vehiculos, setVehiculos] = useState([]);
@@ -239,11 +240,7 @@ export default function Conductores() {
               name: "estadoId",
               label: "Todos los estados",
               value: filters.estadoId,
-              options: [
-                { value: 1, label: "Disponible" },
-                { value: 2, label: "En viaje" },
-                { value: 3, label: "Inactivo" },
-              ],
+              options: opcionesEstadosConductor(),
             },
           ]}
           onFilterChange={handleFilterChange}
@@ -289,7 +286,7 @@ export default function Conductores() {
                             <span
                               className={`badge ${getEstadoColor(conductor.estado?.id)}`}
                             >
-                              {ESTADOS_CONDUCTOR[conductor.estado?.id] ||
+                              {nombreEstadoConductor(conductor.estado?.id) ||
                                 conductor.estado?.nombre ||
                                 conductor.estado?.id}
                             </span>
@@ -329,7 +326,7 @@ export default function Conductores() {
                             className={`mobile-badge ${getEstadoColor(conductor.estado?.id)}`}
                           >
                             {(
-                              ESTADOS_CONDUCTOR[conductor.estado?.id] ||
+                              nombreEstadoConductor(conductor.estado?.id) ||
                               conductor.estado?.nombre ||
                               conductor.estado?.id ||
                               ""
@@ -607,9 +604,11 @@ export default function Conductores() {
               style={{ width: "100%" }}
               required
             >
-              <option value="1">Disponible</option>
-              <option value="2">En viaje</option>
-              <option value="3">Inactivo</option>
+              {opcionesEstadosConductor().map((op) => (
+                <option key={op.value} value={op.value}>
+                  {op.label}
+                </option>
+              ))}
             </select>
           </div>
           {error && <p className="error">{error}</p>}

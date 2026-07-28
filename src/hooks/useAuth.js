@@ -1,5 +1,11 @@
 import { authService } from "../services/auth.service";
 
+function emitAuthChange() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("auth-change"));
+  }
+}
+
 export function useAuth() {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -18,11 +24,13 @@ export function useAuth() {
         rol: data.usuario?.rol,
       }),
     );
+    emitAuthChange();
   };
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("rutago_user");
+    emitAuthChange();
   };
   return { isAuthenticated, login, logout };
 }

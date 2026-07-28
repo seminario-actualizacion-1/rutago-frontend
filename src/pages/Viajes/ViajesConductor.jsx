@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { viajesService } from "../../services/viajes.service";
-import { ESTADOS_VIAJE } from "../../config/estados";
+import { useEstadosViaje } from "../../hooks/useEstadosViaje";
 import {
   obtenerEstadoId,
   obtenerEstadoColor,
@@ -10,6 +10,7 @@ import {
 import { Route, Clock, DollarSign, Users, MapPin } from "lucide-react";
 
 export default function ViajesConductor({ onVerDetalle }) {
+  const { data: estadosViaje, nombre, ESTADO } = useEstadosViaje();
   const [viajesDisponibles, setViajesDisponibles] = useState([]);
   const [misViajes, setMisViajes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +92,7 @@ export default function ViajesConductor({ onVerDetalle }) {
   return (
     <>
       <div className="page-header">
-        <h1>Mis viajes (Conductor)</h1>
+        <h1>Mis viajes</h1>
         <p
           style={{
             color: "#6b7280",
@@ -212,8 +213,19 @@ export default function ViajesConductor({ onVerDetalle }) {
                             }}
                           >
                             <Users size={13} /> {textoCuposPasajero(viaje)}{" "}
-                            cupos
+                            solicitudes
                           </span>
+                          {viaje.horario?.vehiculoPlaca && (
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                              }}
+                            >
+                              {viaje.horario.vehiculoPlaca}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div
@@ -242,17 +254,231 @@ export default function ViajesConductor({ onVerDetalle }) {
           </div>
 
           <div className="dashboard-section" style={{ marginTop: "2rem" }}>
-            <h2>Mis viajes</h2>
-            {misViajes.length === 0 ? (
-              <div
-                className="dashboard-card"
-                style={{ textAlign: "center", padding: "2rem" }}
-              >
-                <p style={{ color: "#6b7280" }}>
-                  Aún no tienes viajes asignados
-                </p>
-              </div>
-            ) : (
+            <h2>Viajes activos</h2>
+            {(() => {
+              const activos = misViajes.filter((v) => {
+                const eid = obtenerEstadoId(v);
+                return ![ESTADO.FINALIZADO, ESTADO.CANCELADO].includes(eid);
+              });
+              return activos.length === 0 ? (
+                <div
+                  className="dashboard-card"
+                  style={{ textAlign: "center", padding: "2rem" }}
+                >
+                  <p style={{ color: "#6b7280" }}>No tienes viajes activos</p>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "0.75rem",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(300px, 1fr))",
+                  }}
+                >
+                  {activos.map((viaje) => {
+                    const estadoId = obtenerEstadoId(viaje);
+                    return (
+                      <div
+                        key={viaje.id}
+                        className="dashboard-card"
+                        style={{ padding: 0, overflow: "hidden" }}
+                      >
+                        <div style={{ padding: "1rem 1rem 0 1rem" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              marginBottom: "0.4rem",
+                            }}
+                          >
+                            <h3
+                              style={{
+                                fontSize: "0.95rem",
+                                fontWeight: 700,
+                                color: "#1f2937",
+                                margin: 0,
+                              }}
+                            >
+                              {viaje.ruta?.nombre || "Ruta sin nombre"}
+                            </h3>
+                            <span
+                              className={`badge ${obtenerEstadoColor(estadoId)}`}
+                            >
+                              {viaje.estado?.nombre ||
+                                nombre(estadoId) ||
+                                estadoId ||
+                                "-"}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.35rem",
+                              fontSize: "0.85rem",
+                              color: "#374151",
+                              marginBottom: "0.75rem",
+                            }}
+                          >
+                            <span style={{ fontWeight: 600 }}>
+                              {viaje.ruta?.origen?.nombre || "?"}
+                            </span>
+                            <span style={{ color: "#9ca3af" }}>&rarr;</span>
+                            <span style={{ fontWeight: 600 }}>
+                              {viaje.ruta?.destino?.nombre || "?"}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr 1fr",
+                              gap: "0.5rem",
+                              marginBottom: "0.75rem",
+                              fontSize: "0.8rem",
+                              color: "#6b7280",
+                            }}
+                          >
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                              }}
+                            >
+                              <Clock size={13} /> {horarioLabel(viaje)}
+                            </span>
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                              }}
+                            >
+                              <DollarSign size={13} /> $
+                              {viaje.precioEstimado || "—"}
+                            </span>
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                              }}
+                            >
+                              <Users size={13} /> {textoCuposPasajero(viaje)}{" "}
+                              cupos
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            padding: "0.6rem 1rem",
+                            background: "#f9fafb",
+                            borderTop: "1px solid #e5e7eb",
+                            display: "flex",
+                            gap: "0.4rem",
+                          }}
+                        >
+                          <button
+                            className="button button-outline"
+                            style={{
+                              flex: 1,
+                              fontSize: "0.8rem",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "0.25rem",
+                            }}
+                            onClick={() => onVerDetalle(viaje)}
+                          >
+                            <MapPin size={13} /> Ruta
+                          </button>
+                          {estadoId === ESTADO.BUSCANDO && (
+                            <button
+                              className="button button-primary"
+                              style={{ width: "100%", fontSize: "0.85rem" }}
+                              disabled={
+                                accionConductorId === `aceptar-${viaje.id}`
+                              }
+                              onClick={() => handleAceptarViaje(viaje.id)}
+                            >
+                              {accionConductorId === `aceptar-${viaje.id}`
+                                ? "Aceptando..."
+                                : "Aceptar viaje"}
+                            </button>
+                          )}
+                          {estadoId === ESTADO.ACEPTADO && (
+                            <>
+                              <button
+                                className="button button-primary"
+                                style={{ flex: 1, fontSize: "0.8rem" }}
+                                disabled={
+                                  accionConductorId === `iniciar-${viaje.id}`
+                                }
+                                onClick={() => handleIniciarViaje(viaje.id)}
+                              >
+                                {accionConductorId === `iniciar-${viaje.id}`
+                                  ? "..."
+                                  : "Iniciar"}
+                              </button>
+                              <button
+                                className="button button-danger"
+                                style={{ flex: 1, fontSize: "0.8rem" }}
+                                disabled={
+                                  accionConductorId === `cancelar-${viaje.id}`
+                                }
+                                onClick={() => handleCancelar(viaje.id)}
+                              >
+                                {accionConductorId === `cancelar-${viaje.id}`
+                                  ? "..."
+                                  : "Cancelar"}
+                              </button>
+                            </>
+                          )}
+                          {estadoId === ESTADO.EN_CURSO && (
+                            <>
+                              <button
+                                className="button button-success"
+                                style={{ flex: 1, fontSize: "0.8rem" }}
+                                disabled={
+                                  accionConductorId === `finalizar-${viaje.id}`
+                                }
+                                onClick={() => handleFinalizarViaje(viaje.id)}
+                              >
+                                {accionConductorId === `finalizar-${viaje.id}`
+                                  ? "..."
+                                  : "Finalizar"}
+                              </button>
+                              <button
+                                className="button button-danger"
+                                style={{ flex: 1, fontSize: "0.8rem" }}
+                                disabled={
+                                  accionConductorId === `cancelar-${viaje.id}`
+                                }
+                                onClick={() => handleCancelar(viaje.id)}
+                              >
+                                {accionConductorId === `cancelar-${viaje.id}`
+                                  ? "..."
+                                  : "Cancelar"}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+
+          {misViajes.some((v) => {
+            const eid = obtenerEstadoId(v);
+            return [ESTADO.FINALIZADO, ESTADO.CANCELADO].includes(eid);
+          }) && (
+            <div className="dashboard-section" style={{ marginTop: "2rem" }}>
+              <h2>Historial</h2>
               <div
                 style={{
                   display: "grid",
@@ -260,187 +486,112 @@ export default function ViajesConductor({ onVerDetalle }) {
                   gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
                 }}
               >
-                {misViajes.map((viaje) => {
-                  const estadoId = obtenerEstadoId(viaje);
-                  return (
-                    <div
-                      key={viaje.id}
-                      className="dashboard-card"
-                      style={{ padding: 0, overflow: "hidden" }}
-                    >
-                      <div style={{ padding: "1rem 1rem 0 1rem" }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "flex-start",
-                            marginBottom: "0.4rem",
-                          }}
-                        >
-                          <h3
-                            style={{
-                              fontSize: "0.95rem",
-                              fontWeight: 700,
-                              color: "#1f2937",
-                              margin: 0,
-                            }}
-                          >
-                            {viaje.ruta?.nombre || "Ruta sin nombre"}
-                          </h3>
-                          <span
-                            className={`badge ${obtenerEstadoColor(estadoId)}`}
-                          >
-                            {viaje.estado?.nombre ||
-                              ESTADOS_VIAJE[estadoId] ||
-                              estadoId ||
-                              "-"}
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.35rem",
-                            fontSize: "0.85rem",
-                            color: "#374151",
-                            marginBottom: "0.75rem",
-                          }}
-                        >
-                          <span style={{ fontWeight: 600 }}>
-                            {viaje.ruta?.origen?.nombre || "?"}
-                          </span>
-                          <span style={{ color: "#9ca3af" }}>&rarr;</span>
-                          <span style={{ fontWeight: 600 }}>
-                            {viaje.ruta?.destino?.nombre || "?"}
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "0.5rem",
-                            marginBottom: "0.75rem",
-                            fontSize: "0.8rem",
-                            color: "#6b7280",
-                          }}
-                        >
-                          <span
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "0.3rem",
-                            }}
-                          >
-                            <Clock size={13} /> {horarioLabel(viaje)}
-                          </span>
-                          <span
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "0.3rem",
-                            }}
-                          >
-                            <DollarSign size={13} /> $
-                            {viaje.precioEstimado || "—"}
-                          </span>
-                          <span
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "0.3rem",
-                            }}
-                          >
-                            <Users size={13} /> {textoCuposPasajero(viaje)}{" "}
-                            cupos
-                          </span>
-                        </div>
-                      </div>
+                {misViajes
+                  .filter((v) => {
+                    const eid = obtenerEstadoId(v);
+                    return [ESTADO.FINALIZADO, ESTADO.CANCELADO].includes(eid);
+                  })
+                  .map((viaje) => {
+                    const estadoId = obtenerEstadoId(viaje);
+                    return (
                       <div
-                        style={{
-                          padding: "0.6rem 1rem",
-                          background: "#f9fafb",
-                          borderTop: "1px solid #e5e7eb",
-                          display: "flex",
-                          gap: "0.4rem",
-                        }}
+                        key={viaje.id}
+                        className="dashboard-card"
+                        style={{ padding: 0, overflow: "hidden", opacity: 0.7 }}
                       >
-                        <button
-                          className="button button-outline"
-                          style={{
-                            flex: 1,
-                            fontSize: "0.8rem",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: "0.25rem",
-                          }}
-                          onClick={() => onVerDetalle(viaje)}
-                        >
-                          <MapPin size={13} /> Ruta
-                        </button>
-                        {estadoId === 2 && (
-                          <>
-                            <button
-                              className="button button-primary"
-                              style={{ flex: 1, fontSize: "0.8rem" }}
-                              disabled={
-                                accionConductorId === `iniciar-${viaje.id}`
-                              }
-                              onClick={() => handleIniciarViaje(viaje.id)}
+                        <div style={{ padding: "1rem 1rem 0 1rem" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              marginBottom: "0.4rem",
+                            }}
+                          >
+                            <h3
+                              style={{
+                                fontSize: "0.95rem",
+                                fontWeight: 700,
+                                color: "#1f2937",
+                                margin: 0,
+                              }}
                             >
-                              {accionConductorId === `iniciar-${viaje.id}`
-                                ? "..."
-                                : "Iniciar"}
-                            </button>
-                            <button
-                              className="button button-danger"
-                              style={{ flex: 1, fontSize: "0.8rem" }}
-                              disabled={
-                                accionConductorId === `cancelar-${viaje.id}`
-                              }
-                              onClick={() => handleCancelar(viaje.id)}
+                              {viaje.ruta?.nombre || "Ruta sin nombre"}
+                            </h3>
+                            <span
+                              className={`badge ${obtenerEstadoColor(estadoId)}`}
                             >
-                              {accionConductorId === `cancelar-${viaje.id}`
-                                ? "..."
-                                : "Cancelar"}
-                            </button>
-                          </>
-                        )}
-                        {estadoId === 3 && (
-                          <>
-                            <button
-                              className="button button-success"
-                              style={{ flex: 1, fontSize: "0.8rem" }}
-                              disabled={
-                                accionConductorId === `finalizar-${viaje.id}`
-                              }
-                              onClick={() => handleFinalizarViaje(viaje.id)}
+                              {viaje.estado?.nombre ||
+                                nombre(estadoId) ||
+                                estadoId ||
+                                "-"}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.35rem",
+                              fontSize: "0.85rem",
+                              color: "#374151",
+                              marginBottom: "0.75rem",
+                            }}
+                          >
+                            <span style={{ fontWeight: 600 }}>
+                              {viaje.ruta?.origen?.nombre || "?"}
+                            </span>
+                            <span style={{ color: "#9ca3af" }}>&rarr;</span>
+                            <span style={{ fontWeight: 600 }}>
+                              {viaje.ruta?.destino?.nombre || "?"}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr 1fr",
+                              gap: "0.5rem",
+                              marginBottom: "0.75rem",
+                              fontSize: "0.8rem",
+                              color: "#6b7280",
+                            }}
+                          >
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                              }}
                             >
-                              {accionConductorId === `finalizar-${viaje.id}`
-                                ? "..."
-                                : "Finalizar"}
-                            </button>
-                            <button
-                              className="button button-danger"
-                              style={{ flex: 1, fontSize: "0.8rem" }}
-                              disabled={
-                                accionConductorId === `cancelar-${viaje.id}`
-                              }
-                              onClick={() => handleCancelar(viaje.id)}
+                              <Clock size={13} /> {horarioLabel(viaje)}
+                            </span>
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                              }}
                             >
-                              {accionConductorId === `cancelar-${viaje.id}`
-                                ? "..."
-                                : "Cancelar"}
-                            </button>
-                          </>
-                        )}
+                              <DollarSign size={13} /> $
+                              {viaje.precioEstimado || "—"}
+                            </span>
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                              }}
+                            >
+                              <Users size={13} /> {textoCuposPasajero(viaje)}{" "}
+                              cupos
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </>
       )}
     </>

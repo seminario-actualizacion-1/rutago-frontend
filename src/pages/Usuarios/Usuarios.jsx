@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRoles } from "../../hooks/useRoles";
 import { usePaginacion } from "../../hooks/usePaginacion";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
@@ -58,6 +59,8 @@ export default function Usuarios() {
   const [filters, setFilters] = useState({ rolId: "" });
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
+
+  const { opciones: opcionesRoles, nombre: nombreRol, data: roles } = useRoles();
 
   const fetchUsuarios = async () => {
     try {
@@ -383,15 +386,7 @@ export default function Usuarios() {
 
   const usuariosPaginados = usuarios;
 
-  const getRolNombre = (rolId) => {
-    const roles = {
-      1: "Administrador",
-      2: "Conductor",
-      3: "Pasajero",
-      4: "Entidad Externa",
-    };
-    return roles[rolId] || "Desconocido";
-  };
+  const getRolNombre = (rolId) => { return nombreRol(rolId) || "Desconocido"; };
 
   const getRolColor = (rolId) => {
     const colors = {
@@ -459,12 +454,7 @@ export default function Usuarios() {
               name: "rolId",
               label: "Todos los roles",
               value: filters.rolId,
-              options: [
-                { value: "1", label: "Administrador" },
-                { value: "2", label: "Conductor" },
-                { value: "3", label: "Pasajero" },
-                { value: "4", label: "Entidad Externa" },
-              ],
+              options: opcionesRoles().map(r => ({ value: String(r.value), label: r.label })),
             },
           ]}
           onFilterChange={handleFilterChange}
@@ -706,10 +696,9 @@ export default function Usuarios() {
               required
             >
               <option value="">Seleccionar rol</option>
-              <option value="1">Administrador</option>
-              <option value="2">Conductor</option>
-              <option value="3">Pasajero</option>
-              <option value="4">Entidad Externa</option>
+              {opcionesRoles().map(r => (
+                <option key={r.value} value={String(r.value)}>{r.label}</option>
+              ))}
             </select>
           </div>
 

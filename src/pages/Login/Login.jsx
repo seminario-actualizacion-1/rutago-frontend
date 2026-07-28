@@ -5,7 +5,7 @@ import Input from "../../components/Input/Input";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import Button from "../../components/Button/Button";
 import Card from "../../components/Card/Card";
-import { ROLES } from "../../config/roles";
+import { useRoles } from "../../hooks/useRoles";
 import "./Login.css";
 
 function Login() {
@@ -13,6 +13,7 @@ function Login() {
   const [formData, setFormData] = useState({ correo: "", contrasena: "" });
   const [error, setError] = useState("");
   const { login } = useAuth();
+  const { obtenerId: obtenerIdRol } = useRoles();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,9 +27,9 @@ function Login() {
       await login(formData);
       const user = JSON.parse(localStorage.getItem("rutago_user") || "{}");
       const rol = user.rol?.id;
-      if (rol === ROLES.CONDUCTOR) navigate("/viajes");
-      else if (rol === ROLES.PASAJERO) navigate("/viajes");
-      else if (rol === ROLES.ENTIDAD) navigate("/vehiculos");
+      if (rol === obtenerIdRol("Conductor")) navigate("/viajes");
+      else if (rol === obtenerIdRol("Pasajero")) navigate("/viajes");
+      else if (rol === obtenerIdRol("Entidad Externa")) navigate("/vehiculos");
       else navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Credenciales incorrectas");

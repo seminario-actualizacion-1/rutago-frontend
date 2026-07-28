@@ -1,10 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
+import { useEstadosViaje } from "../../hooks/useEstadosViaje";
 import Pagination from "../../components/Pagination/Pagination";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
+import Modal from "../../components/Modal/Modal";
 import MapaRutas from "../../components/MapaRutas/MapaRutas";
 import { viajesService } from "../../services/viajes.service";
-import { ESTADOS_VIAJE } from "../../config/estados";
+import { rutasService } from "../../services/rutas.service";
+import { horariosService } from "../../services/horarios.service";
+
 import {
   obtenerEstadoId,
   obtenerEstadoColor,
@@ -12,7 +16,8 @@ import {
   textoCupos,
 } from "./viajesHelpers";
 
-export default function ViajesAdmin({ onVerDetalle, onEditar }) {
+export default function ViajesAdmin({ onVerDetalle, onEditar, recargar }) {
+  const { opciones, nombre } = useEstadosViaje();
   const [viajes, setViajes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,6 +29,12 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
   const [filters, setFilters] = useState({ estadoId: "" });
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [rutas, setRutas] = useState([]);
+  const [horarios, setHorarios] = useState([]);
+  const [crearForm, setCrearForm] = useState({ rutaId: "", horarioId: "", precioEstimado: "" });
+  const [crearError, setCrearError] = useState("");
+  const [crearLoading, setCrearLoading] = useState(false);
 
   const queryParams = useMemo(
     () => ({
@@ -52,7 +63,7 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
 
   useEffect(() => {
     loadViajes();
-  }, [queryParams]);
+  }, [queryParams, recargar]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
@@ -76,7 +87,63 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
     setCurrentPage(1);
   };
 
+  const fetchRutas = async () => {
+    try {
+      const data = await rutasService.getAll({ paginaActual: 1, registrosPorPagina: 100 });
+      setRutas(data.data || []);
+    } catch {
+      // silencioso
+    }
+  };
+
+  useEffect(() => {
+    fetchRutas();
+  }, []);
+
+  const handleRutaChange = async (rutaId) => {
+    setCrearForm((prev) => ({ ...prev, rutaId, horarioId: "" }));
+    setHorarios([]);
+    if (!rutaId) return;
+    try {
+      const data = await horariosService.getByRuta(rutaId);
+      setHorarios(data.data || []);
+    } catch {
+      setHorarios([]);
+    }
+  };
+
+  const handleNuevoViaje = () => {
+    setCrearForm({ rutaId: "", horarioId: "", precioEstimado: "" });
+    setHorarios([]);
+    setCrearError("");
+    setModalOpen(true);
+  };
+
+  const handleGuardarViaje = async (e) => {
+    e.preventDefault();
+    if (!crearForm.rutaId) {
+      setCrearError("Debe seleccionar una ruta");
+      return;
+    }
+    setCrearLoading(true);
+    setCrearError("");
+    try {
+      await viajesService.create({
+        rutaId: crearForm.rutaId,
+        horarioId: crearForm.horarioId,
+        precioEstimado: crearForm.precioEstimado || undefined,
+      });
+      setModalOpen(false);
+      loadViajes();
+    } catch (err) {
+      setCrearError(err.message);
+    } finally {
+      setCrearLoading(false);
+    }
+  };
+
   const handleEliminar = async (viajeId) => {
+    if (!window.confirm("¿Estás seguro de eliminar este viaje?")) return;
     try {
       await viajesService.eliminar(viajeId);
       setViajes((prev) => prev.filter((v) => v.id !== viajeId));
@@ -103,6 +170,9 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
       </div>
 
       <div style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}>
+        <button onClick={handleNuevoViaje} className="button button-primary">
+          + Nuevo Viaje
+        </button>
         <button
           onClick={() => setVistaMapa(!vistaMapa)}
           className="button button-outline"
@@ -134,13 +204,7 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
                 name: "estadoId",
                 label: "Todos los estados",
                 value: filters.estadoId,
-                options: [
-                  { value: 1, label: "Buscando" },
-                  { value: 2, label: "Aceptado" },
-                  { value: 3, label: "En curso" },
-                  { value: 4, label: "Finalizado" },
-                  { value: 5, label: "Cancelado" },
-                ],
+                options: opciones(),
               },
             ]}
             onFilterChange={handleFilterChange}
@@ -185,7 +249,7 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
                                 className={`badge ${obtenerEstadoColor(obtenerEstadoId(viaje))}`}
                               >
                                 {viaje.estado?.nombre ||
-                                  ESTADOS_VIAJE[obtenerEstadoId(viaje)] ||
+                                  nombre(obtenerEstadoId(viaje)) ||
                                   obtenerEstadoId(viaje) ||
                                   "-"}
                               </span>
@@ -241,7 +305,7 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
                             >
                               {(
                                 viaje.estado?.nombre ||
-                                ESTADOS_VIAJE[obtenerEstadoId(viaje)] ||
+                                nombreEstadoViaje(obtenerEstadoId(viaje)) ||
                                 obtenerEstadoId(viaje) ||
                                 "-"
                               ).toString()}
@@ -296,6 +360,80 @@ export default function ViajesAdmin({ onVerDetalle, onEditar }) {
           )}
         </div>
       )}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Nuevo Viaje"
+      >
+        <form onSubmit={handleGuardarViaje}>
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+              Ruta
+            </label>
+            <select
+              value={crearForm.rutaId}
+              onChange={(e) => handleRutaChange(e.target.value)}
+              className="input"
+              style={{ width: "100%" }}
+              required
+            >
+              <option value="">Seleccionar ruta</option>
+              {rutas.map((ruta) => (
+                <option key={ruta.id} value={ruta.id}>
+                  {ruta.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+              Horario
+            </label>
+            <select
+              value={crearForm.horarioId}
+              onChange={(e) => setCrearForm({ ...crearForm, horarioId: e.target.value })}
+              className="input"
+              style={{ width: "100%" }}
+              required
+            >
+              <option value="">Seleccionar horario</option>
+              {horarios.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.horaSalida?.slice(0, 5) || h.id}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500" }}>
+              Precio estimado ($)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="100"
+              value={crearForm.precioEstimado}
+              onChange={(e) => setCrearForm({ ...crearForm, precioEstimado: e.target.value })}
+              className="input"
+              style={{ width: "100%" }}
+              placeholder="Opcional"
+            />
+          </div>
+          {crearError && <p className="error">{crearError}</p>}
+          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              onClick={() => setModalOpen(false)}
+              className="button button-outline"
+            >
+              Cancelar
+            </button>
+            <button type="submit" className="button button-primary" disabled={crearLoading}>
+              {crearLoading ? "Creando..." : "Crear Viaje"}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </>
   );
 }

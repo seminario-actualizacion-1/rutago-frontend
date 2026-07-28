@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
+import { useTiposDocumento } from "../../hooks/useTiposDocumento";
 
 export default function PerfilPasajero({
   perfil,
   onRefresh,
   tipoDocumentoOptions,
 }) {
+  const { opciones: opcionesTiposDocumento, data: tiposDocumento } = useTiposDocumento();
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     telefono: perfil?.telefono || "",
     direccion: perfil?.direccion || "",
-    tipoDocumentoId: perfil?.tipoDocumentoId || 1,
+    tipoDocumentoId: perfil?.tipoDocumentoId || tiposDocumento[0]?.id || 1,
     numeroDocumento: perfil?.numeroDocumento || "",
     fechaNacimiento: perfil?.fechaNacimiento
       ? perfil.fechaNacimiento.split("T")[0]
@@ -47,7 +49,7 @@ export default function PerfilPasajero({
     setFormData({
       telefono: perfil?.telefono || "",
       direccion: perfil?.direccion || "",
-      tipoDocumentoId: perfil?.tipoDocumentoId || 1,
+      tipoDocumentoId: perfil?.tipoDocumentoId || tiposDocumento[0]?.id || 1,
       numeroDocumento: perfil?.numeroDocumento || "",
       fechaNacimiento: perfil?.fechaNacimiento
         ? perfil.fechaNacimiento.split("T")[0]
@@ -124,9 +126,9 @@ export default function PerfilPasajero({
           onChange={handleChange}
           className="input"
         >
-          {(tipoDocumentoOptions || []).map((td) => (
-            <option key={td.id} value={td.id}>
-              {td.nombre} — {td.descripcion}
+          {opcionesTiposDocumento().map((td) => (
+            <option key={td.value} value={td.value}>
+              {td.label}
             </option>
           ))}
         </select>

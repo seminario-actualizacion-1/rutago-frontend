@@ -3,14 +3,16 @@ import api from "../../api/axios";
 import { perfilConductorService } from "../../services/perfilConductor.service";
 import { perfilEntidadService } from "../../services/perfilEntidad.service";
 import { perfilPasajeroService } from "../../services/perfilPasajero.service";
-import { ESTADOS_VEHICULO } from "../../config/estados";
-import { obtenerRol } from "../../config/roles";
+import { useRoles } from "../../hooks/useRoles";
+import { useEstadosVehiculo } from "../../hooks/useEstadosVehiculo";
 import PerfilConductor from "./PerfilConductor";
 import PerfilPasajero from "./PerfilPasajero";
 import PerfilEntidad from "./PerfilEntidad";
 import "./Perfil.css";
 
 export default function Perfil() {
+  const { obtenerId: obtenerIdRol, nombre: nombreRol } = useRoles();
+  const { nombre: nombreEstadoVehiculo } = useEstadosVehiculo();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -39,12 +41,13 @@ export default function Perfil() {
   };
 
   const obtenerEstadoTexto = (estadoId) => {
-    return ESTADOS_VEHICULO[estadoId] || "En terminal";
+    return nombreEstadoVehiculo(estadoId) || "En terminal";
   };
 
   const obtenerEstadoClase = (estadoId) => {
-    if (estadoId === 2) return "estado-ruta";
-    if (estadoId === 3) return "estado-proximo";
+    const nombre = nombreEstadoVehiculo(estadoId);
+    if (nombre === "En Ruta") return "estado-ruta";
+    if (nombre === "Próximo") return "estado-proximo";
     return "estado-terminal";
   };
 
@@ -60,21 +63,21 @@ export default function Perfil() {
         correo: usuario.correo,
       });
 
-      if (usuario.rol?.id === 2) {
+      if (usuario.rol?.id === obtenerIdRol("Conductor")) {
         try {
           const perfilResponse = await perfilConductorService.getMiPerfil();
           setPerfilEspecializado(perfilResponse.data || null);
         } catch {
           setPerfilEspecializado(usuario.perfilConductor || null);
         }
-      } else if (usuario.rol?.id === 3) {
+      } else if (usuario.rol?.id === obtenerIdRol("Pasajero")) {
         try {
           const perfilResponse = await perfilPasajeroService.getMiPerfil();
           setPerfilEspecializado(perfilResponse.data || null);
         } catch {
           setPerfilEspecializado(usuario.perfilPasajero || null);
         }
-      } else if (usuario.rol?.id === 4) {
+      } else if (usuario.rol?.id === obtenerIdRol("Entidad Externa")) {
         try {
           const perfilResponse = await perfilEntidadService.getMiPerfil();
           setPerfilEspecializado(perfilResponse.data || null);
@@ -222,7 +225,7 @@ export default function Perfil() {
 
               <div className="perfil-row">
                 <span className="perfil-label">Rol:</span>
-                <span className="perfil-value">{obtenerRol(user.rol?.id)}</span>
+                <span className="perfil-value">{nombreRol(user.rol?.id)}</span>
               </div>
 
               <div className="perfil-actions">
@@ -288,11 +291,11 @@ export default function Perfil() {
         </div>
       </div>
 
-      {user.rol?.id === 2 && perfilEspecializado && (
+      {user.rol?.id === obtenerIdRol("Conductor") && perfilEspecializado && (
         <PerfilConductor perfil={perfilEspecializado} onRefresh={fetchPerfil} />
       )}
 
-      {user.rol?.id === 3 && perfilEspecializado && (
+      {user.rol?.id === obtenerIdRol("Pasajero") && perfilEspecializado && (
         <PerfilPasajero
           perfil={perfilEspecializado}
           onRefresh={fetchPerfil}
@@ -300,7 +303,7 @@ export default function Perfil() {
         />
       )}
 
-      {user.rol?.id === 4 && perfilEspecializado && (
+      {user.rol?.id === obtenerIdRol("Entidad Externa") && perfilEspecializado && (
         <PerfilEntidad perfil={perfilEspecializado} onRefresh={fetchPerfil} />
       )}
 
@@ -504,15 +507,13 @@ export default function Perfil() {
 
                 <p>
                   <strong>Latitud:</strong>{" "}
-                  {busSeleccionado.vehiculo?.latitud || "3.8801"}
+                  {busSeleccionado.vehiculo?.latitud || "—"}
                 </p>
 
                 <p>
                   <strong>Longitud:</strong>{" "}
-                  {busSeleccionado.vehiculo?.longitud || "-77.0312"}
+                  {busSeleccionado.vehiculo?.longitud || "—"}
                 </p>
-
-                <small>Ubicación simulada del bus</small>
               </div>
             </div>
           )}

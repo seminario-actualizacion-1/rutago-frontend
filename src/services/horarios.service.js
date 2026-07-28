@@ -3,27 +3,18 @@ import * as api from "../api/horarios";
 const extractError = (err, fallback) =>
   new Error(err.response?.data?.message || err.message || fallback);
 
-const normalizeHorarioPayload = (horario) => ({
-  ...horario,
-  vehiculoId:
-    horario.vehiculoId === "" ||
-    horario.vehiculoId == null ||
-    Number.isNaN(horario.vehiculoId)
-      ? null
-      : Number(horario.vehiculoId),
-  rutaId:
-    horario.rutaId === "" ||
-    horario.rutaId == null ||
-    Number.isNaN(horario.rutaId)
-      ? null
-      : Number(horario.rutaId),
-  frecuenciaMinutos:
-    horario.frecuenciaMinutos === "" ||
-    horario.frecuenciaMinutos == null ||
-    Number.isNaN(horario.frecuenciaMinutos)
-      ? null
-      : Number(horario.frecuenciaMinutos),
-});
+const normalizeHorarioPayload = (horario) => {
+  const normalizado = { ...horario };
+  ["vehiculoId", "rutaId", "frecuenciaMinutos"].forEach((campo) => {
+    const val = normalizado[campo];
+    if (val === "" || val == null || Number.isNaN(val)) {
+      delete normalizado[campo];
+    } else {
+      normalizado[campo] = Number(val);
+    }
+  });
+  return normalizado;
+};
 
 export const horariosService = {
   getAll: async (params = {}) => {

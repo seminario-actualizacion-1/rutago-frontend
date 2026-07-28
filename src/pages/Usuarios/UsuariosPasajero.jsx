@@ -1,17 +1,7 @@
-import { useState, useEffect } from "react";
-import api from "../../api/axios";
+import { useTiposDocumento } from "../../hooks/useTiposDocumento";
 
 export default function UsuariosPasajero({ formData, onChange }) {
-  const [tiposDocumento, setTiposDocumento] = useState([]);
-
-  useEffect(() => {
-    api
-      .get("/tipos-documento")
-      .then((res) => {
-        if (res.data?.success) setTiposDocumento(res.data.data);
-      })
-      .catch(() => {});
-  }, []);
+  const { opciones: opcionesTiposDocumento } = useTiposDocumento();
 
   return (
     <>
@@ -70,9 +60,9 @@ export default function UsuariosPasajero({ formData, onChange }) {
           style={{ width: "100%" }}
         >
           <option value="">Seleccionar</option>
-          {tiposDocumento.map((td) => (
-            <option key={td.id} value={td.id}>
-              {td.nombre}
+          {opcionesTiposDocumento().map((td) => (
+            <option key={td.value} value={td.value}>
+              {td.label}
             </option>
           ))}
         </select>

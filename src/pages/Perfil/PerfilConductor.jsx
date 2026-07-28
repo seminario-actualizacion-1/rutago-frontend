@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { perfilConductorService } from "../../services/perfilConductor.service";
-import { ESTADOS_CONDUCTOR } from "../../config/estados";
+import { useEstadosConductor } from "../../hooks/useEstadosConductor";
 
 export default function PerfilConductor({ perfil, onRefresh }) {
+  const { opciones: opcionesEstadosConductor, data: estadosConductor } = useEstadosConductor();
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     licenciaConducir: perfil?.licenciaConducir || "",
-    estadoId: perfil?.estadoId || 1,
+    estadoId: perfil?.estadoId || estadosConductor[0]?.id || 1,
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -38,7 +39,7 @@ export default function PerfilConductor({ perfil, onRefresh }) {
     setEditing(false);
     setFormData({
       licenciaConducir: perfil?.licenciaConducir || "",
-      estadoId: perfil?.estadoId || 1,
+      estadoId: perfil?.estadoId || estadosConductor[0]?.id || 1,
     });
     setMessage("");
     setError("");
@@ -70,7 +71,7 @@ export default function PerfilConductor({ perfil, onRefresh }) {
           <div className="perfil-row">
             <span className="perfil-label">Estado:</span>
             <span className="perfil-value">
-              {ESTADOS_CONDUCTOR[perfil?.estadoId] ||
+              {estadosConductor.find(e => e.id === perfil?.estadoId)?.nombre ||
                 perfil?.estadoId ||
                 "No definido"}
             </span>
@@ -113,9 +114,9 @@ export default function PerfilConductor({ perfil, onRefresh }) {
           onChange={handleChange}
           className="input"
         >
-          <option value="1">Disponible</option>
-          <option value="2">En viaje</option>
-          <option value="3">Inactivo</option>
+          {opcionesEstadosConductor().map(op => (
+            <option key={op.value} value={op.value}>{op.label}</option>
+          ))}
         </select>
 
         <div className="form-actions">

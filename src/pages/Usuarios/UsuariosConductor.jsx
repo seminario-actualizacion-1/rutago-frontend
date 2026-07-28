@@ -1,6 +1,7 @@
-import { ESTADOS_CONDUCTOR } from "../../config/estados";
+import { useEstadosConductor } from "../../hooks/useEstadosConductor";
 
 export default function UsuariosConductor({ formData, onChange, vehiculos }) {
+  const { nombre: nombreEstadoConductor, data: estadosConductor } = useEstadosConductor();
   return (
     <>
       <div style={{ marginBottom: "1rem" }}>
@@ -64,9 +65,9 @@ export default function UsuariosConductor({ formData, onChange, vehiculos }) {
           className="input"
           style={{ width: "100%" }}
         >
-          {Object.entries(ESTADOS_CONDUCTOR).map(([id, label]) => (
-            <option key={id} value={id}>
-              {label}
+          {estadosConductor.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.nombre}
             </option>
           ))}
         </select>

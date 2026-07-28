@@ -132,9 +132,14 @@ export default function MapaRutas({ rutas = [], showSearch = false }) {
           if (!iconCache[colorHex])
             iconCache[colorHex] = svgMarkerIcon(colorHex);
           const icono = iconCache[colorHex];
-          const geometria = ruta.rutaGeometria
-            ? JSON.parse(ruta.rutaGeometria)
-            : null;
+          let geometria = null;
+          if (ruta.rutaGeometria) {
+            try {
+              geometria = JSON.parse(ruta.rutaGeometria);
+            } catch {
+              geometria = null;
+            }
+          }
           const oCoord = geometria
             ? geometria[0]
             : COMUNA_CENTROS[ruta.origen.id];
