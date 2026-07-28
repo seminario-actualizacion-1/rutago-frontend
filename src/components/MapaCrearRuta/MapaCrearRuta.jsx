@@ -108,17 +108,33 @@ function BuscadorMapa() {
 }
 
 export default function MapaCrearRuta({ formData, setFormData, comunas }) {
+  const parseCoords = () => {
+    if (formData?.rutaGeometria) {
+      try {
+        const parsed = JSON.parse(formData.rutaGeometria);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const initialCoords = parseCoords();
+
   const [origen, setOrigen] = useState(() => {
+    if (initialCoords) return initialCoords[0];
     if (formData?.origenId && COMUNA_CENTROS[formData.origenId])
       return COMUNA_CENTROS[formData.origenId];
     return null;
   });
   const [destino, setDestino] = useState(() => {
+    if (initialCoords) return initialCoords[initialCoords.length - 1];
     if (formData?.destinoId && COMUNA_CENTROS[formData.destinoId])
       return COMUNA_CENTROS[formData.destinoId];
     return null;
   });
-  const [rutaCoords, setRutaCoords] = useState(null);
+  const [rutaCoords, setRutaCoords] = useState(initialCoords);
   const [calculando, setCalculando] = useState(false);
   const [expandido, setExpandido] = useState(false);
   const ultimoDestino = useRef(null);

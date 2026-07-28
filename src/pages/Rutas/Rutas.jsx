@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
@@ -11,6 +12,7 @@ import { usePaginacion } from "../../hooks/usePaginacion";
 import "./Rutas.css";
 
 export default function Rutas() {
+  const navigate = useNavigate();
   const [rutas, setRutas] = useState([]);
   const [comunas, setComunas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,6 @@ export default function Rutas() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("ASC");
-  const [vistaMapa, setVistaMapa] = useState(false);
 
   const fetchRutas = async () => {
     try {
@@ -107,6 +108,7 @@ export default function Rutas() {
       descripcion: ruta.descripcion || "",
       distanciaKm: ruta.distanciaKm || "",
       tiempoEstimadoMinutos: ruta.tiempoEstimadoMinutos || "",
+      rutaGeometria: ruta.rutaGeometria || "",
     });
     setModalOpen(true);
   };
@@ -202,26 +204,15 @@ export default function Rutas() {
           + Nueva Ruta
         </button>
         <button
-          onClick={() => setVistaMapa(!vistaMapa)}
+          onClick={() => navigate("/rutas/mapa")}
           className="button button-outline"
         >
-          {vistaMapa ? "Ver Tabla" : "Ver Mapa"}
+          Ver Mapa
         </button>
       </div>
 
-      {vistaMapa ? (
-        <div
-          className="bg-white rounded-lg shadow-sm"
-          style={{ padding: "1rem" }}
-        >
-          <h3 style={{ marginBottom: "0.75rem" }}>
-            Mapa de Rutas — Buenaventura
-          </h3>
-          <MapaRutas rutas={rutas} />
-        </div>
-      ) : (
-        <div className="table-container">
-          <TableToolbar
+      <div className="table-container">
+        <TableToolbar
             searchValue={searchTerm}
             onSearchChange={handleSearchChange}
             placeholder="Buscar por nombre, origen o destino..."
@@ -337,7 +328,6 @@ export default function Rutas() {
             />
           )}
         </div>
-      )}
 
       <Modal
         isOpen={modalOpen}
