@@ -1,9 +1,9 @@
-import * as api from "../api/perfilPasajero";
+import * as api from "../api/pasajero";
 
 const extractError = (err, fallback) =>
   new Error(err.response?.data?.message || err.message || fallback);
 
-export const perfilPasajeroService = {
+export const pasajeroService = {
   getAll: async (params = {}) => {
     try {
       const res = await api.getPasajeros(params);
@@ -25,7 +25,7 @@ export const perfilPasajeroService = {
       const res = await api.getPasajeroByUsuario(usuarioId);
       return res.data;
     } catch (err) {
-      throw extractError(err, "Error al cargar perfil del pasajero");
+      throw extractError(err, "Error al cargar pasajero por usuario");
     }
   },
   create: async (data) => {

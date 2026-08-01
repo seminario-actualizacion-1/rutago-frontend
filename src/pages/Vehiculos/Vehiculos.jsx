@@ -5,7 +5,7 @@ import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import MapaSelector from "../../components/MapaSelector/MapaSelector";
 import { vehiculosService } from "../../services/vehiculos.service";
-import { perfilEntidadService } from "../../services/perfilEntidad.service";
+import { entidadService } from "../../services/entidad.service";
 import { usePaginacion } from "../../hooks/usePaginacion";
 import { useEstadosVehiculo } from "../../hooks/useEstadosVehiculo";
 import { useRoles } from "../../hooks/useRoles";
@@ -73,7 +73,7 @@ export default function Vehiculos() {
       ];
       if (esAdmin) {
         promises.push(
-          perfilEntidadService.getAll({
+          entidadService.getAll({
             paginaActual: 1,
             registrosPorPagina: 100,
           }),
@@ -112,11 +112,11 @@ export default function Vehiculos() {
     };
     if (!esAdmin) {
       try {
-        const resp = await perfilEntidadService.getMiPerfil();
-        const perfil = resp.data || resp;
-        baseForm.entidadId = perfil.id;
+        const resp = await entidadService.getMiPerfil();
+        const entidad = resp.data || resp;
+        baseForm.entidadId = entidad.id;
       } catch {
-        // si no tiene perfil de entidad, entidadId queda vacío
+        // si no tiene entidad, entidadId queda vacío
       }
     }
     setFormData(baseForm);

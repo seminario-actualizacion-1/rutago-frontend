@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { perfilConductorService } from "../../services/perfilConductor.service";
+import { conductorService } from "../../services/conductor.service";
 import { useEstadosConductor } from "../../hooks/useEstadosConductor";
 
-export default function PerfilConductor({ perfil, onRefresh }) {
+export default function Conductor({ perfil, onRefresh }) {
   const { opciones: opcionesEstadosConductor, data: estadosConductor } = useEstadosConductor();
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -24,7 +24,7 @@ export default function PerfilConductor({ perfil, onRefresh }) {
     setError("");
 
     try {
-      await perfilConductorService.updateMiPerfil(formData);
+      await conductorService.updateMiPerfil(formData);
       setMessage("Perfil de conductor actualizado correctamente");
       setEditing(false);
       onRefresh();

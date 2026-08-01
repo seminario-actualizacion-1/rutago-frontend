@@ -5,8 +5,8 @@ import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { horariosService } from "../../services/horarios.service";
 import { rutasService } from "../../services/rutas.service";
-import { vehiculosService } from "../../services/vehiculos.service";
 import { usePaginacion } from "../../hooks/usePaginacion";
+import { formatearHora } from "../../utils/formato";
 
 const minutosATime = (min) => {
   if (!min && min !== 0) return "";
@@ -22,7 +22,6 @@ const timeAMinutos = (time) => {
 };
 
 const emptyForm = {
-  vehiculoId: "",
   rutaId: "",
   horaSalida: "",
   frecuenciaMinutos: "",
@@ -33,7 +32,6 @@ const emptyForm = {
 export default function Horarios() {
   const [horarios, setHorarios] = useState([]);
   const [rutas, setRutas] = useState([]);
-  const [vehiculos, setVehiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -76,18 +74,11 @@ export default function Horarios() {
     const loadData = async () => {
       try {
         setLoading(true);
-        const [rutasData, vehiculosData] = await Promise.all([
-          rutasService.getAll({
-            paginaActual: 1,
-            registrosPorPagina: 100,
-          }),
-          vehiculosService.getAll({
-            paginaActual: 1,
-            registrosPorPagina: 100,
-          }),
-        ]);
+        const rutasData = await rutasService.getAll({
+          paginaActual: 1,
+          registrosPorPagina: 100,
+        });
         setRutas(rutasData.data || []);
-        setVehiculos(vehiculosData.data || []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -120,7 +111,6 @@ export default function Horarios() {
   const handleEditar = (horario) => {
     setEditingHorario(horario);
     setFormData({
-      vehiculoId: horario.vehiculo?.id || "",
       rutaId: horario.ruta?.id || "",
       horaSalida: horario.horaSalida
         ? String(horario.horaSalida).slice(0, 5)
@@ -174,13 +164,6 @@ export default function Horarios() {
     }
   };
 
-  const getVehiculoLabel = (vehiculoId) => {
-    const vehiculo = vehiculos.find((v) => v.id === vehiculoId);
-    return vehiculo
-      ? `${vehiculo.placa} - ${vehiculo.marca} ${vehiculo.modelo}`
-      : "Sin vehículo";
-  };
-
   const getRutaLabel = (rutaId) => {
     const ruta = rutas.find((r) => r.id === rutaId);
     return ruta ? ruta.nombre : "Sin ruta";
@@ -231,7 +214,6 @@ export default function Horarios() {
                     <tr>
                       <th>ID</th>
                       <th>Ruta</th>
-                      <th>Vehículo</th>
                       <th>Hora de salida</th>
                       <th>Frecuencia</th>
                       <th>Días</th>
@@ -244,8 +226,7 @@ export default function Horarios() {
                         <tr key={horario.id}>
                           <td>{horario.id}</td>
                           <td>{getRutaLabel(horario.ruta?.id)}</td>
-                          <td>{getVehiculoLabel(horario.vehiculo?.id)}</td>
-                          <td>{horario.horaSalida || "-"}</td>
+                          <td>{formatearHora(horario.horaSalida) || "-"}</td>
                           <td>
                             {horario.frecuenciaMinutos
                               ? minutosATime(horario.frecuenciaMinutos)
@@ -266,7 +247,7 @@ export default function Horarios() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="7" className="text-center">
+                        <td colSpan="6" className="text-center">
                           No se encontraron horarios
                         </td>
                       </tr>
@@ -283,8 +264,7 @@ export default function Horarios() {
                         <div className="mobile-card-header">
                           <div className="mobile-card-info">
                             <h3>{getRutaLabel(horario.ruta?.id)}</h3>
-                            <p>{getVehiculoLabel(horario.vehiculo?.id)}</p>
-                            <p>Salida: {horario.horaSalida || "-"}</p>
+                            <p>Salida: {formatearHora(horario.horaSalida) || "-"}</p>
                           </div>
                         </div>
                         <div className="mobile-card-body">
@@ -370,38 +350,6 @@ export default function Horarios() {
               {rutas.map((ruta) => (
                 <option key={ruta.id} value={ruta.id}>
                   {ruta.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ marginBottom: "1rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "0.5rem",
-                fontWeight: "500",
-              }}
-            >
-              Vehículo
-            </label>
-            <select
-              value={formData.vehiculoId}
-              onChange={(e) => {
-                const value = e.target.value;
-                setFormData({
-                  ...formData,
-                  vehiculoId: value === "" ? "" : parseInt(value, 10),
-                });
-              }}
-              className="input"
-              style={{ width: "100%" }}
-              required
-            >
-              <option value="">Seleccionar vehículo</option>
-              {vehiculos.map((vehiculo) => (
-                <option key={vehiculo.id} value={vehiculo.id}>
-                  {vehiculo.placa} - {vehiculo.marca} {vehiculo.modelo}
                 </option>
               ))}
             </select>

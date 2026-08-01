@@ -1,12 +1,22 @@
 import { useState } from "react";
-import { perfilEntidadService } from "../../services/perfilEntidad.service";
+import { pasajeroService } from "../../services/pasajero.service";
+import { useTiposDocumento } from "../../hooks/useTiposDocumento";
 
-export default function PerfilEntidad({ perfil, onRefresh }) {
+export default function Pasajero({
+  perfil,
+  onRefresh,
+  tipoDocumentoOptions,
+}) {
+  const { opciones: opcionesTiposDocumento, data: tiposDocumento } = useTiposDocumento();
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
-    telefonoContacto: perfil?.telefonoContacto || "",
+    telefono: perfil?.telefono || "",
     direccion: perfil?.direccion || "",
-    sitioWeb: perfil?.sitioWeb || "",
+    tipoDocumentoId: perfil?.tipoDocumentoId || tiposDocumento[0]?.id || 1,
+    numeroDocumento: perfil?.numeroDocumento || "",
+    fechaNacimiento: perfil?.fechaNacimiento
+      ? perfil.fechaNacimiento.split("T")[0]
+      : "",
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -23,12 +33,12 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
     setError("");
 
     try {
-      await perfilEntidadService.updateMiPerfil(formData);
-      setMessage("Perfil de entidad actualizado correctamente");
+      await pasajeroService.updateMiPerfil(formData);
+      setMessage("Perfil de pasajero actualizado correctamente");
       setEditing(false);
       onRefresh();
     } catch (err) {
-      setError(err.message || "Error al actualizar el perfil de entidad");
+      setError(err.message || "Error al actualizar el perfil de pasajero");
     } finally {
       setLoading(false);
     }
@@ -37,9 +47,13 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
   const handleCancel = () => {
     setEditing(false);
     setFormData({
-      telefonoContacto: perfil?.telefonoContacto || "",
+      telefono: perfil?.telefono || "",
       direccion: perfil?.direccion || "",
-      sitioWeb: perfil?.sitioWeb || "",
+      tipoDocumentoId: perfil?.tipoDocumentoId || tiposDocumento[0]?.id || 1,
+      numeroDocumento: perfil?.numeroDocumento || "",
+      fechaNacimiento: perfil?.fechaNacimiento
+        ? perfil.fechaNacimiento.split("T")[0]
+        : "",
     });
     setMessage("");
     setError("");
@@ -55,9 +69,18 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
         {error && <div className="error-message">{error}</div>}
         <div className="perfil-info">
           <div className="perfil-row">
-            <span className="perfil-label">Teléfono de contacto:</span>
+            <span className="perfil-label">Documento:</span>
             <span className="perfil-value">
-              {perfil?.telefonoContacto || "No registrado"}
+              {perfil?.tipoDocumento
+                ? `${perfil.tipoDocumento.abreviatura || perfil.tipoDocumento.nombre} — ${perfil.tipoDocumento.descripcion || ""}`
+                : "No registrado"}{" "}
+              {perfil?.numeroDocumento || ""}
+            </span>
+          </div>
+          <div className="perfil-row">
+            <span className="perfil-label">Teléfono:</span>
+            <span className="perfil-value">
+              {perfil?.telefono || "No registrado"}
             </span>
           </div>
           <div className="perfil-row">
@@ -67,19 +90,11 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
             </span>
           </div>
           <div className="perfil-row">
-            <span className="perfil-label">Sitio web:</span>
+            <span className="perfil-label">Fecha de nacimiento:</span>
             <span className="perfil-value">
-              {perfil?.sitioWeb ? (
-                <a
-                  href={perfil.sitioWeb}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {perfil.sitioWeb}
-                </a>
-              ) : (
-                "No registrado"
-              )}
+              {perfil?.fechaNacimiento
+                ? new Date(perfil.fechaNacimiento).toLocaleDateString()
+                : "No registrada"}
             </span>
           </div>
           <div className="perfil-actions">
@@ -87,7 +102,7 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
               onClick={() => setEditing(true)}
               className="button button-outline"
             >
-              Editar Perfil de Entidad
+              Editar Perfil de Pasajero
             </button>
           </div>
         </div>
@@ -102,13 +117,36 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
     >
       {message && <div className="success-message">{message}</div>}
       {error && <div className="error-message">{error}</div>}
-      <h2>Editar perfil de entidad</h2>
+      <h2>Editar perfil de pasajero</h2>
       <form onSubmit={handleSave} className="perfil-form">
-        <label>Teléfono de contacto</label>
+        <label>Tipo de documento</label>
+        <select
+          name="tipoDocumentoId"
+          value={formData.tipoDocumentoId}
+          onChange={handleChange}
+          className="input"
+        >
+          {opcionesTiposDocumento().map((td) => (
+            <option key={td.value} value={td.value}>
+              {td.label}
+            </option>
+          ))}
+        </select>
+
+        <label>Número de documento</label>
         <input
           type="text"
-          name="telefonoContacto"
-          value={formData.telefonoContacto}
+          name="numeroDocumento"
+          value={formData.numeroDocumento}
+          onChange={handleChange}
+          className="input"
+        />
+
+        <label>Teléfono</label>
+        <input
+          type="text"
+          name="telefono"
+          value={formData.telefono}
           onChange={handleChange}
           className="input"
         />
@@ -122,11 +160,11 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
           className="input"
         />
 
-        <label>Sitio web</label>
+        <label>Fecha de nacimiento</label>
         <input
-          type="url"
-          name="sitioWeb"
-          value={formData.sitioWeb}
+          type="date"
+          name="fechaNacimiento"
+          value={formData.fechaNacimiento}
           onChange={handleChange}
           className="input"
         />
@@ -144,7 +182,7 @@ export default function PerfilEntidad({ perfil, onRefresh }) {
             className="button button-primary"
             disabled={loading}
           >
-            {loading ? "Guardando..." : "Guardar Perfil de Entidad"}
+            {loading ? "Guardando..." : "Guardar Perfil de Pasajero"}
           </button>
         </div>
       </form>

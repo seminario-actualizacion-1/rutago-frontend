@@ -5,7 +5,7 @@ const extractError = (err, fallback) =>
 
 const normalizeHorarioPayload = (horario) => {
   const normalizado = { ...horario };
-  ["vehiculoId", "rutaId", "frecuenciaMinutos"].forEach((campo) => {
+  ["rutaId", "frecuenciaMinutos"].forEach((campo) => {
     const val = normalizado[campo];
     if (val === "" || val == null || Number.isNaN(val)) {
       delete normalizado[campo];

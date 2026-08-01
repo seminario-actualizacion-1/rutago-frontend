@@ -287,11 +287,11 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 
                 │
 
-      Backend (Express.js)
+       Backend (Express.js)
 
                 │
 
-            MySQL
+          PostgreSQL
 ```
 
 ---
@@ -431,13 +431,14 @@ Herramienta utilizada:
 - Catálogos dinámicos desde API (estados y tipos de documento).
 - Datos reales de Buenaventura (12 comunas, 104 barrios).
 - API REST con paginación, búsqueda y ordenamiento.
-- Migraciones y seeders con Sequelize.
+- Migraciones con Sequelize (estructura + catálogos).
 
 ---
 
 ## 🚧 En desarrollo
 
 - Recuperación de contraseña (frontend).
+- PostGIS y geometrías espaciales.
 - Ubicación GPS en tiempo real.
 
 ---

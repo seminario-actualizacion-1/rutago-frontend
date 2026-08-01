@@ -6,10 +6,9 @@ import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import { usuariosService } from "../../services/usuarios.service";
-import { vehiculosService } from "../../services/vehiculos.service";
-import { perfilConductorService } from "../../services/perfilConductor.service";
-import { perfilEntidadService } from "../../services/perfilEntidad.service";
-import { perfilPasajeroService } from "../../services/perfilPasajero.service";
+import { conductorService } from "../../services/conductor.service";
+import { entidadService } from "../../services/entidad.service";
+import { pasajeroService } from "../../services/pasajero.service";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import UsuariosConductor from "./UsuariosConductor";
 import UsuariosPasajero from "./UsuariosPasajero";
@@ -18,7 +17,6 @@ import "./Usuarios.css";
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
-  const [vehiculos, setVehiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,7 +29,6 @@ export default function Usuarios() {
     rolId: "",
     // Campos de Conductor
     licenciaConducir: "",
-    vehiculoId: "",
     estadoConductor: 1,
     // Campos de Entidad
     razonSocial: "",
@@ -86,22 +83,9 @@ export default function Usuarios() {
     }
   };
 
-  const fetchVehiculos = async () => {
-    try {
-      // Obtener todos los vehículos (sin paginación para el select)
-      const data = await vehiculosService.getAll({
-        paginaActual: 1,
-        registrosPorPagina: 100,
-      });
-      setVehiculos(data.data || []);
-    } catch (err) {
-      console.error("Error al cargar vehículos:", err);
-    }
-  };
-
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchUsuarios(), fetchVehiculos()]);
+      await fetchUsuarios();
     };
 
     loadData();
@@ -127,27 +111,27 @@ export default function Usuarios() {
       const usuarioResponse = await usuariosService.getById(usuario.id);
       const usuarioCompleto = usuarioResponse.data || usuario;
 
-      let perfilConductor = usuarioCompleto.perfilConductor || null;
-      let perfilEntidad = usuarioCompleto.perfilEntidad || null;
+      let conductor = usuarioCompleto.conductor || null;
+      let entidad = usuarioCompleto.entidad || null;
 
-      if (usuarioCompleto.rol?.id === 2 && perfilConductor?.id) {
-        const perfilConductorResponse = await perfilConductorService.getById(
-          perfilConductor.id,
+      if (usuarioCompleto.rol?.id === 2 && conductor?.id) {
+        const conductorResponse = await conductorService.getById(
+          conductor.id,
         );
-        perfilConductor = perfilConductorResponse.data || perfilConductor;
+        conductor = conductorResponse.data || conductor;
       }
 
-      if (usuarioCompleto.rol?.id === 4 && perfilEntidad?.id) {
-        const perfilEntidadResponse = await perfilEntidadService.getById(
-          perfilEntidad.id,
+      if (usuarioCompleto.rol?.id === 4 && entidad?.id) {
+        const entidadResponse = await entidadService.getById(
+          entidad.id,
         );
-        perfilEntidad = perfilEntidadResponse.data || perfilEntidad;
+        entidad = entidadResponse.data || entidad;
       }
 
       const usuarioEditando = {
         ...usuarioCompleto,
-        perfilConductor,
-        perfilEntidad,
+        conductor,
+        entidad,
       };
 
       const nuevoFormData = {
@@ -156,22 +140,18 @@ export default function Usuarios() {
         correo: usuarioEditando.correo,
         rolId: Number(usuarioEditando.rol?.id),
         licenciaConducir:
-          usuarioEditando.perfilConductor?.licenciaConducir || "",
-        vehiculoId:
-          usuarioEditando.perfilConductor?.vehiculo?.id != null
-            ? Number(usuarioEditando.perfilConductor.vehiculo.id)
-            : "",
-        estadoConductor: usuarioEditando.perfilConductor?.estadoId || 1,
-        razonSocial: usuarioEditando.perfilEntidad?.razonSocial || "",
-        nit: usuarioEditando.perfilEntidad?.nit || "",
-        telefonoContacto: usuarioEditando.perfilEntidad?.telefonoContacto || "",
-        telefono: usuarioEditando.perfilPasajero?.telefono || "",
-        direccion: usuarioEditando.perfilPasajero?.direccion || "",
+          usuarioEditando.conductor?.licenciaConducir || "",
+        estadoConductor: usuarioEditando.conductor?.estadoId || 1,
+        razonSocial: usuarioEditando.entidad?.razonSocial || "",
+        nit: usuarioEditando.entidad?.nit || "",
+        telefonoContacto: usuarioEditando.entidad?.telefonoContacto || "",
+        telefono: usuarioEditando.pasajero?.telefono || "",
+        direccion: usuarioEditando.pasajero?.direccion || "",
         tipoDocumentoId:
-          usuarioEditando.perfilPasajero?.tipoDocumento?.id?.toString() || "",
-        numeroDocumento: usuarioEditando.perfilPasajero?.numeroDocumento || "",
-        fechaNacimiento: usuarioEditando.perfilPasajero?.fechaNacimiento
-          ? usuarioEditando.perfilPasajero.fechaNacimiento.split("T")[0]
+          usuarioEditando.pasajero?.tipoDocumento?.id?.toString() || "",
+        numeroDocumento: usuarioEditando.pasajero?.numeroDocumento || "",
+        fechaNacimiento: usuarioEditando.pasajero?.fechaNacimiento
+          ? usuarioEditando.pasajero.fechaNacimiento.split("T")[0]
           : "",
       };
 
@@ -203,18 +183,17 @@ export default function Usuarios() {
           await usuariosService.changeRole(usuarioId, rolId);
         }
       } else if (rolId === 2) {
-        const res = await perfilConductorService.crearConUsuario({
+        const res = await conductorService.crearConUsuario({
           nombres: formData.nombres,
           apellidos: formData.apellidos,
           correo: formData.correo,
           contrasena: formData.contrasena,
-          vehiculoId: formData.vehiculoId || null,
           licenciaConducir: formData.licenciaConducir,
           estadoId: formData.estadoConductor,
         });
         usuarioId = res.data?.usuario?.id;
       } else if (rolId === 4) {
-        const res = await perfilEntidadService.crearConUsuario({
+        const res = await entidadService.crearConUsuario({
           nombres: formData.nombres,
           apellidos: formData.apellidos,
           correo: formData.correo,
@@ -225,7 +204,7 @@ export default function Usuarios() {
         });
         usuarioId = res.data?.usuario?.id;
       } else if (rolId === 3) {
-        const res = await perfilPasajeroService.crearConUsuario({
+        const res = await pasajeroService.crearConUsuario({
           nombres: formData.nombres,
           apellidos: formData.apellidos,
           correo: formData.correo,
@@ -255,38 +234,37 @@ export default function Usuarios() {
 
       // En edición, limpiar perfiles que ya no corresponden
       if (editingUsuario) {
-        if (rolId !== 2 && editingUsuario.perfilConductor) {
-          await perfilConductorService.delete(
-            editingUsuario.perfilConductor.id,
+        if (rolId !== 2 && editingUsuario.conductor) {
+          await conductorService.delete(
+            editingUsuario.conductor.id,
           );
         }
-        if (rolId !== 4 && editingUsuario.perfilEntidad) {
-          await perfilEntidadService.delete(editingUsuario.perfilEntidad.id);
+        if (rolId !== 4 && editingUsuario.entidad) {
+          await entidadService.delete(editingUsuario.entidad.id);
         }
-        if (rolId !== 3 && editingUsuario.perfilPasajero) {
-          await perfilPasajeroService.delete(editingUsuario.perfilPasajero.id);
+        if (rolId !== 3 && editingUsuario.pasajero) {
+          await pasajeroService.delete(editingUsuario.pasajero.id);
         }
 
         // Guardar perfil adicional según rol (solo edición)
-        if (rolId === 2 && editingUsuario.perfilConductor) {
-          await perfilConductorService.update(
-            editingUsuario.perfilConductor.id,
+        if (rolId === 2 && editingUsuario.conductor) {
+          await conductorService.update(
+            editingUsuario.conductor.id,
             {
               usuarioId,
-              vehiculoId: formData.vehiculoId || null,
               licenciaConducir: formData.licenciaConducir,
               estadoId: formData.estadoConductor,
             },
           );
-        } else if (rolId === 4 && editingUsuario.perfilEntidad) {
-          await perfilEntidadService.update(editingUsuario.perfilEntidad.id, {
+        } else if (rolId === 4 && editingUsuario.entidad) {
+          await entidadService.update(editingUsuario.entidad.id, {
             usuarioId,
             razonSocial: formData.razonSocial,
             nit: formData.nit,
             telefonoContacto: formData.telefonoContacto,
           });
-        } else if (rolId === 3 && editingUsuario.perfilPasajero) {
-          await perfilPasajeroService.update(editingUsuario.perfilPasajero.id, {
+        } else if (rolId === 3 && editingUsuario.pasajero) {
+          await pasajeroService.update(editingUsuario.pasajero.id, {
             usuarioId,
             telefono: formData.telefono,
             direccion: formData.direccion,
@@ -308,7 +286,6 @@ export default function Usuarios() {
         contrasena: "",
         rolId: "",
         licenciaConducir: "",
-        vehiculoId: "",
         estadoConductor: 1,
         razonSocial: "",
         nit: "",
@@ -335,7 +312,6 @@ export default function Usuarios() {
       contrasena: "",
       rolId: "",
       licenciaConducir: "",
-      vehiculoId: "",
       estadoConductor: 1,
       razonSocial: "",
       nit: "",
@@ -358,16 +334,16 @@ export default function Usuarios() {
     }
 
     try {
-      if (usuario.perfilConductor) {
-        await perfilConductorService.delete(usuario.perfilConductor.id);
+      if (usuario.conductor) {
+        await conductorService.delete(usuario.conductor.id);
       }
 
-      if (usuario.perfilEntidad) {
-        await perfilEntidadService.delete(usuario.perfilEntidad.id);
+      if (usuario.entidad) {
+        await entidadService.delete(usuario.entidad.id);
       }
 
-      if (usuario.perfilPasajero) {
-        await perfilPasajeroService.delete(usuario.perfilPasajero.id);
+      if (usuario.pasajero) {
+        await pasajeroService.delete(usuario.pasajero.id);
       }
 
       await usuariosService.delete(usuario.id);
@@ -426,7 +402,6 @@ export default function Usuarios() {
                 contrasena: "",
                 rolId: "",
                 licenciaConducir: "",
-                vehiculoId: "",
                 estadoConductor: 1,
                 razonSocial: "",
                 nit: "",
@@ -706,7 +681,6 @@ export default function Usuarios() {
             <UsuariosConductor
               formData={formData}
               onChange={handleFieldChange}
-              vehiculos={vehiculos}
             />
           )}
 
