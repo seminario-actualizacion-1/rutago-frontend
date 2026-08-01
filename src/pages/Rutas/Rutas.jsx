@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
@@ -12,11 +11,11 @@ import { usePaginacion } from "../../hooks/usePaginacion";
 import "./Rutas.css";
 
 export default function Rutas() {
-  const navigate = useNavigate();
   const [rutas, setRutas] = useState([]);
   const [comunas, setComunas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [vistaMapa, setVistaMapa] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRuta, setEditingRuta] = useState(null);
   const {
@@ -168,8 +167,6 @@ export default function Rutas() {
     return comuna ? comuna.nombre : "Sin comuna";
   };
 
-  const rutasPaginadas = rutas;
-
   const sortOptions = [
     { value: "id", label: "ID" },
     { value: "nombre", label: "Nombre" },
@@ -204,130 +201,142 @@ export default function Rutas() {
           + Nueva Ruta
         </button>
         <button
-          onClick={() => navigate("/rutas/mapa")}
+          onClick={() => setVistaMapa(!vistaMapa)}
           className="button button-outline"
         >
-          Ver Mapa
+          {vistaMapa ? "Ver Tabla" : "Ver Mapa"}
         </button>
       </div>
 
-      <div className="table-container">
-        <TableToolbar
-            searchValue={searchTerm}
-            onSearchChange={handleSearchChange}
-            placeholder="Buscar por nombre, origen o destino..."
-            sortOptions={sortOptions}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSortChange={handleSortChange}
-          />
-          <div className="bg-white rounded-lg shadow-sm">
-            {loading ? (
-              <div className="loading-container">
-                <div className="spinner"></div>
-                <p>Cargando rutas...</p>
-              </div>
-            ) : (
-              <>
-                {/* Desktop Table */}
-                <div className="desktop-table">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Origen</th>
-                        <th>Destino</th>
-                        <th>Distancia (km)</th>
-                        <th>Tiempo (min)</th>
-                        <th>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rutasPaginadas.length > 0 ? (
-                        rutasPaginadas.map((ruta) => (
-                          <tr key={ruta.id}>
-                            <td>{ruta.id}</td>
-                            <td>
-                              <span className="font-medium">{ruta.nombre}</span>
+      {vistaMapa ? (
+        <div
+          className="bg-white rounded-lg shadow-sm"
+          style={{ padding: "1rem" }}
+        >
+          <h3 style={{ marginBottom: "0.75rem" }}>
+            Mapa de Rutas — Buenaventura
+          </h3>
+          <MapaRutas rutas={rutas} showSearch />
+        </div>
+      ) : (
+        <div className="table-container">
+          <TableToolbar
+              searchValue={searchTerm}
+              onSearchChange={handleSearchChange}
+              placeholder="Buscar por nombre, origen o destino..."
+              sortOptions={sortOptions}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortChange={handleSortChange}
+            />
+            <div className="bg-white rounded-lg shadow-sm">
+              {loading ? (
+                <div className="loading-container">
+                  <div className="spinner"></div>
+                  <p>Cargando rutas...</p>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table */}
+                  <div className="desktop-table">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Nombre</th>
+                          <th>Origen</th>
+                          <th>Destino</th>
+                          <th>Distancia (km)</th>
+                          <th>Tiempo (min)</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rutas.length > 0 ? (
+                          rutas.map((ruta) => (
+                            <tr key={ruta.id}>
+                              <td>{ruta.id}</td>
+                              <td>
+                                <span className="font-medium">{ruta.nombre}</span>
+                              </td>
+                              <td>{getComunaNombre(ruta.origen?.id)}</td>
+                              <td>{getComunaNombre(ruta.destino?.id)}</td>
+                              <td>{ruta.distanciaKm || "-"}</td>
+                              <td>{ruta.tiempoEstimadoMinutos || "-"}</td>
+                              <td>
+                                <ActionsMenu
+                                  onEdit={() => handleEditar(ruta)}
+                                  onDelete={() => handleEliminar(ruta.id)}
+                                />
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="7" className="text-center">
+                              No se encontraron rutas
                             </td>
-                            <td>{getComunaNombre(ruta.origen?.id)}</td>
-                            <td>{getComunaNombre(ruta.destino?.id)}</td>
-                            <td>{ruta.distanciaKm || "-"}</td>
-                            <td>{ruta.tiempoEstimadoMinutos || "-"}</td>
-                            <td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="mobile-cards">
+                    {rutas.length > 0 ? (
+                      <div className="mobile-cards-list">
+                        {rutas.map((ruta) => (
+                          <div key={ruta.id} className="mobile-card">
+                            <div className="mobile-card-header">
+                              <div className="mobile-card-info">
+                                <h3>{ruta.nombre}</h3>
+                                <p>Origen: {getComunaNombre(ruta.origen?.id)}</p>
+                                <p>
+                                  Destino: {getComunaNombre(ruta.destino?.id)}
+                                </p>
+                                <p>Distancia: {ruta.distanciaKm || "-"} km</p>
+                              </div>
+                            </div>
+
+                            <div className="mobile-card-body">
+                              <div className="mobile-card-row">
+                                <span>Tiempo</span>
+                                <span>
+                                  {ruta.tiempoEstimadoMinutos || "-"} min
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="mobile-card-actions">
                               <ActionsMenu
                                 onEdit={() => handleEditar(ruta)}
                                 onDelete={() => handleEliminar(ruta.id)}
                               />
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="7" className="text-center">
-                            No se encontraron rutas
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile Cards */}
-                <div className="mobile-cards">
-                  {rutasPaginadas.length > 0 ? (
-                    <div className="mobile-cards-list">
-                      {rutasPaginadas.map((ruta) => (
-                        <div key={ruta.id} className="mobile-card">
-                          <div className="mobile-card-header">
-                            <div className="mobile-card-info">
-                              <h3>{ruta.nombre}</h3>
-                              <p>Origen: {getComunaNombre(ruta.origen?.id)}</p>
-                              <p>
-                                Destino: {getComunaNombre(ruta.destino?.id)}
-                              </p>
-                              <p>Distancia: {ruta.distanciaKm || "-"} km</p>
                             </div>
                           </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mobile-empty">No hay rutas disponibles</div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
 
-                          <div className="mobile-card-body">
-                            <div className="mobile-card-row">
-                              <span>Tiempo</span>
-                              <span>
-                                {ruta.tiempoEstimadoMinutos || "-"} min
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="mobile-card-actions">
-                            <ActionsMenu
-                              onEdit={() => handleEditar(ruta)}
-                              onDelete={() => handleEliminar(ruta.id)}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mobile-empty">No hay rutas disponibles</div>
-                  )}
-                </div>
-              </>
+            {!loading && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={pagination?.totalPaginas || 1}
+                totalItems={pagination?.totalRegistros || rutas.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
+              />
             )}
           </div>
-
-          {!loading && (
-            <Pagination
-              currentPage={currentPage}
-              totalPages={pagination?.totalPaginas || 1}
-              totalItems={pagination?.totalRegistros || rutas.length}
-              itemsPerPage={itemsPerPage}
-              onPageChange={handlePageChange}
-              onItemsPerPageChange={handleItemsPerPageChange}
-            />
-          )}
-        </div>
+        )}
 
       <Modal
         isOpen={modalOpen}

@@ -11,6 +11,7 @@ import {
   textoCupos,
   getInitialUser,
 } from "./viajesHelpers";
+import { formatearHora } from "../../utils/formato";
 import ViajesPasajero from "./ViajesPasajero";
 import ViajesConductor from "./ViajesConductor";
 import ViajesAdmin from "./ViajesAdmin";
@@ -64,8 +65,8 @@ export default function Viajes() {
       import("../../services/rutas.service").then((m) =>
         m.rutasService.getAll(),
       ),
-      import("../../services/perfilConductor.service").then((m) =>
-        m.perfilConductorService.getAll(),
+      import("../../services/conductor.service").then((m) =>
+        m.conductorService.getAll(),
       ),
     ]);
     setRutas(rRes.data || []);
@@ -185,7 +186,7 @@ export default function Viajes() {
                   <div className="detalle-field">
                     <label>Horario</label>
                     <span>
-                      {detalleViaje.horario?.horaSalida?.slice(0, 5) || "-"}
+                      {formatearHora(detalleViaje.horario?.horaSalida) || "-"}
                     </span>
                   </div>
                   <div className="detalle-field">
@@ -284,7 +285,7 @@ export default function Viajes() {
                 <option value="">Seleccione un horario</option>
                 {horarios.map((h) => (
                   <option key={h.id} value={h.id}>
-                    {h.horaSalida?.slice(0, 5)}{h.fechaInicio ? ` - ${h.fechaInicio.split("-").reverse().join("/")} al ${h.fechaFin ? h.fechaFin.split("-").reverse().join("/") : ""}` : ""}
+                    {formatearHora(h.horaSalida)}{h.fechaInicio ? ` - ${h.fechaInicio.split("-").reverse().join("/")} al ${h.fechaFin ? h.fechaFin.split("-").reverse().join("/") : ""}` : ""}
                   </option>
                 ))}
               </select>

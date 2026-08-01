@@ -17,6 +17,7 @@ import {
   COMUNA_PALETTE,
   MAP_STYLES,
 } from "../../config/mapas";
+import { formatearHora } from "../../utils/formato";
 
 function svgMarkerIcon(color) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="32" viewBox="0 0 20 32"><path d="M10 0C4.5 0 0 4.5 0 10c0 7.5 10 22 10 22s10-14.5 10-22C20 4.5 15.5 0 10 0Z" fill="${color}" stroke="#fff" stroke-width="1.2"/><circle cx="10" cy="10" r="4" fill="#fff" opacity="0.9"/></svg>`;
@@ -112,7 +113,7 @@ export default function MapaRutas({ rutas = [], showSearch = false }) {
       zoom={13}
       style={{ height: "500px", width: "100%", borderRadius: "8px" }}
     >
-      <style>{`.ruta-tooltip { font-size: 0.7rem; padding: 2px 6px; white-space: nowrap; } .ruta-hover-tooltip { font-size: 0.75rem; padding: 4px 8px; white-space: nowrap; background: #333; color: #fff; border: none; border-radius: 4px; }`}</style>
+      <style>{`.ruta-tooltip { font-size: 0.7rem; padding: 2px 6px; white-space: nowrap; } .ruta-linea { transition: stroke-width 0.25s ease, stroke-opacity 0.25s ease, filter 0.3s ease; }`}</style>
       <TileLayerSwitcher />
       {showSearch && <BuscadorMapa />}
       {!rutasVisibles.length ? (
@@ -136,7 +137,8 @@ export default function MapaRutas({ rutas = [], showSearch = false }) {
           if (ruta.rutaGeometria) {
             try {
               const parsed = JSON.parse(ruta.rutaGeometria);
-              coordenadas = parsed.type === "LineString" ? parsed.coordinates : parsed;
+              coordenadas =
+                parsed.type === "LineString" ? parsed.coordinates : parsed;
             } catch {
               coordenadas = null;
             }
@@ -173,7 +175,7 @@ export default function MapaRutas({ rutas = [], showSearch = false }) {
                           key={h.id}
                           style={{ fontSize: "0.8rem", marginTop: "2px" }}
                         >
-                          {h.horaSalida?.slice(0, 5)}{" "}
+                          {formatearHora(h.horaSalida)}{" "}
                           {h.frecuenciaMinutos
                             ? `· c/${h.frecuenciaMinutos}min`
                             : ""}
@@ -203,7 +205,7 @@ export default function MapaRutas({ rutas = [], showSearch = false }) {
                           key={h.id}
                           style={{ fontSize: "0.8rem", marginTop: "2px" }}
                         >
-                          {h.horaSalida?.slice(0, 5)}{" "}
+                          {formatearHora(h.horaSalida)}{" "}
                           {h.frecuenciaMinutos
                             ? `· c/${h.frecuenciaMinutos}min`
                             : ""}
@@ -222,32 +224,16 @@ export default function MapaRutas({ rutas = [], showSearch = false }) {
                 color={colorHex}
                 weight={3}
                 opacity={0.7}
+                className="ruta-linea"
                 eventHandlers={{
                   mouseover: (e) => {
-                    e.target.setStyle({
-                      weight: 7,
-                      opacity: 1,
-                      color: "#ff6600",
-                    });
-                    e.target
-                      .bindTooltip(
-                        `<b>${ruta.nombre}</b><br/>${ruta.origen?.nombre} → ${ruta.destino?.nombre}`,
-                        {
-                          direction: "top",
-                          offset: [0, -10],
-                          className: "ruta-hover-tooltip",
-                        },
-                      )
-                      .openTooltip();
+                    e.target.setStyle({ weight: 5, opacity: 1 });
+                    e.target._path.style.filter = `drop-shadow(0 0 6px ${colorHex})`;
                     e.target.bringToFront();
                   },
                   mouseout: (e) => {
-                    e.target.setStyle({
-                      weight: 3,
-                      opacity: 0.7,
-                      color: colorHex,
-                    });
-                    e.target.unbindTooltip();
+                    e.target.setStyle({ weight: 3, opacity: 0.7 });
+                    e.target._path.style.filter = "";
                   },
                 }}
               />

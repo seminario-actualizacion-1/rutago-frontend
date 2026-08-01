@@ -15,6 +15,7 @@ import {
   obtenerNombrePersona,
   textoCupos,
 } from "./viajesHelpers";
+import { formatearHora } from "../../utils/formato";
 
 export default function ViajesAdmin({ onVerDetalle, onEditar, recargar }) {
   const { opciones, nombre } = useEstadosViaje();
@@ -261,7 +262,7 @@ export default function ViajesAdmin({ onVerDetalle, onEditar, recargar }) {
                               </span>
                             </td>
                             <td>
-                              {viaje.horario?.horaSalida?.slice(0, 5) || "-"}
+                              {formatearHora(viaje.horario?.horaSalida) || "-"}
                             </td>
                             <td>${viaje.precioEstimado || "-"}</td>
                             <td>{obtenerNombrePersona(viaje.conductor)}</td>
@@ -297,7 +298,7 @@ export default function ViajesAdmin({ onVerDetalle, onEditar, recargar }) {
                               <p>{viaje.ruta?.nombre || "-"}</p>
                               <p>
                                 Horario:{" "}
-                                {viaje.horario?.horaSalida?.slice(0, 5) || "-"}
+                                {formatearHora(viaje.horario?.horaSalida) || "-"}
                               </p>
                             </div>
                             <span
@@ -399,7 +400,7 @@ export default function ViajesAdmin({ onVerDetalle, onEditar, recargar }) {
               <option value="">Seleccionar horario</option>
               {horarios.map((h) => (
                 <option key={h.id} value={h.id}>
-                  {h.horaSalida?.slice(0, 5) || h.id}
+                  {formatearHora(h.horaSalida) || h.id}
                 </option>
               ))}
             </select>

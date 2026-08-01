@@ -118,7 +118,7 @@ export default function ViajesConductor({ onVerDetalle }) {
             {(() => {
               const conCupo = viajesDisponibles.filter((v) => {
                 const ocupados = (v.pasajeros || []).length;
-                const capacidad = v.horario?.capacidadPasajeros || 0;
+                const capacidad = v.vehiculo?.capacidadPasajeros || 0;
                 return ocupados < capacidad;
               });
               return conCupo.length === 0 ? (
@@ -215,7 +215,7 @@ export default function ViajesConductor({ onVerDetalle }) {
                             <Users size={13} /> {textoCuposPasajero(viaje)}{" "}
                             solicitudes
                           </span>
-                          {viaje.horario?.vehiculoPlaca && (
+                          {viaje.vehiculo?.placa && (
                             <span
                               style={{
                                 display: "flex",
@@ -223,7 +223,7 @@ export default function ViajesConductor({ onVerDetalle }) {
                                 gap: "0.3rem",
                               }}
                             >
-                              {viaje.horario.vehiculoPlaca}
+                              {viaje.vehiculo.placa}
                             </span>
                           )}
                         </div>

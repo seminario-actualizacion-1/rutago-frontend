@@ -3,7 +3,7 @@ import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
-import { perfilPasajeroService } from "../../services/perfilPasajero.service";
+import { pasajeroService } from "../../services/pasajero.service";
 import { usuariosService } from "../../services/usuarios.service";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import { usePaginacion } from "../../hooks/usePaginacion";
@@ -55,7 +55,7 @@ export default function Pasajeros() {
   const fetchPasajeros = async () => {
     try {
       setLoading(true);
-      const data = await perfilPasajeroService.getAll({
+      const data = await pasajeroService.getAll({
         ...queryParams,
         q: searchTerm || undefined,
         sortBy,
@@ -74,20 +74,20 @@ export default function Pasajeros() {
     fetchPasajeros();
   }, [queryParams, searchTerm, sortBy, sortOrder]);
 
-  const handleEditar = (perfil) => {
+  const handleEditar = (pasajero) => {
     setError("");
-    setEditingPasajero(perfil);
-    const u = perfil.usuario || {};
+    setEditingPasajero(pasajero);
+    const u = pasajero.usuario || {};
     setFormData({
       nombres: u.nombres || "",
       apellidos: u.apellidos || "",
       correo: u.correo || "",
-      telefono: perfil.telefono || "",
-      direccion: perfil.direccion || "",
-      tipoDocumentoId: perfil.tipoDocumento?.id?.toString() || "",
-      numeroDocumento: perfil.numeroDocumento || "",
-      fechaNacimiento: perfil.fechaNacimiento
-        ? perfil.fechaNacimiento.slice(0, 10)
+      telefono: pasajero.telefono || "",
+      direccion: pasajero.direccion || "",
+      tipoDocumentoId: pasajero.tipoDocumento?.id?.toString() || "",
+      numeroDocumento: pasajero.numeroDocumento || "",
+      fechaNacimiento: pasajero.fechaNacimiento
+        ? pasajero.fechaNacimiento.slice(0, 10)
         : "",
     });
     setModalOpen(true);
@@ -96,7 +96,7 @@ export default function Pasajeros() {
   const handleGuardar = async () => {
     try {
       if (editingPasajero) {
-        await perfilPasajeroService.update(editingPasajero.id, {
+        await pasajeroService.update(editingPasajero.id, {
           telefono: formData.telefono,
           direccion: formData.direccion,
           tipoDocumentoId: formData.tipoDocumentoId,
@@ -111,7 +111,7 @@ export default function Pasajeros() {
           });
         }
       } else {
-        await perfilPasajeroService.crearConUsuario({
+        await pasajeroService.crearConUsuario({
           nombres: formData.nombres,
           apellidos: formData.apellidos,
           correo: formData.correo,
@@ -163,7 +163,7 @@ export default function Pasajeros() {
     }
 
     try {
-      await perfilPasajeroService.delete(id);
+      await pasajeroService.delete(id);
       await fetchPasajeros();
     } catch (err) {
       setError(err.message);
@@ -217,20 +217,20 @@ export default function Pasajeros() {
                   </thead>
                   <tbody>
                     {pasajeros.length > 0 ? (
-                      pasajeros.map((perfil) => (
-                        <tr key={perfil.id}>
-                          <td>{perfil.id}</td>
+                      pasajeros.map((pasajero) => (
+                        <tr key={pasajero.id}>
+                          <td>{pasajero.id}</td>
                           <td>
                             <span className="font-medium">
-                              {perfil.usuario?.nombres || "-"}
+                              {pasajero.usuario?.nombres || "-"}
                             </span>
                           </td>
-                          <td>{perfil.usuario?.apellidos || "-"}</td>
-                          <td>{perfil.usuario?.correo || "-"}</td>
-                          <td>{perfil.telefono || "-"}</td>
+                          <td>{pasajero.usuario?.apellidos || "-"}</td>
+                          <td>{pasajero.usuario?.correo || "-"}</td>
+                          <td>{pasajero.telefono || "-"}</td>
                           <td>
-                            {perfil.tipoDocumento?.id &&
-                            perfil.numeroDocumento ? (
+                            {pasajero.tipoDocumento?.id &&
+                            pasajero.numeroDocumento ? (
                               <div
                                 style={{
                                   display: "flex",
@@ -238,7 +238,7 @@ export default function Pasajeros() {
                                 }}
                               >
                                 <span className="font-medium">
-                                  {perfil.numeroDocumento}
+                                  {pasajero.numeroDocumento}
                                 </span>
                                 <span
                                   style={{
@@ -247,13 +247,13 @@ export default function Pasajeros() {
                                     textTransform: "uppercase",
                                   }}
                                 >
-                                  {perfil.tipoDocumento?.nombre ||
-                                    perfil.tipoDocumento?.id}
+                                  {pasajero.tipoDocumento?.nombre ||
+                                    pasajero.tipoDocumento?.id}
                                 </span>
                               </div>
-                            ) : perfil.numeroDocumento ? (
-                              perfil.numeroDocumento
-                            ) : perfil.tipoDocumento?.id ? (
+                            ) : pasajero.numeroDocumento ? (
+                              pasajero.numeroDocumento
+                            ) : pasajero.tipoDocumento?.id ? (
                               <span
                                 style={{
                                   fontSize: "0.7rem",
@@ -261,8 +261,8 @@ export default function Pasajeros() {
                                   textTransform: "uppercase",
                                 }}
                               >
-                                {perfil.tipoDocumento?.nombre ||
-                                  perfil.tipoDocumento?.id}
+                                {pasajero.tipoDocumento?.nombre ||
+                                  pasajero.tipoDocumento?.id}
                               </span>
                             ) : (
                               "-"
@@ -270,8 +270,8 @@ export default function Pasajeros() {
                           </td>
                           <td>
                             <ActionsMenu
-                              onEdit={() => handleEditar(perfil)}
-                              onDelete={() => handleEliminar(perfil.id)}
+                              onEdit={() => handleEditar(pasajero)}
+                              onDelete={() => handleEliminar(pasajero.id)}
                             />
                           </td>
                         </tr>
@@ -290,32 +290,32 @@ export default function Pasajeros() {
               <div className="mobile-cards">
                 {pasajeros.length > 0 ? (
                   <div className="mobile-cards-list">
-                    {pasajeros.map((perfil) => (
-                      <div key={perfil.id} className="mobile-card">
+                    {pasajeros.map((pasajero) => (
+                      <div key={pasajero.id} className="mobile-card">
                         <div className="mobile-card-header">
                           <div className="mobile-card-info">
-                            <h3>{perfil.usuario?.nombres || "Sin nombre"}</h3>
-                            <p>{perfil.usuario?.correo || "Sin correo"}</p>
+                            <h3>{pasajero.usuario?.nombres || "Sin nombre"}</h3>
+                            <p>{pasajero.usuario?.correo || "Sin correo"}</p>
                           </div>
                         </div>
                         <div className="mobile-card-body">
                           <div className="mobile-card-row">
                             <span>Teléfono</span>
-                            <span>{perfil.telefono || "-"}</span>
+                            <span>{pasajero.telefono || "-"}</span>
                           </div>
                           <div className="mobile-card-row">
                             <span>Documento</span>
                             <span>
-                              {perfil.tipoDocumento?.id
-                                ? `${perfil.tipoDocumento?.nombre || perfil.tipoDocumento?.id} ${perfil.numeroDocumento || ""}`
+                              {pasajero.tipoDocumento?.id
+                                ? `${pasajero.tipoDocumento?.nombre || pasajero.tipoDocumento?.id} ${pasajero.numeroDocumento || ""}`
                                 : "-"}
                             </span>
                           </div>
                         </div>
                         <div className="mobile-card-actions">
                           <ActionsMenu
-                            onEdit={() => handleEditar(perfil)}
-                            onDelete={() => handleEliminar(perfil.id)}
+                            onEdit={() => handleEditar(pasajero)}
+                            onDelete={() => handleEliminar(pasajero.id)}
                           />
                         </div>
                       </div>

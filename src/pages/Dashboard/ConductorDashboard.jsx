@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { viajesService } from "../../services/viajes.service";
 import { useEstadosViaje } from "../../hooks/useEstadosViaje";
 import { obtenerEstadoColor } from "./dashboardUtils";
+import { formatearHora } from "../../utils/formato";
 
 export default function ConductorDashboard() {
   const { nombre, ESTADO, loading: loadingEstados } = useEstadosViaje();
@@ -70,7 +71,7 @@ export default function ConductorDashboard() {
       </p>
       <p>
         <strong>Horario:</strong>{" "}
-        {viaje.horario?.horaSalida || "Sin horario"}
+        {formatearHora(viaje.horario?.horaSalida) || "Sin horario"}
       </p>
       {viaje.pasajeros?.length > 0 && (
         <p>

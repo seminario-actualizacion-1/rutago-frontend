@@ -1,10 +1,10 @@
-import * as api from "../api/perfilEntidad";
+import * as api from "../api/entidad";
 
 const extractError = (err, fallback) =>
   new Error(err.response?.data?.message || err.message || fallback);
 
-const normalizePayload = (perfil, isUpdate = false) => {
-  const p = { ...perfil };
+const normalizePayload = (entidad, isUpdate = false) => {
+  const p = { ...entidad };
   if (isUpdate) delete p.usuarioId;
   if (
     p.usuarioId !== undefined &&
@@ -15,7 +15,7 @@ const normalizePayload = (perfil, isUpdate = false) => {
   return p;
 };
 
-export const perfilEntidadService = {
+export const entidadService = {
   getAll: async (params = {}) => {
     try {
       const res = await api.getEntidades(params);
@@ -37,31 +37,31 @@ export const perfilEntidadService = {
       const res = await api.getMiPerfilEntidad();
       return res.data;
     } catch (err) {
-      throw extractError(err, "Error al cargar perfil de entidad");
+      throw extractError(err, "Error al cargar tu perfil de entidad");
     }
   },
-  create: async (perfil) => {
+  create: async (entidad) => {
     try {
-      const res = await api.createEntidad(normalizePayload(perfil));
+      const res = await api.createEntidad(normalizePayload(entidad));
       return res.data;
     } catch (err) {
       throw extractError(err, "Error al crear entidad");
     }
   },
-  update: async (id, perfil) => {
+  update: async (id, entidad) => {
     try {
-      const res = await api.updateEntidad(id, normalizePayload(perfil, true));
+      const res = await api.updateEntidad(id, normalizePayload(entidad, true));
       return res.data;
     } catch (err) {
       throw extractError(err, "Error al actualizar entidad");
     }
   },
-  updateMiPerfil: async (perfil) => {
+  updateMiPerfil: async (entidad) => {
     try {
-      const res = await api.updateMiPerfilEntidad(normalizePayload(perfil));
+      const res = await api.updateMiPerfilEntidad(normalizePayload(entidad));
       return res.data;
     } catch (err) {
-      throw extractError(err, "Error al actualizar perfil de entidad");
+      throw extractError(err, "Error al actualizar tu perfil de entidad");
     }
   },
   delete: async (id) => {

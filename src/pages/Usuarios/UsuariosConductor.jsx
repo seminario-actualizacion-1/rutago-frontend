@@ -1,6 +1,6 @@
 import { useEstadosConductor } from "../../hooks/useEstadosConductor";
 
-export default function UsuariosConductor({ formData, onChange, vehiculos }) {
+export default function UsuariosConductor({ formData, onChange }) {
   const { nombre: nombreEstadoConductor, data: estadosConductor } = useEstadosConductor();
   return (
     <>
@@ -22,30 +22,6 @@ export default function UsuariosConductor({ formData, onChange, vehiculos }) {
           style={{ width: "100%" }}
           required
         />
-      </div>
-      <div style={{ marginBottom: "1rem" }}>
-        <label
-          style={{
-            display: "block",
-            marginBottom: "0.5rem",
-            fontWeight: "500",
-          }}
-        >
-          Vehículo
-        </label>
-        <select
-          value={formData.vehiculoId}
-          onChange={(e) => onChange("vehiculoId", parseInt(e.target.value))}
-          className="input"
-          style={{ width: "100%" }}
-        >
-          <option value="">Sin vehículo asignado</option>
-          {(vehiculos || []).map((vehiculo) => (
-            <option key={vehiculo.id} value={vehiculo.id}>
-              {vehiculo.placa} - {vehiculo.marca} {vehiculo.modelo}
-            </option>
-          ))}
-        </select>
       </div>
       <div style={{ marginBottom: "1.5rem" }}>
         <label

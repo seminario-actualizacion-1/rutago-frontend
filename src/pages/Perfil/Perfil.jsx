@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axios";
-import { perfilConductorService } from "../../services/perfilConductor.service";
-import { perfilEntidadService } from "../../services/perfilEntidad.service";
-import { perfilPasajeroService } from "../../services/perfilPasajero.service";
+import { conductorService } from "../../services/conductor.service";
+import { entidadService } from "../../services/entidad.service";
+import { pasajeroService } from "../../services/pasajero.service";
 import { useRoles } from "../../hooks/useRoles";
 import { useEstadosVehiculo } from "../../hooks/useEstadosVehiculo";
-import PerfilConductor from "./PerfilConductor";
-import PerfilPasajero from "./PerfilPasajero";
-import PerfilEntidad from "./PerfilEntidad";
+import ConductorPerfil from "./Conductor";
+import PasajeroPerfil from "./Pasajero";
+import EntidadPerfil from "./Entidad";
 import "./Perfil.css";
+import { formatearHora } from "../../utils/formato";
 
 export default function Perfil() {
   const { obtenerId: obtenerIdRol, nombre: nombreRol } = useRoles();
@@ -25,7 +26,8 @@ export default function Perfil() {
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [perfilEspecializado, setPerfilEspecializado] = useState(null);
+  const [datosPerfil, setDatosPerfil] = useState(null);
+
   const [tipoDocumentoOptions, setTipoDocumentoOptions] = useState([]);
 
   const [destino, setDestino] = useState("");
@@ -65,27 +67,27 @@ export default function Perfil() {
 
       if (usuario.rol?.id === obtenerIdRol("Conductor")) {
         try {
-          const perfilResponse = await perfilConductorService.getMiPerfil();
-          setPerfilEspecializado(perfilResponse.data || null);
+          const resp = await conductorService.getMiPerfil();
+          setDatosPerfil(resp.data || null);
         } catch {
-          setPerfilEspecializado(usuario.perfilConductor || null);
+          setDatosPerfil(usuario.conductor || null);
         }
       } else if (usuario.rol?.id === obtenerIdRol("Pasajero")) {
         try {
-          const perfilResponse = await perfilPasajeroService.getMiPerfil();
-          setPerfilEspecializado(perfilResponse.data || null);
+          const resp = await pasajeroService.getMiPerfil();
+          setDatosPerfil(resp.data || null);
         } catch {
-          setPerfilEspecializado(usuario.perfilPasajero || null);
+          setDatosPerfil(usuario.pasajero || null);
         }
       } else if (usuario.rol?.id === obtenerIdRol("Entidad Externa")) {
         try {
-          const perfilResponse = await perfilEntidadService.getMiPerfil();
-          setPerfilEspecializado(perfilResponse.data || null);
+          const resp = await entidadService.getMiPerfil();
+          setDatosPerfil(resp.data || null);
         } catch {
-          setPerfilEspecializado(usuario.perfilEntidad || null);
+          setDatosPerfil(usuario.entidad || null);
         }
       } else {
-        setPerfilEspecializado(null);
+        setDatosPerfil(null);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Error al cargar el perfil");
@@ -291,20 +293,20 @@ export default function Perfil() {
         </div>
       </div>
 
-      {user.rol?.id === obtenerIdRol("Conductor") && perfilEspecializado && (
-        <PerfilConductor perfil={perfilEspecializado} onRefresh={fetchPerfil} />
+      {user.rol?.id === obtenerIdRol("Conductor") && datosPerfil && (
+        <ConductorPerfil perfil={datosPerfil} onRefresh={fetchPerfil} />
       )}
 
-      {user.rol?.id === obtenerIdRol("Pasajero") && perfilEspecializado && (
-        <PerfilPasajero
-          perfil={perfilEspecializado}
+      {user.rol?.id === obtenerIdRol("Pasajero") && datosPerfil && (
+        <PasajeroPerfil
+          perfil={datosPerfil}
           onRefresh={fetchPerfil}
           tipoDocumentoOptions={tipoDocumentoOptions}
         />
       )}
 
-      {user.rol?.id === obtenerIdRol("Entidad Externa") && perfilEspecializado && (
-        <PerfilEntidad perfil={perfilEspecializado} onRefresh={fetchPerfil} />
+      {user.rol?.id === obtenerIdRol("Entidad Externa") && datosPerfil && (
+        <EntidadPerfil perfil={datosPerfil} onRefresh={fetchPerfil} />
       )}
 
       <div className="perfil-content">
@@ -359,7 +361,7 @@ export default function Perfil() {
 
                         <p>
                           <strong>Empresa:</strong>{" "}
-                          {horario.vehiculo?.perfilEntidad?.razonSocial}
+                          {horario.vehiculo?.entidad?.razonSocial}
                         </p>
 
                         <p>
@@ -437,7 +439,7 @@ export default function Perfil() {
               </p>
               <p>
                 <strong>Hora de salida:</strong>{" "}
-                {busSeleccionado.horario?.horaSalida}
+                {formatearHora(busSeleccionado.horario?.horaSalida)}
               </p>
             </div>
           )}
@@ -465,7 +467,7 @@ export default function Perfil() {
               </p>
 
               <p>
-                <strong>Horario:</strong> {busSeleccionado.horario?.horaSalida}
+                <strong>Horario:</strong> {formatearHora(busSeleccionado.horario?.horaSalida)}
               </p>
 
               <p>
@@ -484,7 +486,7 @@ export default function Perfil() {
 
               <p>
                 <strong>Empresa:</strong>{" "}
-                {busSeleccionado.vehiculo?.perfilEntidad?.razonSocial}
+                {busSeleccionado.vehiculo?.entidad?.razonSocial}
               </p>
 
               <p>

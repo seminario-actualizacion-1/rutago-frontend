@@ -10,6 +10,7 @@ import {
   textoCuposPasajero,
   horarioLabel,
 } from "./viajesHelpers";
+import { formatearHora } from "../../utils/formato";
 import { Route, Clock, DollarSign, Users, LogOut, MapPin, Plus, Search, X } from "lucide-react";
 
 export default function ViajesPasajero({ onVerDetalle }) {
@@ -175,7 +176,7 @@ export default function ViajesPasajero({ onVerDetalle }) {
               <div className="form-group">
                 <label>Horario</label>
                 <div className="input" style={{ background: "#f9fafb", cursor: "default", userSelect: "none" }}>
-                  {horarios.find((h) => String(h.id) === formData.horarioId)?.horaSalida?.slice(0, 5)}
+                  {formatearHora(horarios.find((h) => String(h.id) === formData.horarioId)?.horaSalida)}
                   {horarios.find((h) => String(h.id) === formData.horarioId)?.frecuenciaMinutos ? ` (cada ${horarios.find((h) => String(h.id) === formData.horarioId).frecuenciaMinutos} min)` : ""}
                 </div>
               </div>
@@ -209,7 +210,7 @@ export default function ViajesPasajero({ onVerDetalle }) {
                   if (!match) return false;
                 }
                 const ocupados = (v.pasajeros || []).length;
-                const capacidad = v.horario?.capacidadPasajeros || 0;
+                const capacidad = v.vehiculo?.capacidadPasajeros || 0;
                 return ocupados < capacidad;
               });
               return conCupo.length === 0 ? (
@@ -308,7 +309,7 @@ export default function ViajesPasajero({ onVerDetalle }) {
                             <Users size={13} /> {textoCuposPasajero(viaje)}{" "}
                             cupos
                           </span>
-                          {viaje.horario?.vehiculoPlaca && (
+                          {viaje.vehiculo?.placa && (
                             <span
                               style={{
                                 display: "flex",
@@ -316,7 +317,7 @@ export default function ViajesPasajero({ onVerDetalle }) {
                                 gap: "0.3rem",
                               }}
                             >
-                              {viaje.horario.vehiculoPlaca}
+                              {viaje.vehiculo.placa}
                             </span>
                           )}
                           {viaje.conductor && (

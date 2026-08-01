@@ -1,22 +1,12 @@
 import { useState } from "react";
-import { perfilPasajeroService } from "../../services/perfilPasajero.service";
-import { useTiposDocumento } from "../../hooks/useTiposDocumento";
+import { entidadService } from "../../services/entidad.service";
 
-export default function PerfilPasajero({
-  perfil,
-  onRefresh,
-  tipoDocumentoOptions,
-}) {
-  const { opciones: opcionesTiposDocumento, data: tiposDocumento } = useTiposDocumento();
+export default function Entidad({ perfil, onRefresh }) {
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
-    telefono: perfil?.telefono || "",
+    telefonoContacto: perfil?.telefonoContacto || "",
     direccion: perfil?.direccion || "",
-    tipoDocumentoId: perfil?.tipoDocumentoId || tiposDocumento[0]?.id || 1,
-    numeroDocumento: perfil?.numeroDocumento || "",
-    fechaNacimiento: perfil?.fechaNacimiento
-      ? perfil.fechaNacimiento.split("T")[0]
-      : "",
+    sitioWeb: perfil?.sitioWeb || "",
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -33,12 +23,12 @@ export default function PerfilPasajero({
     setError("");
 
     try {
-      await perfilPasajeroService.updateMiPerfil(formData);
-      setMessage("Perfil de pasajero actualizado correctamente");
+      await entidadService.updateMiPerfil(formData);
+      setMessage("Perfil de entidad actualizado correctamente");
       setEditing(false);
       onRefresh();
     } catch (err) {
-      setError(err.message || "Error al actualizar el perfil de pasajero");
+      setError(err.message || "Error al actualizar el perfil de entidad");
     } finally {
       setLoading(false);
     }
@@ -47,13 +37,9 @@ export default function PerfilPasajero({
   const handleCancel = () => {
     setEditing(false);
     setFormData({
-      telefono: perfil?.telefono || "",
+      telefonoContacto: perfil?.telefonoContacto || "",
       direccion: perfil?.direccion || "",
-      tipoDocumentoId: perfil?.tipoDocumentoId || tiposDocumento[0]?.id || 1,
-      numeroDocumento: perfil?.numeroDocumento || "",
-      fechaNacimiento: perfil?.fechaNacimiento
-        ? perfil.fechaNacimiento.split("T")[0]
-        : "",
+      sitioWeb: perfil?.sitioWeb || "",
     });
     setMessage("");
     setError("");
@@ -69,18 +55,9 @@ export default function PerfilPasajero({
         {error && <div className="error-message">{error}</div>}
         <div className="perfil-info">
           <div className="perfil-row">
-            <span className="perfil-label">Documento:</span>
+            <span className="perfil-label">Teléfono de contacto:</span>
             <span className="perfil-value">
-              {perfil?.tipoDocumento
-                ? `${perfil.tipoDocumento.abreviatura || perfil.tipoDocumento.nombre} — ${perfil.tipoDocumento.descripcion || ""}`
-                : "No registrado"}{" "}
-              {perfil?.numeroDocumento || ""}
-            </span>
-          </div>
-          <div className="perfil-row">
-            <span className="perfil-label">Teléfono:</span>
-            <span className="perfil-value">
-              {perfil?.telefono || "No registrado"}
+              {perfil?.telefonoContacto || "No registrado"}
             </span>
           </div>
           <div className="perfil-row">
@@ -90,11 +67,19 @@ export default function PerfilPasajero({
             </span>
           </div>
           <div className="perfil-row">
-            <span className="perfil-label">Fecha de nacimiento:</span>
+            <span className="perfil-label">Sitio web:</span>
             <span className="perfil-value">
-              {perfil?.fechaNacimiento
-                ? new Date(perfil.fechaNacimiento).toLocaleDateString()
-                : "No registrada"}
+              {perfil?.sitioWeb ? (
+                <a
+                  href={perfil.sitioWeb}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {perfil.sitioWeb}
+                </a>
+              ) : (
+                "No registrado"
+              )}
             </span>
           </div>
           <div className="perfil-actions">
@@ -102,7 +87,7 @@ export default function PerfilPasajero({
               onClick={() => setEditing(true)}
               className="button button-outline"
             >
-              Editar Perfil de Pasajero
+              Editar Perfil de Entidad
             </button>
           </div>
         </div>
@@ -117,36 +102,13 @@ export default function PerfilPasajero({
     >
       {message && <div className="success-message">{message}</div>}
       {error && <div className="error-message">{error}</div>}
-      <h2>Editar perfil de pasajero</h2>
+      <h2>Editar perfil de entidad</h2>
       <form onSubmit={handleSave} className="perfil-form">
-        <label>Tipo de documento</label>
-        <select
-          name="tipoDocumentoId"
-          value={formData.tipoDocumentoId}
-          onChange={handleChange}
-          className="input"
-        >
-          {opcionesTiposDocumento().map((td) => (
-            <option key={td.value} value={td.value}>
-              {td.label}
-            </option>
-          ))}
-        </select>
-
-        <label>Número de documento</label>
+        <label>Teléfono de contacto</label>
         <input
           type="text"
-          name="numeroDocumento"
-          value={formData.numeroDocumento}
-          onChange={handleChange}
-          className="input"
-        />
-
-        <label>Teléfono</label>
-        <input
-          type="text"
-          name="telefono"
-          value={formData.telefono}
+          name="telefonoContacto"
+          value={formData.telefonoContacto}
           onChange={handleChange}
           className="input"
         />
@@ -160,11 +122,11 @@ export default function PerfilPasajero({
           className="input"
         />
 
-        <label>Fecha de nacimiento</label>
+        <label>Sitio web</label>
         <input
-          type="date"
-          name="fechaNacimiento"
-          value={formData.fechaNacimiento}
+          type="url"
+          name="sitioWeb"
+          value={formData.sitioWeb}
           onChange={handleChange}
           className="input"
         />
@@ -182,7 +144,7 @@ export default function PerfilPasajero({
             className="button button-primary"
             disabled={loading}
           >
-            {loading ? "Guardando..." : "Guardar Perfil de Pasajero"}
+            {loading ? "Guardando..." : "Guardar Perfil de Entidad"}
           </button>
         </div>
       </form>

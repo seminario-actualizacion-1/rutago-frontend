@@ -1,3 +1,5 @@
+import { formatearHora } from "../../utils/formato";
+
 export function obtenerEstadoColor(estadoId) {
   const colors = {
     1: "badge-pendiente",
@@ -25,7 +27,7 @@ export function obtenerNombrePersona(usuario) {
 export function textoCupos(viaje) {
   const ocupados = viaje.pasajeros?.length || 0;
   const capacidad =
-    viaje.horario?.vehiculo?.capacidadPasajeros || viaje.capacidad || 0;
+    viaje.vehiculo?.capacidadPasajeros || viaje.capacidad || 0;
   return `${ocupados}/${capacidad}`;
 }
 
@@ -40,10 +42,10 @@ export function getInitialUser() {
 
 export function textoCuposPasajero(viaje) {
   const ocupados = (viaje.pasajeros || []).length;
-  const capacidad = viaje.horario?.capacidadPasajeros || 0;
+  const capacidad = viaje.vehiculo?.capacidadPasajeros || 0;
   return `${ocupados}/${capacidad}`;
 }
 
 export function horarioLabel(viaje) {
-  return viaje.horario?.horaSalida?.slice(0, 5) || "Sin horario";
+  return formatearHora(viaje.horario?.horaSalida) || "Sin horario";
 }

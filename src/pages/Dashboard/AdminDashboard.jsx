@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { usuariosService } from "../../services/usuarios.service";
-import { perfilConductorService } from "../../services/perfilConductor.service";
-import { perfilPasajeroService } from "../../services/perfilPasajero.service";
+import { conductorService } from "../../services/conductor.service";
+import { pasajeroService } from "../../services/pasajero.service";
 import { vehiculosService } from "../../services/vehiculos.service";
 import { viajesService } from "../../services/viajes.service";
-import { perfilEntidadService } from "../../services/perfilEntidad.service";
+import { entidadService } from "../../services/entidad.service";
 import { barriosService } from "../../services/barrios.service";
 import { comunasService } from "../../services/comunas.service";
 import { rutasService } from "../../services/rutas.service";
@@ -33,17 +33,17 @@ export default function AdminDashboard() {
           horarios,
         ] = await Promise.all([
           usuariosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-          perfilConductorService.getAll({
+          conductorService.getAll({
             paginaActual: 1,
             registrosPorPagina: 1,
           }),
-          perfilPasajeroService.getAll({
+          pasajeroService.getAll({
             paginaActual: 1,
             registrosPorPagina: 1,
           }),
           vehiculosService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
           viajesService.getAll({ paginaActual: 1, registrosPorPagina: 1 }),
-          perfilEntidadService.getAll({
+          entidadService.getAll({
             paginaActual: 1,
             registrosPorPagina: 1,
           }),

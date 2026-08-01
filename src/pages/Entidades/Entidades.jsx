@@ -5,7 +5,7 @@ import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
-import { perfilEntidadService } from "../../services/perfilEntidad.service";
+import { entidadService } from "../../services/entidad.service";
 import { usuariosService } from "../../services/usuarios.service";
 import "./Entidades.css";
 
@@ -46,7 +46,7 @@ export default function Entidades() {
   const fetchEntidades = async () => {
     try {
       setLoading(true);
-      const data = await perfilEntidadService.getAll({
+      const data = await entidadService.getAll({
         ...queryParams,
         q: searchTerm || undefined,
         sortBy,
@@ -122,13 +122,13 @@ export default function Entidades() {
         }
 
         // 2. Actualizar perfil de entidad
-        await perfilEntidadService.update(editingEntidad.id, {
+        await entidadService.update(editingEntidad.id, {
           razonSocial: formData.razonSocial,
           nit: formData.nit,
           telefonoContacto: formData.telefonoContacto,
         });
       } else {
-        await perfilEntidadService.crearConUsuario({
+        await entidadService.crearConUsuario({
           nombres: formData.nombres,
           apellidos: formData.apellidos,
           correo: formData.correo,
@@ -154,7 +154,7 @@ export default function Entidades() {
     if (!window.confirm("¿Estás seguro de que deseas eliminar esta entidad?"))
       return;
     try {
-      await perfilEntidadService.delete(id);
+      await entidadService.delete(id);
       await fetchEntidades();
     } catch (err) {
       setError(err.message);

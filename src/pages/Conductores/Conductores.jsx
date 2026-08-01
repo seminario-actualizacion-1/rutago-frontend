@@ -4,9 +4,8 @@ import Pagination from "../../components/Pagination/Pagination";
 import Modal from "../../components/Modal/Modal";
 import ActionsMenu from "../../components/ActionsMenu/ActionsMenu";
 import TableToolbar from "../../components/TableToolbar/TableToolbar";
-import { perfilConductorService } from "../../services/perfilConductor.service";
+import { conductorService } from "../../services/conductor.service";
 import { usuariosService } from "../../services/usuarios.service";
-import { vehiculosService } from "../../services/vehiculos.service";
 import PasswordInput from "../../components/PasswordInput/PasswordInput";
 import { useEstadosConductor } from "../../hooks/useEstadosConductor";
 import "./Conductores.css";
@@ -17,7 +16,6 @@ const emptyForm = {
   correo: "",
   contrasena: "",
   usuarioId: "",
-  vehiculoId: "",
   licenciaConducir: "",
   estadoId: 1,
 };
@@ -26,7 +24,6 @@ export default function Conductores() {
   const { opciones: opcionesEstadosConductor, nombre: nombreEstadoConductor } = useEstadosConductor();
   const [conductores, setConductores] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
-  const [vehiculos, setVehiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -51,8 +48,8 @@ export default function Conductores() {
   const fetchDatos = async () => {
     try {
       setLoading(true);
-      const [conductoresData, usuariosData, vehiculosData] = await Promise.all([
-        perfilConductorService.getAll({
+      const [conductoresData, usuariosData] = await Promise.all([
+        conductorService.getAll({
           ...queryParams,
           q: searchTerm || undefined,
           ...(filters.estadoId && { estadoId: filters.estadoId }),
@@ -63,16 +60,11 @@ export default function Conductores() {
           paginaActual: 1,
           registrosPorPagina: 100,
         }),
-        vehiculosService.getAll({
-          paginaActual: 1,
-          registrosPorPagina: 100,
-        }),
       ]);
 
       setConductores(conductoresData.data || []);
       actualizarPaginacion(conductoresData.paginacion);
       setUsuarios(usuariosData.data || []);
-      setVehiculos(vehiculosData.data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -98,7 +90,6 @@ export default function Conductores() {
       apellidos: conductor.usuario?.apellidos || "",
       correo: conductor.usuario?.correo || "",
       usuarioId: conductor.usuario?.id,
-      vehiculoId: conductor.vehiculo?.id || "",
       licenciaConducir: conductor.licenciaConducir || "",
       estadoId: conductor.estado?.id || 1,
     });
@@ -120,18 +111,16 @@ export default function Conductores() {
           });
         }
 
-        await perfilConductorService.update(editingConductor.id, {
-          vehiculoId: formData.vehiculoId || null,
+        await conductorService.update(editingConductor.id, {
           licenciaConducir: formData.licenciaConducir,
           estadoId: formData.estadoId,
         });
       } else {
-        await perfilConductorService.crearConUsuario({
+        await conductorService.crearConUsuario({
           nombres: formData.nombres,
           apellidos: formData.apellidos,
           correo: formData.correo,
           contrasena: formData.contrasena,
-          vehiculoId: formData.vehiculoId || null,
           licenciaConducir: formData.licenciaConducir,
           estadoId: formData.estadoId,
         });
@@ -160,7 +149,7 @@ export default function Conductores() {
     }
 
     try {
-      await perfilConductorService.delete(id);
+      await conductorService.delete(id);
       await fetchDatos();
     } catch (err) {
       setError(err.message);
@@ -195,15 +184,6 @@ export default function Conductores() {
     return usuario
       ? `${usuario.nombres} ${usuario.apellidos || ""}`.trim()
       : "Sin usuario";
-  };
-
-  const getVehiculoPlaca = (conductor) => {
-    if (conductor.vehiculo) {
-      return conductor.vehiculo.placa;
-    }
-
-    const vehiculo = vehiculos.find((v) => v.id === conductor.vehiculo?.id);
-    return vehiculo ? vehiculo.placa : "Sin vehículo";
   };
 
   const getEstadoColor = (estadoId) => {
@@ -264,7 +244,6 @@ export default function Conductores() {
                     <tr>
                       <th>ID</th>
                       <th>Usuario</th>
-                      <th>Vehículo</th>
                       <th>Licencia</th>
                       <th>Estado</th>
                       <th>Acciones</th>
@@ -280,7 +259,6 @@ export default function Conductores() {
                               {getUsuarioNombre(conductor)}
                             </span>
                           </td>
-                          <td>{getVehiculoPlaca(conductor)}</td>
                           <td>{conductor.licenciaConducir || "-"}</td>
                           <td>
                             <span
@@ -301,7 +279,7 @@ export default function Conductores() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="text-center">
+                        <td colSpan="5" className="text-center">
                           No se encontraron conductores
                         </td>
                       </tr>
@@ -319,7 +297,6 @@ export default function Conductores() {
                         <div className="mobile-card-header">
                           <div className="mobile-card-info">
                             <h3>{getUsuarioNombre(conductor)}</h3>
-                            <p>{getVehiculoPlaca(conductor)}</p>
                             <p>Licencia: {conductor.licenciaConducir || "-"}</p>
                           </div>
                           <span
@@ -536,35 +513,6 @@ export default function Conductores() {
               </div>
             </>
           )}
-          <div style={{ marginBottom: "1rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "0.5rem",
-                fontWeight: "500",
-              }}
-            >
-              Vehículo
-            </label>
-            <select
-              value={formData.vehiculoId}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  vehiculoId: e.target.value ? parseInt(e.target.value) : "",
-                })
-              }
-              className="input"
-              style={{ width: "100%" }}
-            >
-              <option value="">Seleccionar vehículo (opcional)</option>
-              {vehiculos.map((vehiculo) => (
-                <option key={vehiculo.id} value={vehiculo.id}>
-                  {vehiculo.placa} - {vehiculo.marca} {vehiculo.modelo}
-                </option>
-              ))}
-            </select>
-          </div>
           <div style={{ marginBottom: "1rem" }}>
             <label
               style={{
