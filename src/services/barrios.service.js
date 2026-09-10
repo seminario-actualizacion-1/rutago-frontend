@@ -12,22 +12,6 @@ export const barriosService = {
       throw extractError(err, "Error al cargar barrios");
     }
   },
-  getById: async (id) => {
-    try {
-      const res = await api.getBarrioById(id);
-      return res.data;
-    } catch (err) {
-      throw extractError(err, "Error al cargar barrio");
-    }
-  },
-  getByComuna: async (comunaId) => {
-    try {
-      const res = await api.getBarriosByComuna(comunaId);
-      return res.data;
-    } catch (err) {
-      throw extractError(err, "Error al cargar barrios por comuna");
-    }
-  },
   create: async (barrio) => {
     try {
       const res = await api.createBarrio(barrio);

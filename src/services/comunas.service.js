@@ -12,14 +12,6 @@ export const comunasService = {
       throw extractError(err, "Error al cargar comunas");
     }
   },
-  getById: async (id) => {
-    try {
-      const res = await api.getComunaById(id);
-      return res.data;
-    } catch (err) {
-      throw extractError(err, "Error al cargar comuna");
-    }
-  },
   create: async (comuna) => {
     try {
       const res = await api.createComuna(comuna);

@@ -306,7 +306,7 @@ export default function ViajesAdmin({ onVerDetalle, onEditar, recargar }) {
                             >
                               {(
                                 viaje.estado?.nombre ||
-                                nombreEstadoViaje(obtenerEstadoId(viaje)) ||
+                                nombre(obtenerEstadoId(viaje)) ||
                                 obtenerEstadoId(viaje) ||
                                 "-"
                               ).toString()}

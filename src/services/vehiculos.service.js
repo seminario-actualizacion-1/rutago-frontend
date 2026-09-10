@@ -25,14 +25,6 @@ export const vehiculosService = {
       throw extractError(err, "Error al cargar vehículos");
     }
   },
-  getById: async (id) => {
-    try {
-      const res = await api.getVehiculoById(id);
-      return res.data;
-    } catch (err) {
-      throw extractError(err, "Error al cargar vehículo");
-    }
-  },
   create: async (vehiculo) => {
     try {
       const res = await api.createVehiculo(normalizePayload(vehiculo));
