@@ -25,14 +25,6 @@ export const horariosService = {
       throw extractError(err, "Error al cargar horarios");
     }
   },
-  getById: async (id) => {
-    try {
-      const res = await api.getHorarioById(id);
-      return res.data;
-    } catch (err) {
-      throw extractError(err, "Error al cargar horario");
-    }
-  },
   getByRuta: async (rutaId) => {
     try {
       const res = await api.getHorariosByRuta(rutaId);

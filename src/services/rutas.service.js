@@ -38,14 +38,6 @@ export const rutasService = {
       throw extractError(err, "Error al cargar rutas");
     }
   },
-  getById: async (id) => {
-    try {
-      const res = await api.getRutaById(id);
-      return res.data;
-    } catch (err) {
-      throw extractError(err, "Error al cargar ruta");
-    }
-  },
   create: async (ruta) => {
     try {
       const res = await api.createRuta(normalizeRutaPayload(ruta));
