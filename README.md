@@ -10,6 +10,7 @@
 ## Sistema Inteligente de Consulta y Monitoreo de Rutas de Transporte en Tiempo Real
 
 <a id="url-del-proyecto"></a>
+
 ## URL del proyecto:
 
 https://rutago.seminario1.eleueleo.com/
@@ -49,6 +50,7 @@ RutaGo es una plataforma web diseñada para facilitar la movilidad urbana e inte
 ---
 
 <a id="objetivo-general"></a>
+
 # 🎯 Objetivo General
 
 Desarrollar una aplicación web que permita a los usuarios consultar rutas, horarios y ubicación de vehículos en tiempo real, optimizando la movilidad y reduciendo los tiempos de espera.
@@ -56,6 +58,7 @@ Desarrollar una aplicación web que permita a los usuarios consultar rutas, hora
 ---
 
 <a id="problematica"></a>
+
 # ❗ Problemática
 
 Actualmente muchos pasajeros desconocen la ubicación de los vehículos, los horarios reales de salida y posibles retrasos de las rutas, ocasionando pérdidas de tiempo e incertidumbre.
@@ -65,6 +68,7 @@ RutaGo busca solucionar esta problemática mediante una plataforma moderna, senc
 ---
 
 <a id="usuarios-del-sistema"></a>
+
 # 👥 Usuarios del Sistema
 
 - 👤 Pasajeros
@@ -75,6 +79,7 @@ RutaGo busca solucionar esta problemática mediante una plataforma moderna, senc
 ---
 
 <a id="funcionalidades"></a>
+
 # ⚙️ Funcionalidades
 
 ### ✅ Completado
@@ -116,6 +121,7 @@ RutaGo busca solucionar esta problemática mediante una plataforma moderna, senc
 ---
 
 <a id="variables-de-entorno"></a>
+
 ## ⚙️ Variables de entorno
 
 Crear archivo `.env` en la raíz:
@@ -127,6 +133,7 @@ VITE_API_URL=http://localhost:8082/api
 ---
 
 <a id="scripts-disponibles"></a>
+
 ## 📦 Scripts disponibles
 
 ```bash
@@ -138,6 +145,7 @@ npm run preview  # vista previa de la build
 ---
 
 <a id="estructura-del-proyecto"></a>
+
 ## 📁 Estructura del proyecto
 
 ```
@@ -215,6 +223,7 @@ rutago-frontend/
 ---
 
 <a id="roles-y-rutas-protegidas"></a>
+
 ## 👥 Roles y rutas protegidas
 
 | Rol             | Rutas accesibles                     |
@@ -229,6 +238,7 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 ---
 
 <a id="componentes-principales"></a>
+
 ## 🧩 Componentes principales
 
 | Componente      | Función                                                |
@@ -254,6 +264,7 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 ---
 
 <a id="tecnologias-utilizadas"></a>
+
 ## 🛠 Tecnologías Utilizadas
 
 | Tecnología | Uso |
@@ -272,6 +283,7 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 ---
 
 <a id="arquitectura"></a>
+
 # 🏗 Arquitectura
 
 ```
@@ -297,6 +309,7 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 ---
 
 <a id="frontend"></a>
+
 # 💻 Frontend
 
 ## Páginas implementadas
@@ -324,6 +337,7 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 ---
 
 <a id="usuarios-de-prueba"></a>
+
 ## 👥 Usuarios de prueba
 
 | Rol             | Correo               | Contraseña           |
@@ -336,6 +350,7 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 ---
 
 <a id="urls-desplegadas"></a>
+
 ## 🔗 URLs desplegadas
 
 | Servicio | URL                                        |
@@ -346,6 +361,7 @@ Cada ruta verifica el rol mediante el componente `ProtectedRoute` con la prop `a
 ---
 
 <a id="instalacion"></a>
+
 # 🚀 Instalación
 
 ## Frontend
@@ -364,6 +380,7 @@ http://localhost:5173
 ---
 
 <a id="cicd-y-deploy"></a>
+
 ## 🚀 CI/CD y Deploy
 
 ### Workflow
@@ -393,6 +410,7 @@ El frontend se despliega automáticamente al hacer push a `main`, generando el b
 ---
 
 <a id="metodologia-scrum"></a>
+
 # 📋 Metodología Scrum
 
 Herramienta utilizada:
@@ -402,6 +420,7 @@ Herramienta utilizada:
 ---
 
 <a id="equipo"></a>
+
 # 👨‍💻 Equipo
 
 | Rol           | Integrante          |
@@ -415,6 +434,7 @@ Herramienta utilizada:
 ---
 
 <a id="estado-del-proyecto"></a>
+
 # 📊 Estado del Proyecto
 
 ## ✅ Completado
@@ -452,6 +472,7 @@ Herramienta utilizada:
 ---
 
 <a id="control-de-versiones"></a>
+
 # 🚀 Control de Versiones
 
 Se utiliza Git y GitHub mediante el flujo de trabajo basado en ramas (Git Flow), permitiendo el desarrollo colaborativo y el control de versiones del proyecto.
@@ -459,6 +480,7 @@ Se utiliza Git y GitHub mediante el flujo de trabajo basado en ramas (Git Flow),
 ---
 
 <a id="licencia"></a>
+
 # 📄 Licencia
 
 Proyecto académico desarrollado con fines educativos para la asignatura Seminario de Actualización.
@@ -466,6 +488,7 @@ Proyecto académico desarrollado con fines educativos para la asignatura Seminar
 ---
 
 <a id="checklist-de-evaluacion--fase-2"></a>
+
 ## ✅ Checklist de Evaluación — Fase 2
 
 ### Pruebas Funcionales en Vivo
@@ -484,8 +507,11 @@ Proyecto académico desarrollado con fines educativos para la asignatura Seminar
 ---
 
 <a id="repositorios"></a>
+
 # 🔗 Repositorios
 
 [**Backend**](https://github.com/seminario-actualizacion-1/rutago-backend)
 
 [**Trello**](https://trello.com/b/zR4MFcBH)
+
+prueba de integracion github slack
