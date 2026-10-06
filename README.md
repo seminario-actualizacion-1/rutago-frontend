@@ -489,5 +489,3 @@ Proyecto académico desarrollado con fines educativos para la asignatura Seminar
 [**Backend**](https://github.com/seminario-actualizacion-1/rutago-backend)
 
 [**Trello**](https://trello.com/b/zR4MFcBH)
-
-prueba de integracion github slack
